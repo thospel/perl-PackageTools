@@ -6,35 +6,47 @@ use strict;
 use File::Temp qw(tempdir);
 use File::Copy qw(move);
 use File::Path qw(rmtree);
+use File::Spec;
+use Cwd;
 use Errno qw(ENOENT ESTALE);
 use Getopt::Long 2.11;
-use Cwd;
-use File::Spec;
 
-our $VERSION = "1.010"; # $Revision: 2525 $
+our $VERSION = "1.010"; # $Revision: 2530 $
 
 my $zip = "zip";
 my $tar = "tar";
 my $compress = "gzip --best";
 
 # http://gnuwin32.sourceforge.net/packages/bsdtar.htm
-my $bsd_tar	= 'C:\Program Files\GnuWin32\bin\bsdtar';
+my $bsd_tar	= 'C:/Program Files/GnuWin32/bin/bsdtar';
 # http://gnuwin32.sourceforge.net/packages/zip.htm
-my $gnuwin_zip	= 'C:\Program Files\GnuWin32\bin\zip';
+my $gnuwin_zip	= 'C:/Program Files/GnuWin32/bin/zip';
 
 &Getopt::Long::config("bundling", "require_order");
 my ($unsafe, $help, $version);
-die "Could not parse your command line. Try $0 -h\n" unless
+my @OLD_ARGV = @ARGV;
+die "Could not parse your command line (@ARGV) . Try $0 -h\n" unless
     GetOptions("zip=s"		=> \$zip,
                "tar=s"		=> \$tar,
+               "perl=s"		=> \my $perl,
                "compress=s"	=> \$compress,
                "leave=s"	=> \my $leave,
                "prerequisite=f"	=> \my %prereq,
+               "reinvoke"	=> \my $reinvoked,
                "version!"	=> \$version,
                "unsafe!"	=> \$unsafe,
                "U"		=> \$unsafe,
                "help!"		=> \$help,
                "h"		=> \$help);
+
+if ($perl && !$reinvoked) {
+    # Reinvoke protects against endless recursive calls
+    no warnings "once";
+    require FindBin;
+    my $program = File::Spec->catfile($FindBin::Bin, $FindBin::Script);
+    exec($perl, $program, "--reinvoke", @OLD_ARGV);
+    die "Could not re-exec as $perl $program --reinvoke @ARGV: $!";
+}
 
 if ($version) {
     print<<"EOF";
@@ -53,7 +65,7 @@ if ($help) {
 
 sub exectable {
     my ($name) = @_;
-    return -x $name ? $name : undef if 
+    return -x $name ? $name : undef if
         File::Spec->file_name_is_absolute($name);
     my ($volume,$directories,$file) = File::Spec->splitpath($name);
     return -x $name ? $name : undef if $volume ne "" || $directories ne "";
@@ -98,7 +110,7 @@ if (%prereq) {
         my $ver = $prereq{$pre_name};
         $ver =~ s/\./,/g;
         $ver .= ",0,0";
-        $prereq .= 
+        $prereq .=
             qq(        <DEPENDENCY NAME="$pre_name" VERSION="$ver" />\n);
     }
     $pkg =~ s!^(\s*<IMPLEMENTATION>\s*\n)!$1$prereq!m;
@@ -156,10 +168,10 @@ close($npfh) || die "Error closing $new_ppd: $!";
 # (maybe at some point generate a filelist myself and do the compress later)
 
 print STDERR "\t$tar ", "-czf $tmp_dir/$arch/$dist --exclude \"blib/man*\"", $pp_dir eq "" ? "" : " -C $pp_dir", " blib\n";
-system($tar, 
-       "-czf", "$tmp_dir/$arch/$dist", 
-       "--exclude", $^O eq "MSWin32" ? qq("blib/man*") : "blib/man*", 
-       ($pp_dir eq "" ? () : ("-C", $pp_dir)), 
+system($tar,
+       "-czf", "$tmp_dir/$arch/$dist",
+       "--exclude", $^O eq "MSWin32" ? qq("blib/man*") : "blib/man*",
+       ($pp_dir eq "" ? () : ("-C", $pp_dir)),
        "blib") and die "Could not tar";
 my $from_dir = getcwd;
 chdir($tmp_dir) || die "Could not chdir $tmp_dir: $!";

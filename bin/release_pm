@@ -2,7 +2,7 @@
 use strict;
 use Getopt::Long;
 
-our $VERSION = "1.002"; # $Revision: 2528 $
+our $VERSION = "1.002"; # $Revision: 2530 $
 
 my $quot = qr/[\'\"]/; # " unconfuse emacs
 my $sums = "md5-versions";
@@ -26,7 +26,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2007-10-29 10:08:39 +0100 (Mon, 29 Oct 2007) $
+$Date: 2007-10-29 11:30:15 +0100 (Mon, 29 Oct 2007) $
 EOF
     exit 0;
 }
@@ -260,7 +260,7 @@ sub release {
                     my $now = sprintf("%04d-%02d-%02d %02d:%02d:%02d UT",
                                       $year+1900, $mon+1, $mday,
                                       $hour, $min, $sec);
-                    $file_props->{content} =~ s/^(Revision history for .*\s*\n)([\d.]+)(\s*.*)/$1 . ($2 eq $release_props->{release} ? "$2\t$now" : "$release_props->{release}\t$now\n\n$2$3")/ie;
+                    $file_props->{content} =~ s/^(Revision history for .*\s*\n)([\d.]+)([^\S\n]*.*)/$1 . ($2 eq $release_props->{release} ? "$2\t$now" : "$release_props->{release}\t$now\n\n$2$3")/ie;
                 }
             } elsif ($file eq "Package.pm" || $file =~ m!/Package.pm\z!) {
                 no warnings "once";

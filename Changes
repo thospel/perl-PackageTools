@@ -1,7 +1,11 @@
 Revision history for Perl extension PackageTools.
 
-1.000	2007-10-29 09:08:00 UT
+1.000	2007-10-29 10:27:15 UT
 	- original version; created by h2xs 1.23 with options
 		-b 5.8.0 -AXn PackageTools
 	- Import already existing ad hoc versions of release_pm and makeppd.pl
 	- Streamline the code
+	- Add support for auto-updating the date in Changes
+	- Add support for auto-updating the version in README
+	- makeppd.pl now supports running under a different perl version than
+	  the one used to start the program
