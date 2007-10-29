@@ -2,7 +2,7 @@
 use strict;
 use Getopt::Long;
 
-our $VERSION = "1.002"; # $Revision: 2525 $
+our $VERSION = "1.002"; # $Revision: 2528 $
 
 my $quot = qr/[\'\"]/; # " unconfuse emacs
 my $sums = "md5-versions";
@@ -26,7 +26,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2007-10-29 09:44:25 +0100 (Mon, 29 Oct 2007) $
+$Date: 2007-10-29 10:08:39 +0100 (Mon, 29 Oct 2007) $
 EOF
     exit 0;
 }
@@ -232,7 +232,12 @@ sub get_files {
         }
         $file_props{$file} = $file_props;
     }
-    $release_props->next_release if %{$release_props->{old_file_props}};
+    if (%{$release_props->{old_file_props}}) {
+        for my $file (keys %{$release_props->{old_file_props}}) {
+            print STDERR "Forgetting $file\n";
+        }
+        $release_props->next_release;
+    }
     $release_props->{time_stamp} = time;
 }
 
@@ -257,7 +262,7 @@ sub release {
                                       $hour, $min, $sec);
                     $file_props->{content} =~ s/^(Revision history for .*\s*\n)([\d.]+)(\s*.*)/$1 . ($2 eq $release_props->{release} ? "$2\t$now" : "$release_props->{release}\t$now\n\n$2$3")/ie;
                 }
-            } elsif ($file eq "Package.pm") {
+            } elsif ($file eq "Package.pm" || $file =~ m!/Package.pm\z!) {
                 no warnings "once";
                 require Data::Dumper;
                 local $Data::Dumper::Indent = 1;
@@ -278,8 +283,8 @@ sub release {
                 if (!$again) {
                     $file_props->{version} =
                         $release_props->next_version($file_props->{version});
-                    $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release};
                 }
+                $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release};
                 $file_props->{version_changed} = 1;
                 print STDERR "Updated $file\n";
                 $changes++;

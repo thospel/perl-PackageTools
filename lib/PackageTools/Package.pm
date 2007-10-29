@@ -1,30 +1,15 @@
 package PackageTools::Package;
-our $VERSION = "1.000"; # $Revision: 2526 $
+our $VERSION = "1.000"; # $Revision: 2528 $
 
 # START HISTORY
 our %history = (
-  'lib/PackageTools/Package.pm' => {
-    '1.000' => '1.000'
-  },
-  'bin/release_pm' => {
-    '1.000' => '1.000'
-  },
   'Changes' => {
     '1.000' => '1.000'
   },
-  'MANIFEST' => {
-    '1.000' => '1.000'
+  'bin/release_pm' => {
+    '1.002' => '1.000'
   },
-  'bin/makeppd.pl' => {
-    '1.000' => '1.000'
-  },
-  't/00_syntax.t' => {
-    '1.000' => '1.000'
-  },
-  'Makefile.PL' => {
-    '1.000' => '1.000'
-  },
-  'README' => {
+  'lib/PackageTools/Package.pm' => {
     '1.000' => '1.000'
   }
 );
