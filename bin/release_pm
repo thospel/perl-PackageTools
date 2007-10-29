@@ -1,0 +1,345 @@
+#!/usr/bin/perl -w
+use strict;
+use Getopt::Long;
+
+our $VERSION = "1.002"; # $Revision: 2525 $
+
+my $quot = qr/[\'\"]/; # " unconfuse emacs
+my $sums = "md5-versions";
+
+Getopt::Long::Configure ("bundling");
+my $start_digits  = 3;
+my $start_version = 1;
+die "Could not parse your command line. Try $0 -h\n" unless
+    GetOptions("import-revision!"	=> \my $import_revision,
+               "import-version!"	=> \my $import_version,
+               "digits=i"		=> \$start_digits,
+               "initial:s"		=> \my $start_release,
+               "start_version=s",	=> \$start_version,
+               "again"			=> \my $again,
+	       "version!"		=> \my $print_version,
+               "U|unsafe!"		=> \my $unsafe,
+               "h|help!"		=> \my $help);
+
+if ($print_version) {
+    print<<"EOF";
+release $VERSION
+EOF
+    print<<'EOF';
+$Date: 2007-10-29 09:44:25 +0100 (Mon, 29 Oct 2007) $
+EOF
+    exit 0;
+}
+if ($help) {
+    require Config;
+    $ENV{PATH} .= ":" unless $ENV{PATH} eq "";
+    $ENV{PATH} = "$ENV{PATH}$Config::Config{'installscript'}";
+    exec("perldoc", "-F", $unsafe ? "-U" : (), $0) || exit 1;
+    # make parser happy
+    %Config::Config = ();
+}
+die "Meaningless arguments\n" if @ARGV;
+die "Cannot have both import-revision and import-version" if
+    $import_revision && $import_version;
+$again = 1 if defined $start_release;
+
+package PackageTools::Release;
+use Carp;
+use Digest::MD5 qw(md5_hex);
+use Errno qw(ENOENT ESTALE);
+
+our $history = <<'EOF'
+use Carp;
+
+sub released {
+    my ($package, $version) = @_;
+    my $p = $package;
+    $p =~ s!::!/!g;
+    my $history = $history{"lib/$p.pm"} ||
+        croak "Could not find a history for package '$package'";
+    my $lowest = 9**9**9;
+    for my $v (keys %$history) {
+        $lowest = $v if $v >= $version && $v < $lowest;
+    }
+    croak "No known version '$version' of package '$package'" if
+        $lowest == 9**9**9;
+    return $history->{$lowest};
+}
+EOF
+    ;
+# Import a complete file and return the contents as a single string
+sub slurp {
+    my ($file, $may_not_exist) = @_;
+    croak "filename is undefined" if !defined $file;
+    open(my $fh, "<", $file) or
+        $may_not_exist && ($! == ENOENT || $! == ESTALE) ?
+	return undef : croak "Could not open '$file': $!";
+    my $rc = read($fh, my $slurp, 1024 + -s $fh);
+    croak "File '$file' is still growing" if
+        $rc &&= read($fh, $slurp, 1024, length $slurp);
+    croak "Error reading from '$file': $!" if !defined $rc;
+    close($fh) || croak "Error while closing '$file': $!";
+    return $slurp;
+}
+
+sub spew {
+    my $file = shift;
+    croak "filename is undefined" if !defined $file;
+    open(my $fh, ">", $file) || croak "Could not create '$file': $!";
+    eval {
+        print($fh @_) || croak "Error writing to '$file': $!";
+        close($fh)    || croak "Error closing '$file': $!";
+    };
+    if ($@) {
+        undef $fh;
+        unlink($file) || die "Could not unlink '$file' after $@";
+        die $@;
+    }
+}
+
+sub get_versions_file {
+    my ($class) = @_;
+    my (%file_props, %released, $release, $begun, $ended, $digits);
+    my $content = slurp($sums, 1);
+    if (defined $content) {
+        my $md5_versions_content = $content;
+        my $line_nr;
+        while ($md5_versions_content =~ s/^([^\n]*.)//s) {
+            $line_nr++;
+            my $line = $+;
+            $line =~ s/\s+\z//;
+            $line =~ s/^\s+//;
+            next if $line eq "" || $line =~ /^\#/;
+            if (!$begun) {
+                if ($line =~ /^BEGIN\z/) {
+                    $begun = 1;
+                    next;
+                }
+                croak "Unexpected data before BEGIN at line $line_nr in file $sums";
+            }
+            croak "Unexpected data after END at line $line_nr in file $sums" if
+                $ended;
+            if ($line =~ /^VERSION\s+([a-fA-F\d]{32})\s+(\d+\.\d+)\s+(\S+)\z/) {
+                croak "Duplicate VERSION entry for file $3\n" if
+                    exists $file_props{$3};
+                $file_props{$3} = {
+                    old_chksum	=> $1,
+                    version	=> $2,
+                    file	=> $3,
+                };
+            } elsif ($line =~ /^RELEASED\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\S+)\z/) {
+                croak "Duplicate RELEASED entry for file $3 version $1\n" if
+                    exists $released{$3}{$1};
+                $released{$3}{$1} = $2;
+            } elsif ($line =~ /^RELEASE\s+(\d+\.\d+)\z/) {
+                croak "Duplicate RELEASE\n" if defined $release;
+                $release = $1;
+            } elsif ($line =~ /^DIGITS\s+(\d+)\z/) {
+                croak "Duplicate DIGITS\n" if defined $digits;
+                $digits = $1;
+            } elsif ($line =~ /^END\z/) {
+                $ended = 1;
+            } else {
+                croak "Could not parse line $line_nr in file $sums";
+            }
+        }
+    } else {
+        $content = "";
+    }
+
+    $digits = $start_digits if !defined $digits;
+    my $format = sprintf("%%.%df", $digits);
+    if (!defined $release) {
+        # croak "No RELEASE\n" if $content ne "";
+        $start_release ||= 1;
+        $release = sprintf($format, $start_release);
+    }
+    return bless {
+        step		=> 1/10**$digits,
+        "format"	=> $format,
+        start_version	=> sprintf($format, $start_version),
+        digits		=> $digits,
+        release		=> $release,
+        release_changed	=> $again,
+        any_changes	=> 0,
+        old_content	=> $content,
+        old_file_props	=> \%file_props,
+        released	=> \%released,
+    }, $class;
+}
+
+sub next_version {
+    my ($release_props, $version, $steps) = @_;
+    Carp::confess "Assertion: No version" if !defined $version;
+    $steps = 1 if !defined $steps;
+    return sprintf($release_props->{format},
+                   $version + $steps * $release_props->{step});
+}
+
+sub next_release {
+    my ($release_props) = @_;
+    if (!$release_props->{release_changed}) {
+        $release_props->{release} = $release_props->next_version($release_props->{release});
+        $release_props->{release_changed} = 1;
+    }
+    $release_props->{any_changes} ||= 1;
+}
+
+sub chksum {
+    my ($file_props) = @_;
+    # Get rid of typical CVS junk
+    my $content = $file_props->{content};
+    $content =~ s/\$(?:Revision|Date|Author):[^\n\$]+\$//g;
+    return md5_hex($content);
+}
+
+sub get_MANIFEST {
+    my $manifest = slurp("MANIFEST");
+    croak "$sums is not in MANIFEST\n" if $manifest !~ s/^\s*\Q$sums\E\s*\n//m;
+    return $manifest =~ /^\s*(\S+)/mg;
+}
+
+sub get_files {
+    my ($release_props) = @_;
+
+    $release_props->{file_props} = \my %file_props;
+    my @files = get_MANIFEST();
+    $release_props->{files} = \@files;
+    for my $file (@files) {
+        my $file_props = delete $release_props->{old_file_props}{$file};
+        if (!$file_props) {
+            $file_props = {
+                version	=> $release_props->{start_version},
+                version_changed => 1,
+                file	=> $file,
+            };
+            print STDERR "New $file\n";
+            $release_props->next_release;
+        }
+        $file_props->{content} = slurp($file);
+        $file_props->{chksum} = chksum($file_props);
+        if ($import_revision &&
+            $file_props->{content} =~ /\$Revision\s*:\s*(\d+)\.(\d+)\S*\s*\$/) {
+            $file_props->{version} = $release_props->next_version($1, $2);
+            $file_props->{version_changed} = 1;
+            $release_props->next_release;
+        }
+        if ($import_version &&
+            $file_props->{content} =~ /^\s*(?:(?:my|our)\s*)?\$VERSION\s*=\s*($quot)([\d._]+)\1\s*;/m) {
+            $file_props->{version} = $release_props->next_version($2, 0);
+            $file_props->{version_changed} = 1;
+            $release_props->next_release;
+        }
+        $file_props{$file} = $file_props;
+    }
+    $release_props->next_release if %{$release_props->{old_file_props}};
+    $release_props->{time_stamp} = time;
+}
+
+sub release {
+    my ($release_props) = @_;
+    my $file_props = $release_props->{file_props};
+    my $changes;
+    do {
+        $changes = 0;
+        for my $file (@{$release_props->{files}}) {
+            my $file_props = $file_props->{$file} ||
+                die "Assertion: Unknown file $file";;
+            if ($file eq "README") {
+                $file_props->{content} =~ s/^(.* version )(.*)\n/$1$release_props->{release}\n/i;
+                $file_props->{content} =~ s/^(.*)\n=+\n/"$1\n" . "=" x length($1) . "\n"/ie;
+            } elsif ($file eq "Changes") {
+                if ($release_props->{any_changes}) {
+                    my ($sec, $min, $hour, $mday, $mon, $year) =
+                        gmtime($release_props->{time_stamp});
+                    my $now = sprintf("%04d-%02d-%02d %02d:%02d:%02d UT",
+                                      $year+1900, $mon+1, $mday,
+                                      $hour, $min, $sec);
+                    $file_props->{content} =~ s/^(Revision history for .*\s*\n)([\d.]+)(\s*.*)/$1 . ($2 eq $release_props->{release} ? "$2\t$now" : "$release_props->{release}\t$now\n\n$2$3")/ie;
+                }
+            } elsif ($file eq "Package.pm") {
+                no warnings "once";
+                require Data::Dumper;
+                local $Data::Dumper::Indent = 1;
+                local $Data::Dumper::Sortkeys = 1;
+                my $released_string =
+                    Data::Dumper::Dumper($release_props->{released});
+                $released_string =~ s/^\s*\$VAR1\s*=\s*{(.*)}\s*;\s*\z/our %history = ($1);\n\n$history/s || die "Assertion: Unexpected Dumper output";
+                $file_props->{content} =~ s/^[^\S\n]*\#\s*START\s+HISTORY\s*\n(.*?)^\s*\#\s*END\s+HISTORY[^\S\n]*\n/\# START HISTORY\n$released_string\# END HISTORY\n/sm;
+            }
+            $file_props->{content} =~ s/^(\s*(?:(?:my|our)\s*)?\$VERSION\s*=\s*)($quot)[\d._]+\2(\s*;)/$1$2$file_props->{version}$2$3/mg;
+
+            # Did we change ?
+            $file_props->{new_chksum} = chksum($file_props);
+            if (!$file_props->{version_changed} &&
+                (!$file_props->{old_chksum} ||
+                 $file_props->{old_chksum} ne $file_props->{new_chksum})) {
+                $release_props->next_release;
+                if (!$again) {
+                    $file_props->{version} =
+                        $release_props->next_version($file_props->{version});
+                    $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release};
+                }
+                $file_props->{version_changed} = 1;
+                print STDERR "Updated $file\n";
+                $changes++;
+            }
+        }
+    } while $changes;
+}
+
+sub set_version_file {
+    my ($release_props) = @_;
+    die "Assertion: No RELEASE\n" if !defined $release_props->{release};
+
+    my ($sec, $min, $hour, $mday, $mon, $year) =
+        gmtime($release_props->{time_stamp});
+    my $content =
+        sprintf("# Generated on %4d-%02d-%02d %02d:%02d:%02d UT using $0\n",
+                $year+1900, $mon+1, $mday, $hour, $min, $sec);
+    $content .= "BEGIN\n";
+    $content .= "DIGITS $release_props->{digits}\n";
+    $content .= sprintf("RELEASE $release_props->{format}\n",
+                        $release_props->{release});
+
+    my $file_props = $release_props->{file_props};
+    # Same order as files in MANIFEST
+    for my $file (@{$release_props->{files}}) {
+        my $file_props = $file_props->{$file} ||
+            die "Assertion: No data for $file";
+        if ($file_props->{new_chksum} ne $file_props->{chksum}) {
+            spew($file, $file_props->{content});
+            print STDERR "Restored $file\n" if $file_props->{old_chksum} && $file_props->{old_chksum} eq $file_props->{new_chksum};
+        }
+        $content .=
+            sprintf("VERSION %s $release_props->{format} %s\n", @$file_props{qw(new_chksum version file)});
+    }
+    my $released = $release_props->{released};
+    for my $file (sort keys %$released) {
+        my $versions = $released->{$file};
+        for my $version (sort { $b <=> $a } keys %$versions) {
+            $content .= sprintf("RELEASED $release_props->{format} $release_props->{format} %s\n", $version, $versions->{$version}, $file);
+        }
+    }
+    $content .= "END\n";
+    my $c1 = $content;
+    $c1 =~ s/^[^\n\S]*\#.*\n//mg;
+    my $c2 = $release_props->{old_content};
+    $c2 =~ s/^[^\n\S]*\#.*\n//mg;
+    my $updates = 0;
+    if ($c1 ne $c2) {
+        print STDERR $release_props->{old_content} eq "" ? "New" : "Updated", " release, saved in $sums\n";
+        spew($sums, $content);
+        $updates++;
+    }
+    return $updates;
+}
+
+package main;
+eval {
+    my $release_props = PackageTools::Release->get_versions_file;
+    $release_props->get_files;
+    $release_props->release;
+    $release_props->set_version_file;
+};
+die "Aborted: $@" if $@;

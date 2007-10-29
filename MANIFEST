@@ -1,0 +1,9 @@
+Changes
+MANIFEST
+Makefile.PL
+README
+bin/makeppd.pl
+bin/release_pm
+lib/PackageTools/Package.pm
+md5-versions
+t/00_syntax.t
