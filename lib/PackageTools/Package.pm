@@ -1,5 +1,5 @@
 package PackageTools::Package;
-our $VERSION = "1.000"; # $Revision: 2530 $
+our $VERSION = "1.000"; # $Revision: 2531 $
 
 # START HISTORY
 our %history = (
@@ -7,7 +7,7 @@ our %history = (
     '1.000' => '1.000'
   },
   'bin/makeppd.pl' => {
-    '1.010' => '1.000'
+    '1.011' => '1.000'
   },
   'bin/release_pm' => {
     '1.002' => '1.000'

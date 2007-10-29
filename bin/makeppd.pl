@@ -11,7 +11,7 @@ use Cwd;
 use Errno qw(ENOENT ESTALE);
 use Getopt::Long 2.11;
 
-our $VERSION = "1.010"; # $Revision: 2530 $
+our $VERSION = "1.011"; # $Revision: 2531 $
 
 my $zip = "zip";
 my $tar = "tar";
@@ -33,6 +33,7 @@ die "Could not parse your command line (@ARGV) . Try $0 -h\n" unless
                "leave=s"	=> \my $leave,
                "prerequisite=f"	=> \my %prereq,
                "reinvoke"	=> \my $reinvoked,
+               "min_version=s"	=> \my $min_version,
                "version!"	=> \$version,
                "unsafe!"	=> \$unsafe,
                "U"		=> \$unsafe,
@@ -62,6 +63,7 @@ if ($help) {
     # make parser happy
     %Config::Config = ();
 }
+die "This is $0 version $VERSION, but the caller wants at least version $min_version\n" if $min_version && $VERSION < $min_version;
 
 sub exectable {
     my ($name) = @_;
