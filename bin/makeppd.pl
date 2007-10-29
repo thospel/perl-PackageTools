@@ -11,7 +11,7 @@ use Cwd;
 use Errno qw(ENOENT ESTALE);
 use Getopt::Long 2.11;
 
-our $VERSION = "1.011"; # $Revision: 2531 $
+our $VERSION = "1.011"; # $Revision: 2532 $
 
 my $zip = "zip";
 my $tar = "tar";
@@ -45,8 +45,13 @@ if ($perl && !$reinvoked) {
     no warnings "once";
     require FindBin;
     my $program = File::Spec->catfile($FindBin::Bin, $FindBin::Script);
-    exec($perl, $program, "--reinvoke", @OLD_ARGV);
-    die "Could not re-exec as $perl $program --reinvoke @ARGV: $!";
+    if ($^O eq "MSWin32") {
+        $_ = qq("$_") for $program, @OLD_ARGV;
+    }
+    my $rc = system($perl, $program, "--reinvoke", @OLD_ARGV);
+    die "Could not re-exec as $perl $program --reinvoke @OLD_ARGV: $!" if $rc < 0;
+    die "Signal $rc failure on re-exec of re-exec as $perl $program --reinvoke @OLD_ARGV" if $rc & 0xff;
+    exit $rc >> 8;
 }
 
 if ($version) {
