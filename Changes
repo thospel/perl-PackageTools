@@ -1,5 +1,9 @@
 Revision history for Perl extension PackageTools.
 
+1.001	2007-10-31 12:36:18 UT
+	- Fix a bug that release_pm --again sometimes did not update the version
+	  of a changed file.
+
 1.000	2007-10-29 11:14:08 UT
 	- original version; created by h2xs 1.23 with options
 		-b 5.8.0 -AXn PackageTools

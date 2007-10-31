@@ -2,7 +2,7 @@
 use strict;
 use Getopt::Long;
 
-our $VERSION = "1.002"; # $Revision: 2530 $
+our $VERSION = "1.003"; # $Revision: 2538 $
 
 my $quot = qr/[\'\"]/; # " unconfuse emacs
 my $sums = "md5-versions";
@@ -26,7 +26,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2007-10-29 11:30:15 +0100 (Mon, 29 Oct 2007) $
+$Date: 2007-10-31 13:39:40 +0100 (Wed, 31 Oct 2007) $
 EOF
     exit 0;
 }
@@ -202,12 +202,19 @@ sub get_MANIFEST {
 sub get_files {
     my ($release_props) = @_;
 
+    my $released = $release_props->{released};
     $release_props->{file_props} = \my %file_props;
     my @files = get_MANIFEST();
     $release_props->{files} = \@files;
     for my $file (@files) {
         my $file_props = delete $release_props->{old_file_props}{$file};
-        if (!$file_props) {
+        if ($file_props) {
+            $released->{$file}{$file_props->{version}} ||= do {
+                print STDERR "Fixup missing RELEASED for $file\n";
+                $release_props->{release};
+            };
+            $file_props->{version_changed} = $again && $released->{$file}{$file_props->{version}} eq $release_props->{release};
+        } else {
             $file_props = {
                 version	=> $release_props->{start_version},
                 version_changed => 1,
@@ -280,10 +287,8 @@ sub release {
                 (!$file_props->{old_chksum} ||
                  $file_props->{old_chksum} ne $file_props->{new_chksum})) {
                 $release_props->next_release;
-                if (!$again) {
-                    $file_props->{version} =
-                        $release_props->next_version($file_props->{version});
-                }
+                $file_props->{version} =
+                    $release_props->next_version($file_props->{version});
                 $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release};
                 $file_props->{version_changed} = 1;
                 print STDERR "Updated $file\n";

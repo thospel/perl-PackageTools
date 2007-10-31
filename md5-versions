@@ -1,17 +1,21 @@
-# Generated on 2007-10-29 11:14:08 UT using /usr/local/bin/release_pm
+# Generated on 2007-10-31 12:36:18 UT using /usr/local/bin/release_pm
 BEGIN
 DIGITS 3
-RELEASE 1.000
-VERSION f2189108888b4ea3b4ed518d5e5558b7 1.000 Changes
+RELEASE 1.001
+VERSION 23fe8a37a0f06d8140e1311fffd7177b 1.001 Changes
 VERSION c46e364068debc64f36281c655187818 1.000 MANIFEST
 VERSION 5d42e101bab2099c5a2b8a8dcac50701 1.000 Makefile.PL
-VERSION e810bbda3beb9a8396002d42fdae2cfb 1.000 README
+VERSION 3cfc350b153678fbe57d7414800d29c4 1.001 README
 VERSION a1c9263becef55164b44a3422e210a8e 1.011 bin/makeppd.pl
-VERSION 37c666f4a2911fefcf91188f91af89ca 1.002 bin/release_pm
-VERSION 146acd5e214ae79b233f4732725ffe0f 1.000 lib/PackageTools/Package.pm
+VERSION b619f23535d6b1a4ff51ce4ad38b6f0c 1.003 bin/release_pm
+VERSION 16f1a15f343f9935a271acbc0b0d9433 1.001 lib/PackageTools/Package.pm
 VERSION c69c74b52f36f54340d27ca758ce84f4 1.000 t/00_syntax.t
+RELEASED 1.001 1.001 Changes
 RELEASED 1.000 1.000 Changes
+RELEASED 1.001 1.001 README
 RELEASED 1.011 1.000 bin/makeppd.pl
+RELEASED 1.003 1.001 bin/release_pm
 RELEASED 1.002 1.000 bin/release_pm
+RELEASED 1.001 1.001 lib/PackageTools/Package.pm
 RELEASED 1.000 1.000 lib/PackageTools/Package.pm
 END
