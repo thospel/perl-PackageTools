@@ -11,7 +11,7 @@ use Cwd;
 use Errno qw(ENOENT ESTALE);
 use Getopt::Long 2.11;
 
-our $VERSION = "1.011"; # $Revision: 2532 $
+our $VERSION = "1.012"; # $Revision: 2551 $
 
 my $zip = "zip";
 my $tar = "tar";
@@ -23,7 +23,6 @@ my $bsd_tar	= 'C:/Program Files/GnuWin32/bin/bsdtar';
 my $gnuwin_zip	= 'C:/Program Files/GnuWin32/bin/zip';
 
 &Getopt::Long::config("bundling", "require_order");
-my ($unsafe, $help, $version);
 my @OLD_ARGV = @ARGV;
 die "Could not parse your command line (@ARGV) . Try $0 -h\n" unless
     GetOptions("zip=s"		=> \$zip,
@@ -34,11 +33,10 @@ die "Could not parse your command line (@ARGV) . Try $0 -h\n" unless
                "prerequisite=f"	=> \my %prereq,
                "reinvoke"	=> \my $reinvoked,
                "min_version=s"	=> \my $min_version,
-               "version!"	=> \$version,
-               "unsafe!"	=> \$unsafe,
-               "U"		=> \$unsafe,
-               "help!"		=> \$help,
-               "h"		=> \$help);
+               "map=s"		=> \my %package_map,
+               "version!"	=> \my $version,
+               "U|unsafe!"	=> \my $unsafe,
+               "h|help!"	=> \my $help);
 
 if ($perl && !$reinvoked) {
     # Reinvoke protects against endless recursive calls
@@ -125,23 +123,23 @@ if (%prereq) {
 
 my %replace_package =
     (
-     # Time::Hires is in activeperl but often not in the ppm db
+     # These are in activeperl but not in the ppm db
      "Time-HiRes"		=> "",
-     # Net::SMTP   is in activeperl but often not in the ppm db
      "Net-SMTP"			=> "",
-     # MIME::Base64 is in activeperl but often not in the ppm db
      "MIME-Base64"		=> "",
-     # Test::More is normally only for testing
-     "Test-More"		=> "",
+     "Test-More"		=> "", # Test::More is normally only for testing
      "Win32"			=> "",
-     # "Test-More"		=> "Test-Simple",
-     # "Win32"			=> "libwin32",
+     "Win32API::File"		=> "",	# Since version 1.012
+     # Some info about CPAN modules
      "Date-Calendar"		=> "Date-Calc",
      "Date-Calendar-Profiles"	=> "Date-Calc",
+     # Some of our own modules
      "Email::SMTP::Utils"	=> "Email::SMTP",
      "Email::SMTP::Headers"	=> "Email::SMTP",
      "Email::SMTP::Transmit"	=> "Email::SMTP",
      "Email::Time"		=> "Email::SMTP",
+     # User specified mappings
+     %package_map
 );
 my $change = join "|" => map quotemeta($_) => keys %replace_package;
 $pkg =~ s!^(\s*<DEPENDENCY\s+NAME=")($change)("\s+VERSION="[^\"]+"\s+/>\s*\n)!
@@ -187,3 +185,82 @@ system($zip, "-r", "foo", ".") and die "Could not zip (rc $?)";
 chdir($from_dir) || die "Could not chdir $from_dir: $!";
 my $ppm = "$pp_dir$pkg_name-$major.$minor.ppm";
 move("$tmp_dir/foo.zip", $ppm) || die "Could not move $tmp_dir/foo.zip to $ppm: $!";
+__END__
+
+=head1 NAME
+
+makeppd.pl - Generate a ppm file from a standard perl package
+
+=head1 SYNOPSIS
+
+  makeppd.pl [--perl=executable] [--min_version=version_number] [--zip=executable] [--tar=executable] [--compress=executable] [--leave=directory] [--prereq name=version] [--map module=package] ppd_file [version]
+  makeppd.pl --help
+  makeppd.pl --version
+
+=head1 OPTIONS
+
+=over 4
+
+=item X<option_perl>--perl=executable
+
+=item X<option_min_version>--min_version=version_number
+
+=item X<option_zip>--zip=executable
+
+=item X<option_tar>--tar=executable
+
+=item X<option_compress>--compress=executable
+
+=item X<option_leave>--leave=directory
+
+=item X<option_prereq>--prereq name=version
+
+=item X<option_map>--map module=package
+
+available since version 1.012
+
+=item X<option_version>--version
+
+=item X<option_unsafe>--unsafe, -U
+
+=item X<option_help>--help, -h
+
+=back
+
+=head1 EXAMPLE
+
+Typical use in a Makefile.PL so that you can do C<nmake ppm>:
+
+  ...
+  WriteMakefile
+  (
+     ...
+     clean		=> {
+         FILES => '$(DISTVNAME).ppm',
+     },
+     ...
+  );
+  ...
+  package MY;
+  sub postamble {
+    return shift->SUPER::postamble() . <<"EOF";
+  ppm: \$(DISTVNAME).ppm
+
+  \$(DISTVNAME).ppm: all ppd
+	makeppd.pl --perl=\$(PERL) --min_version=1.011 --zip=\$(ZIP) --tar=\$(TAR) --compress="\$(COMPRESS)" --leave=ppm \$(DISTNAME).ppd \$(VERSION)
+EOF
+  }
+
+=head1 AUTHOR
+
+Ton Hospel, E<lt>makeppd@ton.iguana.beE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2007 by Ton Hospel
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.4 or,
+at your option, any later version of Perl 5 you may have available.
+
+=cut
