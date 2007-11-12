@@ -1,8 +1,8 @@
-# Generated on 2007-11-12 09:48:05 UT using /usr/local/bin/release_pm
+# Generated on 2007-11-12 09:49:27 UT using /usr/local/bin/release_pm
 BEGIN
 DIGITS 3
 RELEASE 1.003
-VERSION 81f5ad2ad19c4f7bb13a9c2d553e0a3f 1.003 Changes
+VERSION 4bea3ce56174de37faf61c991e0226ae 1.003 Changes
 VERSION c46e364068debc64f36281c655187818 1.000 MANIFEST
 VERSION 5d42e101bab2099c5a2b8a8dcac50701 1.000 Makefile.PL
 VERSION ce3c468e4f4b073e587e2c5fd960ec13 1.003 README
