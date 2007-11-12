@@ -1,5 +1,7 @@
 Revision history for Perl extension PackageTools.
 
+1.003	2007-11-12 09:48:05 UT
+
 1.002	2007-11-09 14:05:58 UT
 	- New file should also immediately get a released entry
 	- Add a --map option to makeppd.pl so that the user can also add 
