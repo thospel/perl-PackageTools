@@ -2,7 +2,7 @@
 use strict;
 use Getopt::Long;
 
-our $VERSION = "1.004"; # $Revision: 2551 $
+our $VERSION = "1.004"; # $Revision: 2557 $
 
 my $quot = qr/[\'\"]/; # " unconfuse emacs
 my $sums = "md5-versions";
@@ -26,7 +26,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2007-11-06 17:35:07 +0100 (Tue, 06 Nov 2007) $
+$Date: 2007-11-12 10:35:06 +0100 (Mon, 12 Nov 2007) $
 EOF
     exit 0;
 }
@@ -225,7 +225,8 @@ sub get_files {
             print STDERR "New $file\n";
         }
         $file_props->{content} = slurp($file);
-        $file_props->{chksum} = chksum($file_props);
+        $file_props->{content_chksum} = $file_props->{disk_chksum} = 
+            chksum($file_props);
         if ($import_revision &&
             $file_props->{content} =~ /\$Revision\s*:\s*(\d+)\.(\d+)\S*\s*\$/) {
             $file_props->{version} = $release_props->next_version($1, $2);
@@ -268,7 +269,7 @@ sub release {
                     my $now = sprintf("%04d-%02d-%02d %02d:%02d:%02d UT",
                                       $year+1900, $mon+1, $mday,
                                       $hour, $min, $sec);
-                    $file_props->{content} =~ s/^(Revision history for .*\s*\n)([\d.]+)([^\S\n]*.*)/$1 . ($2 eq $release_props->{release} ? "$2\t$now" : "$release_props->{release}\t$now\n\n$2$3")/ie;
+                    $file_props->{content} =~ s/^(Revision history for .*\s*\n|)([\d.]+)([^\S\n]*.*)/$1 . ($2 eq $release_props->{release} ? "$2\t$now" : "$release_props->{release}\t$now\n\n$2$3")/ie;
                 }
             } elsif ($file eq "Package.pm" || $file =~ m!/Package.pm\z!) {
                 no warnings "once";
@@ -283,17 +284,23 @@ sub release {
             $file_props->{content} =~ s/^(\s*(?:(?:my|our)\s*)?\$VERSION\s*=\s*)($quot)[\d._]+\2(\s*;)/$1$2$file_props->{version}$2$3/mg;
 
             # Did we change ?
-            $file_props->{new_chksum} = chksum($file_props);
-            if (!$file_props->{version_changed} &&
-                (!$file_props->{old_chksum} ||
-                 $file_props->{old_chksum} ne $file_props->{new_chksum})) {
-                $release_props->next_release;
-                $file_props->{version} =
-                    $release_props->next_version($file_props->{version});
-                $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release};
-                $file_props->{version_changed} = 1;
+            my $content_chksum = chksum($file_props);
+            if ($file_props->{content_chksum} ne $content_chksum) {
+                $file_props->{content_chksum} = $content_chksum;
                 print STDERR "Updated $file\n";
-                $changes++;
+            }
+            if (!$file_props->{old_chksum} ||
+                $file_props->{old_chksum} ne $file_props->{content_chksum}) {
+                $release_props->{any_changes} = $changes = 1 if 
+                    !$release_props->{any_changes};
+                if (!$file_props->{version_changed}) {
+                    $release_props->next_release;
+                    $file_props->{version} =
+                        $release_props->next_version($file_props->{version});
+                    $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release};
+                    $file_props->{version_changed} = 1;
+                    $changes++;
+                }
             }
         }
     } while $changes;
@@ -318,12 +325,12 @@ sub set_version_file {
     for my $file (@{$release_props->{files}}) {
         my $file_props = $file_props->{$file} ||
             die "Assertion: No data for $file";
-        if ($file_props->{new_chksum} ne $file_props->{chksum}) {
+        if ($file_props->{content_chksum} ne $file_props->{disk_chksum}) {
             spew($file, $file_props->{content});
-            print STDERR "Restored $file\n" if $file_props->{old_chksum} && $file_props->{old_chksum} eq $file_props->{new_chksum};
+            print STDERR "Restored $file\n" if $file_props->{old_chksum} && $file_props->{old_chksum} eq $file_props->{content_chksum};
         }
         $content .=
-            sprintf("VERSION %s $release_props->{format} %s\n", @$file_props{qw(new_chksum version file)});
+            sprintf("VERSION %s $release_props->{format} %s\n", @$file_props{qw(content_chksum version file)});
     }
     my $released = $release_props->{released};
     for my $file (sort keys %$released) {
@@ -339,7 +346,7 @@ sub set_version_file {
     $c2 =~ s/^[^\n\S]*\#.*\n//mg;
     my $updates = 0;
     if ($c1 ne $c2) {
-        print STDERR $release_props->{old_content} eq "" ? "New" : "Updated", " release, saved in $sums\n";
+        print STDERR $release_props->{old_content} eq "" ? "New" : "Updated", " $sums\n";
         spew($sums, $content);
         $updates++;
     }

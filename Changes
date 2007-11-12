@@ -1,10 +1,12 @@
 Revision history for Perl extension PackageTools.
 
-1.002	2007-11-05 09:26:58 UT
+1.002	2007-11-09 14:05:58 UT
 	- New file should also immediately get a released entry
 	- Add a --map option to makeppd.pl so that the user can also add 
 	  conversion from module version to ppm package
 	- Initial documentation for makeppd.pl
+	- propegate ANY changes better so the Changes will get updated
+	- Make first "revision history" line in Changes optional
 
 1.001	2007-10-31 12:36:18 UT
 	- Fix a bug that release_pm --again sometimes did not update the 
