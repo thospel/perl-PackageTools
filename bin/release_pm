@@ -2,7 +2,7 @@
 use strict;
 use Getopt::Long;
 
-our $VERSION = "1.005"; # $Revision: 2564 $
+our $VERSION = "1.006"; # $Revision: 2575 $
 
 my $quot = qr/[\'\"]/; # " unconfuse emacs
 my $sums = "md5-versions";
@@ -26,7 +26,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2007-11-12 10:48:34 +0100 (Mon, 12 Nov 2007) $
+$Date: 2007-11-13 17:50:20 +0100 (Tue, 13 Nov 2007) $
 EOF
     exit 0;
 }
@@ -196,6 +196,9 @@ sub chksum {
 sub get_MANIFEST {
     my $manifest = slurp("MANIFEST");
     croak "$sums is not in MANIFEST\n" if $manifest !~ s/^\s*\Q$sums\E\s*\n//m;
+    # META.yml is often generated during the make dist so it's often absent
+    # and even if it isn't versioning typically happens too late
+    $manifest =~ s/^\s*META\.yml(?:\s+.*|\s*)\n//m;
     return $manifest =~ /^\s*(\S+)/mg;
 }
 
