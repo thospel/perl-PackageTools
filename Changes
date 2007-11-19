@@ -1,7 +1,8 @@
 Revision history for Perl extension PackageTools.
 
-1.004	2007-11-13 09:25:59 UT
+1.004	2007-11-16 14:27:27 UT
 	- Ignore META.yml while versioning
+	- fixup run suggestion for .t files
 
 1.003	2007-11-12 09:49:27 UT
 	- propegate ANY changes better so the Changes will get updated
