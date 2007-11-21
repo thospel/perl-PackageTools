@@ -1,8 +1,13 @@
 Revision history for Perl extension PackageTools.
 
-1.004	2007-11-16 14:27:27 UT
+1.004	2007-11-21 12:01:44 UT
+
+1.005	2007-11-21 09:53:43 UT
+
+1.004	2007-11-20 16:49:11 UT
 	- Ignore META.yml while versioning
 	- fixup run suggestion for .t files
+	- Improve import_from and released handling
 
 1.003	2007-11-12 09:49:27 UT
 	- propegate ANY changes better so the Changes will get updated
@@ -10,12 +15,12 @@ Revision history for Perl extension PackageTools.
 
 1.002	2007-11-09 14:05:58 UT
 	- New file should also immediately get a released entry
-	- Add a --map option to makeppd.pl so that the user can also add 
+	- Add a --map option to makeppd.pl so that the user can also add
 	  conversion from module version to ppm package
 	- Initial documentation for makeppd.pl
 
 1.001	2007-10-31 12:36:18 UT
-	- Fix a bug that release_pm --again sometimes did not update the 
+	- Fix a bug that release_pm --again sometimes did not update the
 	  version of a changed file.
 
 1.000	2007-10-29 11:14:08 UT

@@ -2,7 +2,7 @@
 use strict;
 use Getopt::Long;
 
-our $VERSION = "1.006"; # $Revision: 2578 $
+our $VERSION = "1.006"; # $Revision: 2584 $
 
 my $quot = qr/[\'\"]/; # " unconfuse emacs
 my $sums = "md5-versions";
@@ -26,7 +26,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2007-11-19 10:27:37 +0100 (Mon, 19 Nov 2007) $
+$Date: 2007-11-21 13:03:25 +0100 (Wed, 21 Nov 2007) $
 EOF
     exit 0;
 }
@@ -195,7 +195,11 @@ sub chksum {
 
 sub get_MANIFEST {
     my $manifest = slurp("MANIFEST");
-    croak "$sums is not in MANIFEST\n" if $manifest !~ s/^\s*\Q$sums\E\s*\n//m;
+    if ($manifest !~ s/^\s*\Q$sums\E\s*\n//m) {
+        croak "$sums is not in MANIFEST\n" if !defined $start_release;
+        spew($sums, "");
+        $manifest .= "$sums\n";
+    }
     # META.yml is often generated during the make dist so it's often absent
     # and even if it isn't versioning typically happens too late
     $manifest =~ s/^\s*META\.yml(?:\s+.*|\s*)\n//m;
@@ -224,7 +228,6 @@ sub get_files {
                 file	=> $file,
             };
             $release_props->next_release;
-            $released->{$file}{$file_props->{version}} = $release_props->{release};
             print STDERR "New $file\n";
         }
         $file_props->{content} = slurp($file);
@@ -235,12 +238,14 @@ sub get_files {
             $file_props->{version} = $release_props->next_version($1, $2);
             $file_props->{version_changed} = 1;
             $release_props->next_release;
+            $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release};
         }
         if ($import_version &&
             $file_props->{content} =~ /^\s*(?:(?:my|our)\s*)?\$VERSION\s*=\s*($quot)([\d._]+)\1\s*;/m) {
             $file_props->{version} = $release_props->next_version($2, 0);
             $file_props->{version_changed} = 1;
             $release_props->next_release;
+            $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release};
         }
         $file_props{$file} = $file_props;
     }
