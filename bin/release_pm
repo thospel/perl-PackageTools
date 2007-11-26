@@ -2,7 +2,7 @@
 use strict;
 use Getopt::Long;
 
-our $VERSION = "1.006"; # $Revision: 2584 $
+our $VERSION = "1.006"; # $Revision: 2604 $
 
 my $quot = qr/[\'\"]/; # " unconfuse emacs
 my $sums = "md5-versions";
@@ -26,7 +26,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2007-11-21 13:03:25 +0100 (Wed, 21 Nov 2007) $
+$Date: 2007-11-26 11:41:40 +0100 (Mon, 26 Nov 2007) $
 EOF
     exit 0;
 }
@@ -197,8 +197,10 @@ sub get_MANIFEST {
     my $manifest = slurp("MANIFEST");
     if ($manifest !~ s/^\s*\Q$sums\E\s*\n//m) {
         croak "$sums is not in MANIFEST\n" if !defined $start_release;
+        print STDERR "Creating empty $sums\n";
         spew($sums, "");
-        $manifest .= "$sums\n";
+        print STDERR "Adding $sums to MANIFEST\n";
+        spew("MANIFEST", "$manifest$sums\n");
     }
     # META.yml is often generated during the make dist so it's often absent
     # and even if it isn't versioning typically happens too late
@@ -231,22 +233,21 @@ sub get_files {
             print STDERR "New $file\n";
         }
         $file_props->{content} = slurp($file);
-        $file_props->{content_chksum} = $file_props->{disk_chksum} = 
+        $file_props->{content_chksum} = $file_props->{disk_chksum} =
             chksum($file_props);
         if ($import_revision &&
             $file_props->{content} =~ /\$Revision\s*:\s*(\d+)\.(\d+)\S*\s*\$/) {
             $file_props->{version} = $release_props->next_version($1, $2);
             $file_props->{version_changed} = 1;
             $release_props->next_release;
-            $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release};
         }
         if ($import_version &&
             $file_props->{content} =~ /^\s*(?:(?:my|our)\s*)?\$VERSION\s*=\s*($quot)([\d._]+)\1\s*;/m) {
             $file_props->{version} = $release_props->next_version($2, 0);
             $file_props->{version_changed} = 1;
             $release_props->next_release;
-            $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release};
         }
+        $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release} if $file_props->{version_changed} && $file ne $sums;
         $file_props{$file} = $file_props;
     }
     if (%{$release_props->{old_file_props}}) {
@@ -302,7 +303,7 @@ sub release {
             }
             if (!$file_props->{old_chksum} ||
                 $file_props->{old_chksum} ne $file_props->{content_chksum}) {
-                $release_props->{any_changes} = $changes = 1 if 
+                $release_props->{any_changes} = $changes = 1 if
                     !$release_props->{any_changes};
                 if (!$file_props->{version_changed}) {
                     $release_props->next_release;
