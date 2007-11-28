@@ -2,7 +2,7 @@
 use strict;
 use Getopt::Long;
 
-our $VERSION = "1.006"; # $Revision: 2604 $
+our $VERSION = "1.006"; # $Revision: 2632 $
 
 my $quot = qr/[\'\"]/; # " unconfuse emacs
 my $sums = "md5-versions";
@@ -26,7 +26,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2007-11-26 11:41:40 +0100 (Mon, 26 Nov 2007) $
+$Date: 2007-11-28 09:21:09 +0100 (Wed, 28 Nov 2007) $
 EOF
     exit 0;
 }
@@ -187,7 +187,7 @@ sub next_release {
 
 sub chksum {
     my ($file_props) = @_;
-    # Get rid of typical CVS junk
+    # Get rid of typical CVS/Subversion junk
     my $content = $file_props->{content};
     $content =~ s/\$(?:Revision|Date|Author):[^\n\$]+\$//g;
     return md5_hex($content);
