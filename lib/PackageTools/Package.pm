@@ -1,5 +1,5 @@
 package PackageTools::Package;
-our $VERSION = "1.004"; # $Revision: 2575 $
+our $VERSION = "1.004"; # $Revision: 2640 $
 
 # START HISTORY
 our %history = (
@@ -11,7 +11,11 @@ our %history = (
     '1.004' => '1.004'
   },
   'MANIFEST' => {
-    '1.000' => '1.000'
+    '1.000' => '1.000',
+    '1.001' => '1.004'
+  },
+  'MANIFEST.SKIP' => {
+    '1.000' => '1.004'
   },
   'Makefile.PL' => {
     '1.000' => '1.001'

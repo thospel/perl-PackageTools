@@ -2,7 +2,7 @@
 use strict;
 use Getopt::Long;
 
-our $VERSION = "1.006"; # $Revision: 2632 $
+our $VERSION = "1.006"; # $Revision: 2640 $
 
 my $quot = qr/[\'\"]/; # " unconfuse emacs
 my $sums = "md5-versions";
@@ -26,7 +26,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2007-11-28 09:21:09 +0100 (Wed, 28 Nov 2007) $
+$Date: 2007-12-03 16:55:06 +0100 (Mon, 03 Dec 2007) $
 EOF
     exit 0;
 }
@@ -204,7 +204,7 @@ sub get_MANIFEST {
     }
     # META.yml is often generated during the make dist so it's often absent
     # and even if it isn't versioning typically happens too late
-    $manifest =~ s/^\s*META\.yml(?:\s+.*|\s*)\n//m;
+    $manifest =~ s/^\s*META\.yml(?:[^\S\n]+.*|[^\S\n]*)\n//m;
     return $manifest =~ /^\s*(\S+)/mg;
 }
 
