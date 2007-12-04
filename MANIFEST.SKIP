@@ -24,6 +24,8 @@
 \.old$
 \#$
 \b\.#
+/\.#
+^\.#
 \.bak$
 
 # Avoid Devel::Cover files.
