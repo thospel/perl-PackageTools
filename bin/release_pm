@@ -2,7 +2,7 @@
 use strict;
 use Getopt::Long;
 
-our $VERSION = "1.006"; # $Revision: 2646 $
+our $VERSION = "1.006"; # $Revision: 2660 $
 
 my $quot = qr/[\'\"]/; # " unconfuse emacs
 my $sums = "md5-versions";
@@ -26,7 +26,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2007-12-04 16:08:08 +0100 (Tue, 04 Dec 2007) $
+$Date: 2007-12-11 11:52:16 +0100 (Tue, 11 Dec 2007) $
 EOF
     exit 0;
 }
@@ -296,6 +296,8 @@ sub release {
                     Data::Dumper::Dumper($release_props->{released});
                 $released_string =~ s/^\s*\$VAR1\s*=\s*{(.*)}\s*;\s*\z/our %history = ($1);\n\n$history/s || die "Assertion: Unexpected Dumper output";
                 $file_props->{content} =~ s/^[^\S\n]*\#\s*START\s+HISTORY\s*\n(.*?)^\s*\#\s*END\s+HISTORY[^\S\n]*\n/\# START HISTORY\n$released_string\# END HISTORY\n/sm;
+                $file_props->{version_changed} = 1;
+                $file_props->{version} = $release_props->{release};
             } elsif ($file =~ m!^t/(.*\.t)\z!) {
                 my $name = $1;
                 $file_props->{content} =~ s/^((?:\#.*\n)*\#.*it should work as )\`perl\s+(t\/|).*\'\s*\n/$1\`perl $2$name\'\n/;
