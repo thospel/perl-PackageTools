@@ -1,4 +1,7 @@
 #!/usr/bin/perl -w
+# $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
+# $Id: makeppd.pl 2678 2007-12-12 16:05:15Z hospelt $
+
 # Author: Ton Hospel
 # Create a ppm
 
@@ -11,7 +14,7 @@ use Cwd;
 use Errno qw(ENOENT ESTALE);
 use Getopt::Long 2.11;
 
-our $VERSION = "1.012"; # $Revision: 2677 $
+our $VERSION = "1.013"; # $Revision: 2678 $
 
 my $zip = "zip";
 my $tar = "tar";

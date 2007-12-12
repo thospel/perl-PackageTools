@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.004	2007-12-12 14:55:23 UT
+1.004	2007-12-12 15:56:24 UT
 	- Ignore META.yml while versioning
 	- fixup run suggestion for .t files
 	- Improve import_from and released handling
@@ -8,6 +8,7 @@ Revision history for Perl extension PackageTools.
 	- Add MANIFEST.SKIP
 	- Detect duplicates in MANIFEST
 	- Force Package.pm version to be the release version
+	- release_pm now ignores more source control keywords (Id,URL,HeadURL)
 
 1.003	2007-11-12 09:49:27 UT
 	- propegate ANY changes better so the Changes will get updated
