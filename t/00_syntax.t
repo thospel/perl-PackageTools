@@ -2,7 +2,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 00_syntax.t'
 #########################
-# $Revision: 2525 $
+# $Revision: 2677 $
 our $VERSION = "1.000";
 
 use strict;

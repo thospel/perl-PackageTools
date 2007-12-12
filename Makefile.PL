@@ -5,7 +5,7 @@ use warnings;
 use ExtUtils::MakeMaker;
 use Config qw(%Config);
 
-our $VERSION = '1.000';	# $Revision: 2525 $
+our $VERSION = '1.000';	# $Revision: 2677 $
 
 # Allows to suppress all program installation with -n (library only)
 use Getopt::Std;

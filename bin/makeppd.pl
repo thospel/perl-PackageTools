@@ -11,7 +11,7 @@ use Cwd;
 use Errno qw(ENOENT ESTALE);
 use Getopt::Long 2.11;
 
-our $VERSION = "1.012"; # $Revision: 2551 $
+our $VERSION = "1.012"; # $Revision: 2677 $
 
 my $zip = "zip";
 my $tar = "tar";

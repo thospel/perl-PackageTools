@@ -1,5 +1,5 @@
 package PackageTools::Package;
-our $VERSION = "1.004"; # $Revision: 2640 $
+our $VERSION = "1.004"; # $Revision: 2677 $
 
 # START HISTORY
 our %history = (
