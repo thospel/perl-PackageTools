@@ -2,7 +2,7 @@
 use strict;
 use Getopt::Long;
 
-our $VERSION = "1.006"; # $Revision: 2660 $
+our $VERSION = "1.006"; # $Revision: 2672 $
 
 my $quot = qr/[\'\"]/; # " unconfuse emacs
 my $sums = "md5-versions";
@@ -26,7 +26,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2007-12-11 11:52:16 +0100 (Tue, 11 Dec 2007) $
+$Date: 2007-12-12 16:01:29 +0100 (Wed, 12 Dec 2007) $
 EOF
     exit 0;
 }
@@ -318,11 +318,11 @@ sub release {
                     $release_props->next_release;
                     $file_props->{version} =
                         $release_props->next_version($file_props->{version});
-                    $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release};
                     $file_props->{version_changed} = 1;
                     $changes++;
                 }
             }
+            $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release} if $release_props->{release_changed};
         }
     } while $changes;
 }
