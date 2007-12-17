@@ -1,5 +1,7 @@
 package PackageTools::Package;
-our $VERSION = "1.004"; # $Revision: 2678 $
+# $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/lib/PackageTools/Package.pm $
+# $Id: Package.pm 2680 2007-12-17 09:31:56Z hospelt $
+our $VERSION = "1.004";
 
 # START HISTORY
 our %history = (
