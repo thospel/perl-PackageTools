@@ -5,7 +5,7 @@ use warnings;
 use ExtUtils::MakeMaker;
 use Config qw(%Config);
 
-our $VERSION = '1.001';	# $Revision: 2693 $
+our $VERSION = '1.001';	# $Revision: 2696 $
 
 # Allows to suppress all program installation with -n (library only)
 use Getopt::Std;
@@ -54,5 +54,8 @@ ppm: \$(DISTVNAME).ppm
 
 \$(DISTVNAME).ppm: all ppd
 	\$(PERL) bin/makeppd.pl --zip=\$(ZIP) --tar=\$(TAR) --compress="\$(COMPRESS)" --leave=ppm \$(DISTNAME).ppd \$(VERSION)
+
+ppm_install: \$(DISTVNAME).ppm
+	ppm install ppm/\$(DISTNAME).ppd
 EOF
 }

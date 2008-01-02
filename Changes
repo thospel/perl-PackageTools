@@ -17,6 +17,7 @@ Revision history for Perl extension PackageTools.
 	  or commandline zip
 	- Fix package mappings containing :: (they become - in the ppd)
 	- Support BEGIN { $VERSION = "1.234" } style version lines
+	- Add a "ppm_install" make target
 
 1.003	2007-11-12 09:49:27 UT
 	- propegate ANY changes better so the Changes will get updated
