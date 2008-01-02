@@ -1,8 +1,8 @@
 Revision history for Perl extension PackageTools.
 
-1.004	2007-12-13 22:49:08 UT
+1.004	2007-12-29 20:48:15 UT
 	- Ignore META.yml while versioning
-	- fixup run suggestion for .t files
+	- Fixup run suggestion for .t files
 	- Improve import_from and released handling
 	- Add md5-versions to MANIFEST if not already there
 	- Add MANIFEST.SKIP
@@ -12,6 +12,11 @@ Revision history for Perl extension PackageTools.
 	- Source control keywords now get canonicalized differently. This means
 	  that all old files that have them will count as different the first
 	  time this new version is used
+	- Normalize the header text in test files a bit
+	- Improve error messages in makeppd.pl for the case of missing bsd tar
+	  or commandline zip
+	- Fix package mappings containing :: (they become - in the ppd)
+	- Support BEGIN { $VERSION = "1.234" } style version lines
 
 1.003	2007-11-12 09:49:27 UT
 	- propegate ANY changes better so the Changes will get updated

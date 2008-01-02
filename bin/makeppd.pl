@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 2678 2007-12-12 16:05:15Z hospelt $
+# $Id: makeppd.pl 2693 2008-01-02 09:54:19Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
@@ -14,7 +14,7 @@ use Cwd;
 use Errno qw(ENOENT ESTALE);
 use Getopt::Long 2.11;
 
-our $VERSION = "1.013"; # $Revision: 2678 $
+our $VERSION = "1.013"; # $Revision: 2693 $
 
 my $zip = "zip";
 my $tar = "tar";
@@ -106,11 +106,11 @@ if (@ARGV) {
     $version eq "$major.$minor" || die "Package is at version $version, but the ppd is at version $major.$minor\n";
 }
 my ($arch) = $pkg =~
-    m!^\s*<ARCHITECTURE\s+NAME="([^\"]+)"\s*/>\s*$!m or
+    m{^\s*<ARCHITECTURE\s+NAME="([^\"]+)"\s*/>\s*$}m or
     die "Could not parse architecture from $ppd";
 my $dist = "$pkg_name-$major.$minor.tar.gz";
 my $code_base = "$arch/$dist";
-$pkg =~ s!^(\s*<CODEBASE\s+HREF=")[^\"]*("\s*/>\s*\n)!$1$code_base$2!m or
+$pkg =~ s{^(\s*<CODEBASE\s+HREF=")[^\"]*("\s*/>\s*\n)}{$1$code_base$2}m or
     die "Could not substitute codebase";
 if (%prereq) {
     my $prereq = "";
@@ -121,7 +121,7 @@ if (%prereq) {
         $prereq .=
             qq(        <DEPENDENCY NAME="$pre_name" VERSION="$ver" />\n);
     }
-    $pkg =~ s!^(\s*<IMPLEMENTATION>\s*\n)!$1$prereq!m;
+    $pkg =~ s{^(\s*<IMPLEMENTATION>\s*\n)}{$1$prereq}m;
 }
 
 my %replace_package =
@@ -131,19 +131,52 @@ my %replace_package =
      "Net-SMTP"			=> "",
      "MIME-Base64"		=> "",
      "Test-More"		=> "", # Test::More is normally only for testing
+     # Activestate Win32 builtins
      "Win32"			=> "",
-     "Win32API::File"		=> "",	# Since version 1.012
+     "Win32-ChangeNotify"	=> "", # Since makeppd.pl version 1.013
+     "Win32-Clipboard"		=> "", # Since makeppd.pl version 1.013
+     "Win32-Console"		=> "", # Since makeppd.pl version 1.013
+     "Win32-Event"		=> "", # Since makeppd.pl version 1.013
+     "Win32-EventLog"		=> "", # Since makeppd.pl version 1.013
+     "Win32-File"		=> "", # Since makeppd.pl version 1.013
+     "Win32-FileSecurity"	=> "", # Since makeppd.pl version 1.013
+     "Win32-IPC"		=> "", # Since makeppd.pl version 1.013
+     "Win32-Internet"		=> "", # Since makeppd.pl version 1.013
+     "Win32-Job"		=> "", # Since makeppd.pl version 1.013
+     "Win32-Mutex"		=> "", # Since makeppd.pl version 1.013
+     "Win32-NetAdmin"		=> "", # Since makeppd.pl version 1.013
+     "Win32-NetResource"	=> "", # Since makeppd.pl version 1.013
+     "Win32-ODBC"		=> "", # Since makeppd.pl version 1.013
+     "Win32-OLE"		=> "", # Since makeppd.pl version 1.013
+     "Win32-OLE-Const"	=> "", # Since makeppd.pl version 1.013
+     "Win32-OLE-Enum"		=> "", # Since makeppd.pl version 1.013
+     "Win32-OLE-NLS"		=> "", # Since makeppd.pl version 1.013
+     "Win32-OLE-TypeInfo"	=> "", # Since makeppd.pl version 1.013
+     "Win32-OLE-Variant"	=> "", # Since makeppd.pl version 1.013
+     "Win32-PerfLib"		=> "", # Since makeppd.pl version 1.013
+     "Win32-Pipe"		=> "", # Since makeppd.pl version 1.013
+     "Win32-Process"		=> "", # Since makeppd.pl version 1.013
+     "Win32-Registry"		=> "", # Since makeppd.pl version 1.013
+     "Win32-Semaphore"		=> "", # Since makeppd.pl version 1.013
+     "Win32-Service"		=> "", # Since makeppd.pl version 1.013
+     "Win32-Shortcut"		=> "", # Since makeppd.pl version 1.013
+     "Win32-Sound"		=> "", # Since makeppd.pl version 1.013
+     "Win32-TieRegistry"	=> "", # Since makeppd.pl version 1.013
+     "Win32-WinError"		=> "", # Since makeppd.pl version 1.013
+     "Win32API-File"		=> "", # Since makeppd.pl version 1.012
+     "Win32API-Net"		=> "", # Since makeppd.pl version 1.013
+     "Win32API-Registry"	=> "", # Since makeppd.pl version 1.013
      # Some info about CPAN modules
      "Date-Calendar"		=> "Date-Calc",
      "Date-Calendar-Profiles"	=> "Date-Calc",
      # Some of our own modules
-     "Email::SMTP::Utils"	=> "Email::SMTP",
-     "Email::SMTP::Headers"	=> "Email::SMTP",
-     "Email::SMTP::Transmit"	=> "Email::SMTP",
-     "Email::Time"		=> "Email::SMTP",
+     "Email-SMTP-Utils"		=> "Email-SMTP", # Since version 1.013
+     "Email-SMTP-Headers"	=> "Email-SMTP", # Since version 1.013
+     "Email-SMTP-Transmit"	=> "Email-SMTP", # Since version 1.013
+     "Email-Time"		=> "Email-SMTP", # Since version 1.013
      # User specified mappings
      %package_map
-);
+    );
 my $change = join "|" => map quotemeta($_) => keys %replace_package;
 $pkg =~ s!^(\s*<DEPENDENCY\s+NAME=")($change)("\s+VERSION="[^\"]+"\s+/>\s*\n)!
 $replace_package{$2} ? $1 . $replace_package{$2} . $3 : ""!meg;
@@ -158,7 +191,7 @@ if ($leave) {
         rmtree("$leave/$f");
     }
 }
-my ($pp_dir, $pp_name) = $ppd =~ m!^(.*?)([^/]+)\z!s or
+my ($pp_dir, $pp_name) = $ppd =~ m{^(.*?)([^/]+)\z}s or
     die "Could not parse $ppd";
 # print STDERR "$pp_dir, $pp_name, $pkg_name, $major, $minor, $arch\n";
 mkdir("$tmp_dir/$arch") || die "Could not mkdir $tmp_dir/$arch: $!";
@@ -180,11 +213,17 @@ system($tar,
        "-czf", "$tmp_dir/$arch/$dist",
        "--exclude", $^O eq "MSWin32" ? qq("blib/man*") : "blib/man*",
        ($pp_dir eq "" ? () : ("-C", $pp_dir)),
-       "blib") and die "Could not tar";
+       "blib") and do {
+           warn("If you don't have bsd tar, you can get it from http://gnuwin32.sourceforge.net/packages/bsdtar.htm\n") if $? == -1 || $? == 256;
+           die "Could not tar (rc $?)";
+};
 my $from_dir = getcwd;
 chdir($tmp_dir) || die "Could not chdir $tmp_dir: $!";
 print STDERR "\t$zip -r foo .\n";
-system($zip, "-r", "foo", ".") and die "Could not zip (rc $?)";
+system($zip, "-r", "foo", ".") and do {
+    warn("If you don't have a commandline zip, you can get it from http://gnuwin32.sourceforge.net/packages/zip.htm\n") if $? == -1 || $? == 256;
+    die "Could not zip (rc $?)";
+};
 chdir($from_dir) || die "Could not chdir $from_dir: $!";
 my $ppm = "$pp_dir$pkg_name-$major.$minor.ppm";
 move("$tmp_dir/foo.zip", $ppm) || die "Could not move $tmp_dir/foo.zip to $ppm: $!";

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 2680 2007-12-17 09:31:56Z hospelt $
+# $Id: release_pm 2693 2008-01-02 09:54:19Z hospelt $
 use strict;
 use Getopt::Long;
 
@@ -28,7 +28,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2007-12-17 10:31:56 +0100 (Mon, 17 Dec 2007) $
+$Date: 2008-01-02 10:54:19 +0100 (Wed, 02 Jan 2008) $
 EOF
     exit 0;
 }
@@ -251,7 +251,7 @@ sub get_files {
             $release_props->next_release;
         }
         if ($import_version &&
-            $file_props->{content} =~ /^\s*(?:(?:my|our)\s*)?\$VERSION\s*=\s*($quot)([\d._]+)\1\s*;/m) {
+            $file_props->{content} =~ /^\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*($quot)([\d._]+)\1\s*[;\}]/m) {
             $file_props->{version} = $release_props->next_version($2, 0);
             $file_props->{version_changed} = 1;
             $release_props->next_release;
@@ -302,9 +302,9 @@ sub release {
                 $file_props->{version} = $release_props->{release};
             } elsif ($file =~ m!^t/(.*\.t)\z!) {
                 my $name = $1;
-                $file_props->{content} =~ s/^((?:\#.*\n)*\#.*it should work as )\`perl\s+(t\/|).*\'\s*\n/$1\`perl $2$name\'\n/;
+                $file_props->{content} =~ s/^((?:\#.*\n)*\#.*it should work as )[`']perl\s+(t\/|).*[`']\s*\n/$1`perl $2$name'\n/;
             }
-            $file_props->{content} =~ s/^(\s*(?:(?:my|our)\s*)?\$VERSION\s*=\s*)($quot)[\d._]+\2(\s*;)/$1$2$file_props->{version}$2$3/mg;
+            $file_props->{content} =~ s/^(\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*)($quot)[\d._]+\2(\s*[;\}])/$1$2$file_props->{version}$2$3/mg;
 
             # Did we change ?
             my $content_chksum = chksum($file_props);

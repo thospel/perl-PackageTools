@@ -1,6 +1,6 @@
 package PackageTools::Package;
 # $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/lib/PackageTools/Package.pm $
-# $Id: Package.pm 2680 2007-12-17 09:31:56Z hospelt $
+# $Id: Package.pm 2693 2008-01-02 09:54:19Z hospelt $
 our $VERSION = "1.004";
 
 # START HISTORY
@@ -20,7 +20,8 @@ our %history = (
     '1.000' => '1.004'
   },
   'Makefile.PL' => {
-    '1.000' => '1.001'
+    '1.000' => '1.001',
+    '1.001' => '1.004'
   },
   'README' => {
     '1.000' => '1.000',
@@ -49,7 +50,8 @@ our %history = (
     '1.004' => '1.004'
   },
   't/00_syntax.t' => {
-    '1.000' => '1.001'
+    '1.000' => '1.001',
+    '1.001' => '1.004'
   }
 );
 

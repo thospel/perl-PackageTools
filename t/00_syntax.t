@@ -2,8 +2,8 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 00_syntax.t'
 #########################
-# $Id: 00_syntax.t 2680 2007-12-17 09:31:56Z hospelt $
-our $VERSION = "1.000";
+# $Id: 00_syntax.t 2693 2008-01-02 09:54:19Z hospelt $
+our $VERSION = "1.001";
 
 use strict;
 use warnings;
