@@ -1,11 +1,12 @@
 #!/usr/bin/perl -w
+# $Id: Makefile.PL 2709 2008-01-07 09:00:36Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
 use Config qw(%Config);
 
-our $VERSION = '1.001';	# $Revision: 2696 $
+our $VERSION = '1.001';
 
 # Allows to suppress all program installation with -n (library only)
 use Getopt::Std;
@@ -42,6 +43,9 @@ WriteMakefile
      ABSTRACT		=> 'lib/PackageTools.pm',
      AUTHOR		=> 'Ton Hospel <PackageTools@ton.iguana.be>',
      EXE_FILES		=> \@programs_to_install,
+     $^O eq "MSWin32" ? (
+         PM_FILTER	=> '$(PERL) -p -e1',
+     ) : (),
      clean		=> {
          FILES => '$(DISTVNAME).ppm',
      },
@@ -57,5 +61,8 @@ ppm: \$(DISTVNAME).ppm
 
 ppm_install: \$(DISTVNAME).ppm
 	ppm install ppm/\$(DISTNAME).ppd
+
+ppm_upgrade: \$(DISTVNAME).ppm
+	ppm upgrade -install ppm/\$(DISTNAME).ppd
 EOF
 }

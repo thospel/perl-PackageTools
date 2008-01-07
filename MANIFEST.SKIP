@@ -14,6 +14,11 @@
 \bpm_to_blib\.ts$
 \bpm_to_blib$
 \bblibdirs\.ts$         # 6.18 through 6.25 generated this
+^[\w-]+-\d+\.\d+\.tar\.gz$
+^[\w-]+-\d+\.\d+\.ppm$
+^[\w-]+\.ppd$
+^ppm/[\w-]+\.ppd$
+^ppm/[\w.-]+/[\w-]+-\d+\.\d+\.tar\.gz$
 
 # Avoid Module::Build generated and utility files.
 \bBuild$
