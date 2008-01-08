@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 2709 2008-01-07 09:00:36Z hospelt $
+# $Id: release_pm 2741 2008-01-08 17:09:54Z hospelt $
 use strict;
 use Getopt::Long;
 
@@ -18,7 +18,7 @@ die "Could not parse your command line. Try $0 -h\n" unless
                "digits=i"		=> \$start_digits,
                "initial:s"		=> \my $start_release,
                "start_version=s",	=> \$start_version,
-               "again"			=> \my $again,
+               "next"			=> \my $next,
 	       "version!"		=> \my $print_version,
                "U|unsafe!"		=> \my $unsafe,
                "h|help!"		=> \my $help);
@@ -28,7 +28,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2008-01-07 10:00:36 +0100 (Mon, 07 Jan 2008) $
+$Date: 2008-01-08 18:09:54 +0100 (Tue, 08 Jan 2008) $
 EOF
     exit 0;
 }
@@ -43,7 +43,6 @@ if ($help) {
 die "Meaningless arguments\n" if @ARGV;
 die "Cannot have both import-revision and import-version" if
     $import_revision && $import_version;
-$again = 1 if defined $start_release;
 
 package PackageTools::Release;
 use Carp;
@@ -165,7 +164,7 @@ sub get_versions_file {
         start_version	=> sprintf($format, $start_version),
         digits		=> $digits,
         release		=> $release,
-        release_changed	=> $again,
+        release_changed	=> 0,
         any_changes	=> 0,
         old_content	=> $content,
         old_file_props	=> \%file_props,
@@ -234,7 +233,7 @@ sub get_files {
                 print STDERR "Fixup missing RELEASED for $file\n";
                 $release_props->{release};
             };
-            $file_props->{version_changed} = $again && $released->{$file}{$file_props->{version}} eq $release_props->{release};
+            $file_props->{version_changed} = !$next && $released->{$file}{$file_props->{version}} eq $release_props->{release};
         } else {
             $file_props = {
                 version	=> $release_props->{start_version},
@@ -383,6 +382,7 @@ sub set_version_file {
 package main;
 eval {
     my $release_props = PackageTools::Release->get_versions_file;
+    $release_props->next_release if $next;    
     $release_props->get_files;
     $release_props->release;
     $release_props->set_version_file;

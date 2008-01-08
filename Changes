@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.004	2008-01-07 09:58:21 UT
+1.004	2008-01-08 10:49:32 UT
 	- Ignore META.yml while versioning
 	- Fixup run suggestion for .t files
 	- Improve import_from and released handling
@@ -27,6 +27,10 @@ Revision history for Perl extension PackageTools.
 	  range
 	- Try to autodetect binary files
 	  (probably a bad idea in a unicode world. Needs more work)
+	- Replace the "--again" option by "--next" with exactly the opposite
+	  meaning. Old "--again" is now the default". Use "--next" just AFTER
+	  doing a release.
+	- Check minimum needed version
 
 1.003	2007-11-12 09:49:27 UT
 	- propegate ANY changes better so the Changes will get updated

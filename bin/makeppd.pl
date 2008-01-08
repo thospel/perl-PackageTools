@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 2693 2008-01-02 09:54:19Z hospelt $
+# $Id: makeppd.pl 2741 2008-01-08 17:09:54Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
@@ -14,8 +14,9 @@ use Cwd;
 use Errno qw(ENOENT ESTALE);
 use Getopt::Long 2.11;
 
-our $VERSION = "1.013"; # $Revision: 2693 $
+our $VERSION = "1.013";
 
+use constant MIN_VERSION => "1.011";
 my $zip = "zip";
 my $tar = "tar";
 my $compress = "gzip --best";
@@ -124,62 +125,76 @@ if (%prereq) {
     $pkg =~ s{^(\s*<IMPLEMENTATION>\s*\n)}{$1$prereq}m;
 }
 
+$_ = [$_, "0"] for values %package_map;
+
+# Map from module name to package name and
+# the first version of this program that had the mapping
 my %replace_package =
     (
-     # These are in activeperl but not in the ppm db
-     "Time-HiRes"		=> "",
-     "Net-SMTP"			=> "",
-     "MIME-Base64"		=> "",
-     "Test-More"		=> "", # Test::More is normally only for testing
-     # Activestate Win32 builtins
-     "Win32"			=> "",
-     "Win32-ChangeNotify"	=> "", # Since makeppd.pl version 1.013
-     "Win32-Clipboard"		=> "", # Since makeppd.pl version 1.013
-     "Win32-Console"		=> "", # Since makeppd.pl version 1.013
-     "Win32-Event"		=> "", # Since makeppd.pl version 1.013
-     "Win32-EventLog"		=> "", # Since makeppd.pl version 1.013
-     "Win32-File"		=> "", # Since makeppd.pl version 1.013
-     "Win32-FileSecurity"	=> "", # Since makeppd.pl version 1.013
-     "Win32-IPC"		=> "", # Since makeppd.pl version 1.013
-     "Win32-Internet"		=> "", # Since makeppd.pl version 1.013
-     "Win32-Job"		=> "", # Since makeppd.pl version 1.013
-     "Win32-Mutex"		=> "", # Since makeppd.pl version 1.013
-     "Win32-NetAdmin"		=> "", # Since makeppd.pl version 1.013
-     "Win32-NetResource"	=> "", # Since makeppd.pl version 1.013
-     "Win32-ODBC"		=> "", # Since makeppd.pl version 1.013
-     "Win32-OLE"		=> "", # Since makeppd.pl version 1.013
-     "Win32-OLE-Const"	=> "", # Since makeppd.pl version 1.013
-     "Win32-OLE-Enum"		=> "", # Since makeppd.pl version 1.013
-     "Win32-OLE-NLS"		=> "", # Since makeppd.pl version 1.013
-     "Win32-OLE-TypeInfo"	=> "", # Since makeppd.pl version 1.013
-     "Win32-OLE-Variant"	=> "", # Since makeppd.pl version 1.013
-     "Win32-PerfLib"		=> "", # Since makeppd.pl version 1.013
-     "Win32-Pipe"		=> "", # Since makeppd.pl version 1.013
-     "Win32-Process"		=> "", # Since makeppd.pl version 1.013
-     "Win32-Registry"		=> "", # Since makeppd.pl version 1.013
-     "Win32-Semaphore"		=> "", # Since makeppd.pl version 1.013
-     "Win32-Service"		=> "", # Since makeppd.pl version 1.013
-     "Win32-Shortcut"		=> "", # Since makeppd.pl version 1.013
-     "Win32-Sound"		=> "", # Since makeppd.pl version 1.013
-     "Win32-TieRegistry"	=> "", # Since makeppd.pl version 1.013
-     "Win32-WinError"		=> "", # Since makeppd.pl version 1.013
-     "Win32API-File"		=> "", # Since makeppd.pl version 1.012
-     "Win32API-Net"		=> "", # Since makeppd.pl version 1.013
-     "Win32API-Registry"	=> "", # Since makeppd.pl version 1.013
+     # Activestate builtins
+     "Time-HiRes"		=> [undef, "1.011"],
+     "Net-SMTP"			=> [undef, "1.011"],
+     "MIME-Base64"		=> [undef, "1.011"],
+     # Test::More is normally only for testing
+     "Test-More"		=> [undef, "1.011"],
+     "Win32"			=> [undef, "1.011"],
+     "Win32-ChangeNotify"	=> [undef, "1.013"],
+     "Win32-Clipboard"		=> [undef, "1.013"],
+     "Win32-Console"		=> [undef, "1.013"],
+     "Win32-Event"		=> [undef, "1.013"],
+     "Win32-EventLog"		=> [undef, "1.013"],
+     "Win32-File"		=> [undef, "1.013"],
+     "Win32-FileSecurity"	=> [undef, "1.013"],
+     "Win32-IPC"		=> [undef, "1.013"],
+     "Win32-Internet"		=> [undef, "1.013"],
+     "Win32-Job"		=> [undef, "1.013"],
+     "Win32-Mutex"		=> [undef, "1.013"],
+     "Win32-NetAdmin"		=> [undef, "1.013"],
+     "Win32-NetResource"	=> [undef, "1.013"],
+     "Win32-ODBC"		=> [undef, "1.013"],
+     "Win32-OLE"		=> [undef, "1.013"],
+     "Win32-OLE-Const"		=> [undef, "1.013"],
+     "Win32-OLE-Enum"		=> [undef, "1.013"],
+     "Win32-OLE-NLS"		=> [undef, "1.013"],
+     "Win32-OLE-TypeInfo"	=> [undef, "1.013"],
+     "Win32-OLE-Variant"	=> [undef, "1.013"],
+     "Win32-PerfLib"		=> [undef, "1.013"],
+     "Win32-Pipe"		=> [undef, "1.013"],
+     "Win32-Process"		=> [undef, "1.013"],
+     "Win32-Registry"		=> [undef, "1.013"],
+     "Win32-Semaphore"		=> [undef, "1.013"],
+     "Win32-Service"		=> [undef, "1.013"],
+     "Win32-Shortcut"		=> [undef, "1.013"],
+     "Win32-Sound"		=> [undef, "1.013"],
+     "Win32-TieRegistry"	=> [undef, "1.013"],
+     "Win32-WinError"		=> [undef, "1.013"],
+     "Win32API-File"		=> [undef, "1.012"],
+     "Win32API-Net"		=> [undef, "1.013"],
+     "Win32API-Registry"	=> [undef, "1.013"],
      # Some info about CPAN modules
-     "Date-Calendar"		=> "Date-Calc",
-     "Date-Calendar-Profiles"	=> "Date-Calc",
+     "Date-Calendar"		=> ["Date-Calc", "1.011"],
+     "Date-Calendar-Profiles"	=> ["Date-Calc", "1.011"],
      # Some of our own modules
-     "Email-SMTP-Utils"		=> "Email-SMTP", # Since version 1.013
-     "Email-SMTP-Headers"	=> "Email-SMTP", # Since version 1.013
-     "Email-SMTP-Transmit"	=> "Email-SMTP", # Since version 1.013
-     "Email-Time"		=> "Email-SMTP", # Since version 1.013
+     "Email-SMTP-Utils"		=> ["Email-SMTP", "1.013"],
+     "Email-SMTP-Headers"	=> ["Email-SMTP", "1.013"],
+     "Email-SMTP-Transmit"	=> ["Email-SMTP", "1.013"],
+     "Email-Time"		=> ["Email-SMTP", "1.013"],
      # User specified mappings
      %package_map
     );
 my $change = join "|" => map quotemeta($_) => keys %replace_package;
-$pkg =~ s!^(\s*<DEPENDENCY\s+NAME=")($change)("\s+VERSION="[^\"]+"\s+/>\s*\n)!
-$replace_package{$2} ? $1 . $replace_package{$2} . $3 : ""!meg;
+my $demand_version = MIN_VERSION;
+$pkg =~ s{^(\s*<DEPENDENCY\s+NAME=")($change)("\s+VERSION="[^\"]+"\s+/>\s*\n)}{
+    if ($replace_package{$2}) {
+        $demand_version = $replace_package{$2}[1] if
+            $replace_package{$2}[1] > $demand_version;
+        defined $replace_package{$2}[0] ? "$1$replace_package{$2}[0]$3" : "";
+    } else {
+        "";
+    }
+}meg;
+warn("Warning: minimum needed version is $demand_version, not $min_version") if
+    $min_version && $demand_version > $min_version;
 $pkg =~ s!^(\s*<DEPENDENCY\s+NAME=")([^\"]*)-Package("\s+VERSION="[^\"]+"\s+/>\s*\n)!$1$2$3!mg;
 
 my $tmp_dir = $leave || tempdir(CLEANUP => 1);
