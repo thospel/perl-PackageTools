@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.004	2008-01-09 12:36:13 UT
+1.004	2008-01-09 16:24:41 UT
 	- Ignore META.yml while versioning
 	- Fixup run suggestion for .t files
 	- Improve import_from and released handling
@@ -32,6 +32,7 @@ Revision history for Perl extension PackageTools.
 	  doing a release.
 	- Check minimum needed version
 	- Save md5-versions.old if any changes
+	- Notify the user when a release is updated
 
 1.003	2007-11-12 09:49:27 UT
 	- propegate ANY changes better so the Changes will get updated

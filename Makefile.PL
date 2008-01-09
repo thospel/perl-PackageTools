@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: Makefile.PL 2709 2008-01-07 09:00:36Z hospelt $
+# $Id: Makefile.PL 2760 2008-01-09 17:15:26Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
@@ -47,7 +47,7 @@ WriteMakefile
          PM_FILTER	=> '$(PERL) -p -e1',
      ) : (),
      clean		=> {
-         FILES => '$(DISTVNAME).ppm',
+         FILES => '$(DISTNAME).ppd',
      },
      );
 
