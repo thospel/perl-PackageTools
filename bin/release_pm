@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 2741 2008-01-08 17:09:54Z hospelt $
+# $Id: release_pm 2750 2008-01-09 12:40:05Z hospelt $
 use strict;
 use Getopt::Long;
 
@@ -28,7 +28,7 @@ if ($print_version) {
 release $VERSION
 EOF
     print<<'EOF';
-$Date: 2008-01-08 18:09:54 +0100 (Tue, 08 Jan 2008) $
+$Date: 2008-01-09 13:40:05 +0100 (Wed, 09 Jan 2008) $
 EOF
     exit 0;
 }
@@ -372,7 +372,12 @@ sub set_version_file {
     $c2 =~ s/^[^\n\S]*\#.*\n//mg;
     my $updates = 0;
     if ($c1 ne $c2) {
-        print STDERR $release_props->{old_content} eq "" ? "New" : "Updated", " $sums\n";
+        if ($release_props->{old_content} eq "") {
+            print STDERR "New $sums\n";
+        } else {
+            print STDERR "Updated $sums\n";
+            spew("$sums.old", $release_props->{old_content})
+        }
         spew($sums, $content);
         $updates++;
     }
