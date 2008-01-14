@@ -1,11 +1,12 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 2741 2008-01-08 17:09:54Z hospelt $
+# $Id: makeppd.pl 2788 2008-01-14 09:06:50Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
 
 use strict;
+use Config;
 use File::Temp qw(tempdir);
 use File::Copy qw(move);
 use File::Path qw(rmtree);
@@ -38,6 +39,7 @@ die "Could not parse your command line (@ARGV) . Try $0 -h\n" unless
                "reinvoke"	=> \my $reinvoked,
                "min_version=s"	=> \my $min_version,
                "map=s"		=> \my %package_map,
+               "binary!"	=> \my $binary,
                "version!"	=> \my $version,
                "U|unsafe!"	=> \my $unsafe,
                "h|help!"	=> \my $help);
@@ -63,12 +65,9 @@ EOF
     exit 0;
 }
 if ($help) {
-    require Config;
     $ENV{PATH} .= ":" unless $ENV{PATH} eq "";
-    $ENV{PATH} = "$ENV{PATH}$Config::Config{'installscript'}";
+    $ENV{PATH} = "$ENV{PATH}$Config{installscript}";
     exec("perldoc", "-F", $unsafe ? "-U" : (), $0) || exit 1;
-    # make parser happy
-    %Config::Config = ();
 }
 die "This is $0 version $VERSION, but the caller wants at least version $min_version\n" if $min_version && $VERSION < $min_version;
 
@@ -107,8 +106,28 @@ if (@ARGV) {
     $version eq "$major.$minor" || die "Package is at version $version, but the ppd is at version $major.$minor\n";
 }
 my ($arch) = $pkg =~
-    m{^\s*<ARCHITECTURE\s+NAME="([^\"]+)"\s*/>\s*$}m or
+    m{^[^\S\n]*<ARCHITECTURE\s+NAME="([^\"]+)"\s*/>[^\S\n]*$}m or
     die "Could not parse architecture from $ppd";
+
+if ($binary) {
+    # Fixup for a perl 5.10 bug where
+    # ARCHITECTURE NAME is MSWin32-x86-multi-thread-5.1
+    my $wrong_version = substr($Config{version},0,3);
+    if ($arch =~ s/-\Q$wrong_version\E\z//) {
+        my ($major, $minor, $sub) = 
+            $Config{version} =~ /^(\d+)\.(\d+)\.(\d+)\z/ or
+            die "Could not parse perl version '$Config{version}'";
+        $arch = "$arch-$major.$minor";
+        $pkg =~ s{^([^\S\n]*<ARCHITECTURE\s+NAME=")[^\"]+("\s*/>[^\S\n]*)$}{$1$arch$2}m || die "Could not fixup ARCHITECTURE NAME";
+        print STDERR "Fixing ARCHITECTURE NAME to $arch\n";
+    }
+} else {
+    $pkg =~ s{^[^\S\n]*<ARCHITECTURE\s+NAME="[^\"]+"\s*/>[^\S\n]*\n}{}m ||
+        die "Could not remove ARCHITECTURE NAME";
+    $pkg =~ s{^[^\S\n]*<OS\s+NAME="[^\"]+"\s*/>[^\S\n]*\n}{}m;
+    $arch = "Any";
+}
+
 my $dist = "$pkg_name-$major.$minor.tar.gz";
 my $code_base = "$arch/$dist";
 $pkg =~ s{^(\s*<CODEBASE\s+HREF=")[^\"]*("\s*/>\s*\n)}{$1$code_base$2}m or

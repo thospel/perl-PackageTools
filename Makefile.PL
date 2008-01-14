@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: Makefile.PL 2760 2008-01-09 17:15:26Z hospelt $
+# $Id: Makefile.PL 2788 2008-01-14 09:06:50Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
@@ -47,22 +47,22 @@ WriteMakefile
          PM_FILTER	=> '$(PERL) -p -e1',
      ) : (),
      clean		=> {
-         FILES => '$(DISTNAME).ppd',
+         FILES => '$(DISTNAME).ppd ppm',
      },
      );
 
 package MY;
 sub postamble {
     return shift->SUPER::postamble() . <<"EOF";
-ppm: \$(DISTVNAME).ppm
+ppm: \$(DISTNAME).ppd
 
-\$(DISTVNAME).ppm: all ppd
+\$(DISTNAME).ppd: all ppd
 	\$(PERL) bin/makeppd.pl --zip=\$(ZIP) --tar=\$(TAR) --compress="\$(COMPRESS)" --leave=ppm \$(DISTNAME).ppd \$(VERSION)
 
-ppm_install: \$(DISTVNAME).ppm
+ppm_install: \$(DISTNAME).ppd
 	ppm install ppm/\$(DISTNAME).ppd
 
-ppm_upgrade: \$(DISTVNAME).ppm
+ppm_upgrade: \$(DISTNAME).ppd
 	ppm upgrade -install ppm/\$(DISTNAME).ppd
 EOF
 }
