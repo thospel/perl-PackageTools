@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 2791 2008-01-15 14:04:59Z hospelt $
+# $Id: release_pm 2793 2008-01-15 14:13:45Z hospelt $
 use strict;
 use Getopt::Long;
 
@@ -317,7 +317,7 @@ sub postamble {
 ppm: \\\$(DISTNAME).ppd
 
 \\\$(DISTNAME).ppd: all ppd
-	bin/makeppd.pl "--perl=\\\$(PERL)" --min_version=1.013 "--zip=\\\$(ZIP)" "--tar=\\\$(TAR)" "--compress=\\\$(COMPRESS)" --leave=ppm \\\$(DISTNAME).ppd \\\$(VERSION)
+	makeppd.pl "--perl=\\\$(PERL)" --min_version=1.013 "--zip=\\\$(ZIP)" "--tar=\\\$(TAR)" "--compress=\\\$(COMPRESS)" --leave=ppm \\\$(DISTNAME).ppd \\\$(VERSION)
 
 ppm_install: \\\$(DISTNAME).ppd
 	ppm install ppm/\\\$(DISTNAME).ppd
