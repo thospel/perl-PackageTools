@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 2788 2008-01-14 09:06:50Z hospelt $
+# $Id: makeppd.pl 2791 2008-01-15 14:04:59Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
@@ -14,6 +14,7 @@ use File::Spec;
 use Cwd;
 use Errno qw(ENOENT ESTALE);
 use Getopt::Long 2.11;
+use ExtUtils::MM_Unix qw();
 
 our $VERSION = "1.013";
 
@@ -59,8 +60,9 @@ if ($perl && !$reinvoked) {
 }
 
 if ($version) {
+    require PackageTools::Package;
     print<<"EOF";
-makeppd.pl (Ton Utils) $VERSION
+makeppd.pl $VERSION (PackageTools $PackageTools::Package::VERSION)
 EOF
     exit 0;
 }
@@ -84,13 +86,47 @@ sub exectable {
     return undef;
 }
 
+sub provides {
+    my $provides = "";
+    my @dirs = "blib/lib";
+    while (defined(my $dir = shift @dirs)) {
+        opendir(my $dh, $dir) || die "Could not opendir '$dir': $!";
+        my @files = sort readdir($dh);
+        closedir($dh) || die "Could not closedir '$dir': $!";
+        for my $f (@files) {
+            next if $f eq "." || $f eq "..";
+            my $file = "$dir/$f";
+            my @stat = lstat($file) or die "Could not lstat $file: $!";
+            if (-d _) {
+                unshift @dirs, $file;
+            } elsif (-f _) {
+                next unless $f =~ /\.pm\z/i;
+                my $v = ExtUtils::MM_Unix->parse_version($file);
+                if (defined $v) {
+                    $file =~ s!^blib/lib/!! ||
+                        die "Assertion: File '$file' does not start with blib/lib/";
+                    $file =~ s!\.pm\z!!i ||
+                        die "Assertion: File '$file' does not end on .pm";
+                    $file =~ s!/!::!g;
+                    $provides .= qq(        <PROVIDE NAME="$file" VERSION="$v" />\n);
+                }
+            } else {
+                die "Unhandled filetype for '$file'";
+            }
+        }
+    }
+    return $provides;
+}
+
 # Determine a good tar
 $tar = $bsd_tar unless exectable($tar);
 # print STDERR "tar=$tar\n";
 $zip = $gnuwin_zip unless exectable($zip);
 # print STDERR "zip=$zip\n";
 
-my $ppd = shift || die "No ppm argument";
+my $ppd = shift || die "No ppd argument";
+
+my $provides = provides();
 
 open(my $pfh, "<", $ppd) || do {
     die "$ppd does not exist yet.\n" if $! == ENOENT || $! == ESTALE;
@@ -114,7 +150,7 @@ if ($binary) {
     # ARCHITECTURE NAME is MSWin32-x86-multi-thread-5.1
     my $wrong_version = substr($Config{version},0,3);
     if ($arch =~ s/-\Q$wrong_version\E\z//) {
-        my ($major, $minor, $sub) = 
+        my ($major, $minor, $sub) =
             $Config{version} =~ /^(\d+)\.(\d+)\.(\d+)\z/ or
             die "Could not parse perl version '$Config{version}'";
         $arch = "$arch-$major.$minor";
@@ -141,8 +177,11 @@ if (%prereq) {
         $prereq .=
             qq(        <DEPENDENCY NAME="$pre_name" VERSION="$ver" />\n);
     }
-    $pkg =~ s{^(\s*<IMPLEMENTATION>\s*\n)}{$1$prereq}m;
+    $pkg =~ s{^([^\S\n]*<IMPLEMENTATION>[^\S\n]*\n)}{$1$prereq}gm ||
+        die "Assertion: No IMPLEMENTATION";
 }
+$pkg =~ s{^([^\S\n]*<IMPLEMENTATION>[^\S\n]*\n)}{$1$provides}gm ||
+    die "Assertion: No IMPLEMENTATION";
 
 $_ = [$_, "0"] for values %package_map;
 
