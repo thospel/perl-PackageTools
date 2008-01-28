@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 2797 2008-01-16 08:23:10Z hospelt $
+# $Id: release_pm 2816 2008-01-28 09:08:42Z hospelt $
 use strict;
 use Getopt::Long;
 
@@ -263,10 +263,10 @@ sub get_files {
         $file_props{$file} = $file_props;
     }
     if (%{$release_props->{old_file_props}}) {
+        $release_props->next_release;
         for my $file (keys %{$release_props->{old_file_props}}) {
             print STDERR "Forgetting $file\n";
         }
-        $release_props->next_release;
     }
     $release_props->{time_stamp} = time;
 }
@@ -318,6 +318,11 @@ ppm: \\\$(DISTNAME).ppd
 
 \\\$(DISTNAME).ppd: all ppd
 	makeppd.pl "--perl=\\\$(PERL)" --min_version=1.013 "--zip=\\\$(ZIP)" "--tar=\\\$(TAR)" "--compress=\\\$(COMPRESS)" --leave=ppm \\\$(DISTNAME).ppd \\\$(VERSION)
+
+cover:
+	cover -delete
+	-HARNESS_PERL_SWITCHES=-MDevel::Cover make test
+	cover
 
 ppm_install: \\\$(DISTNAME).ppd
 	ppm install ppm/\\\$(DISTNAME).ppd
@@ -372,8 +377,7 @@ sub set_version_file {
                 $year+1900, $mon+1, $mday, $hour, $min, $sec);
     $content .= "BEGIN\n";
     $content .= "DIGITS $release_props->{digits}\n";
-    $content .= sprintf("RELEASE $release_props->{format}\n",
-                        $release_props->{release});
+    $content .= "RELEASE $release_props->{release}\n";
 
     my $file_props = $release_props->{file_props};
     # Same order as files in MANIFEST
@@ -385,7 +389,7 @@ sub set_version_file {
             print STDERR "Restored $file\n" if $file_props->{old_chksum} && $file_props->{old_chksum} eq $file_props->{content_chksum};
         }
         $content .=
-            sprintf("VERSION %s $release_props->{format} %s\n", @$file_props{qw(content_chksum version file)});
+            sprintf("VERSION %s %s %s\n", @$file_props{qw(content_chksum version file)});
     }
     my $released = $release_props->{released};
     for my $file (sort keys %$released) {

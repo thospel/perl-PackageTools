@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: Makefile.PL 2792 2008-01-15 14:07:42Z hospelt $
+# $Id: Makefile.PL 2816 2008-01-28 09:08:42Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
@@ -47,7 +47,7 @@ WriteMakefile
          PM_FILTER	=> '$(PERL) -p -e1',
      ) : (),
      clean		=> {
-         FILES => '$(DISTNAME).ppd ppm',
+         FILES => '$(DISTNAME).ppd ppm cover_db',
      },
      );
 
@@ -59,6 +59,11 @@ ppm: \$(DISTNAME).ppd
 
 \$(DISTNAME).ppd: all ppd
 	\$(PERL) bin/makeppd.pl "--zip=\$(ZIP)" "--tar=\$(TAR)" "--compress=\$(COMPRESS)" --leave=ppm \$(DISTNAME).ppd \$(VERSION)
+
+cover:
+	cover -delete
+	-HARNESS_PERL_SWITCHES=-MDevel::Cover make test
+	cover
 
 ppm_install: \$(DISTNAME).ppd
 	ppm install ppm/\$(DISTNAME).ppd
