@@ -6,8 +6,11 @@ use Getopt::Long;
 
 our $VERSION = "1.006";
 
+use constant MTIME	=> 9;	# where to find mtime in stat
+
 my $quot = qr/[\'\"]?/;
 my $sums = "md5-versions";
+my $quick = 1;
 
 Getopt::Long::Configure ("bundling");
 my $start_digits  = 3;
@@ -102,6 +105,8 @@ sub spew {
 sub get_versions_file {
     my ($class) = @_;
     my (%file_props, %released, $release, $begun, $ended, $digits);
+    my @stat;
+    !$quick or @stat = stat($sums) or die "Could not stat '$sums': $!";
     my $content = slurp($sums, 1);
     if (defined $content) {
         my $md5_versions_content = $content;
@@ -157,6 +162,7 @@ sub get_versions_file {
         $release = sprintf($format, $start_release);
     }
     my $release_props = bless {
+        modified	=> $stat[MTIME],
         step		=> 1/10**$digits,
         "format"	=> $format,
         start_version	=> sprintf($format, $start_version),
