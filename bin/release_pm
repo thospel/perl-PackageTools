@@ -1,12 +1,10 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 2836 2008-02-04 08:13:41Z hospelt $
+# $Id: release_pm 2869 2008-02-18 16:42:27Z hospelt $
 use strict;
 use Getopt::Long;
 
 our $VERSION = "1.006";
-
-use constant MTIME	=> 9;	# where to find mtime in stat
 
 my $quot = qr/[\'\"]?/;
 my $sums = "md5-versions";
@@ -49,6 +47,8 @@ package PackageTools::Release;
 use Carp;
 use Digest::MD5 qw(md5_hex);
 use Errno qw(ENOENT ESTALE);
+
+use constant MTIME	=> 9;	# where to find mtime in stat
 
 our $history = <<'EOF'
 use Carp;
@@ -106,7 +106,7 @@ sub get_versions_file {
     my ($class) = @_;
     my (%file_props, %released, $release, $begun, $ended, $digits);
     my @stat;
-    !$quick or @stat = stat($sums) or die "Could not stat '$sums': $!";
+    # !$quick or @stat = stat($sums) or die "Could not stat '$sums': $!";
     my $content = slurp($sums, 1);
     if (defined $content) {
         my $md5_versions_content = $content;
@@ -200,7 +200,7 @@ sub chksum {
     my ($file_props) = @_;
     # Get rid of typical CVS/Subversion junk
     my $content = $file_props->{content};
-    $content =~ s/\$(Revision|Date|Author|Id|URL|HeadURL):[^\n\$]+\$/\$$1: \$/g;
+    $content =~ s/\$(Revision|LastChangedRevision|Rev|Date|LastChangedDate|Author|LastChangedBy|Id|HeadURL|URL):[^\n\$]+\$/\$$1: \$/g;
     return md5_hex($content);
 }
 
