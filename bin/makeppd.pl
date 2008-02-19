@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $HeadURL: http://prodbs1.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
+# $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
 # $Id: makeppd.pl 2791 2008-01-15 14:04:59Z hospelt $
 
 # Author: Ton Hospel
