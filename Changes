@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.004	2008-02-22 13:03:16 UT
+1.004	2008-02-26 09:46:08 UT
 	- Ignore META.yml while versioning
 	- Fixup run suggestion for .t files
 	- Improve import_from and released handling
@@ -25,8 +25,8 @@ Revision history for Perl extension PackageTools.
 	- Bring $VERSION inside START_HISTORY. This means older Package.pm files
 	  have to be edited to get rid of the $VERSION outside the substitution
 	  range
-	- Try to autodetect binary files
-	  (probably a bad idea in a unicode world. Needs more work)
+	- Try to autodetect and properly handle binary files
+	  (possibly a bad idea in a unicode world. Might need work)
 	- Replace the "--again" option by "--next" with exactly the opposite
 	  meaning. Old "--again" is now the default". Use "--next" just AFTER
 	  doing a release.
@@ -47,6 +47,7 @@ Revision history for Perl extension PackageTools.
 	  there are no changes
 	- Add a %postamble hash inside a BEGIN block. Make postamble use that.
 	  This allows easy extending
+	- Do our own $Version$ keyword substitution
 
 1.003	2007-11-12 09:49:27 UT
 	- propegate ANY changes better so the Changes will get updated

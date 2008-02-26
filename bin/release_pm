@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 2911 2008-02-25 08:40:14Z hospelt $
+# $Id: release_pm 2918 2008-02-26 09:50:25Z hospelt $
 use strict;
 use Getopt::Long;
 
@@ -76,23 +76,24 @@ sub slurp {
     open(my $fh, "<", $file) or
         $may_not_exist && ($! == ENOENT || $! == ESTALE) ?
 	return undef : croak "Could not open '$file': $!";
-    # binmode $fh if $file =~ /\.(?:png|gif|jpg|jpeg)\z/i;
-    binmode $fh if -B $file;
+    my $binary = -B $file;
+    binmode $fh if $binary;
     my $rc = read($fh, my $slurp, 1024 + -s $fh);
     croak "File '$file' is still growing" if
         $rc &&= read($fh, $slurp, 1024, length $slurp);
     croak "Error reading from '$file': $!" if !defined $rc;
     close($fh) || croak "Error while closing '$file': $!";
-    return $slurp;
+    return $binary, $slurp;
 }
 
-sub spew {
-    my $file = shift;
+sub spew($$;$) {
+    my $file = $_[0];
     croak "filename is undefined" if !defined $file;
     croak "We shouldn't be trying to update binary file '$file'" if -s $file && -B _;
     open(my $fh, ">", $file) || croak "Could not create '$file': $!";
+    binmode $fh if $_[2];
     eval {
-        print($fh @_) || croak "Error writing to '$file': $!";
+        print($fh $_[1]) || croak "Error writing to '$file': $!";
         close($fh)    || croak "Error closing '$file': $!";
     };
     if ($@) {
@@ -200,7 +201,7 @@ sub chksum {
     my ($file_props) = @_;
     # Get rid of typical CVS/Subversion junk
     my $content = $file_props->{content};
-    $content =~ s/\$(Revision|LastChangedRevision|Rev|Date|LastChangedDate|Author|LastChangedBy|Id|HeadURL|URL):[^\n\$]+\$/\$$1: \$/g;
+    $content =~ s/\$(Revision|LastChangedRevision|Rev|Date|LastChangedDate|Author|LastChangedBy|Id|HeadURL|URL):[^\n\$]+?\$/\$$1: \$/g;
     return md5_hex($content);
 }
 
@@ -250,7 +251,7 @@ sub get_files {
             $release_props->next_release;
             print STDERR "New $file\n";
         }
-        $file_props->{content} = slurp($file);
+        ($file_props->{binary}, $file_props->{content}) = slurp($file);
         $file_props->{content_chksum} = $file_props->{disk_chksum} =
             chksum($file_props);
         if ($import_revision &&
@@ -260,8 +261,8 @@ sub get_files {
             $release_props->next_release;
         }
         if ($import_version &&
-            $file_props->{content} =~ /^\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*($quot)([\d._]+)\1\s*[;\}]/m) {
-            $file_props->{version} = $release_props->next_version($2, 0);
+            $file_props->{content} =~ /^\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*($quot)([\d._]+)\1\s*[;\}]|\$Version:\s*([\d.]+)\s*\$/m) {
+            $file_props->{version} = $release_props->next_version($+, 0);
             $file_props->{version_changed} = 1;
             $release_props->next_release;
         }
@@ -355,7 +356,10 @@ sub postamble {
 
             }
 
-            $file_props->{content} =~ s/^(\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*)($quot)[\d._]+\2(\s*[;\}])/$1$2$file_props->{version}$2$3/mg;
+            if (!$file_props->{binary}) {
+                $file_props->{content} =~ s/^(\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*)($quot)[\d._]+\2(\s*[;\}])/$1$2$file_props->{version}$2$3/mg;
+                $file_props->{content} =~ s/\$Version:\s*[\d.]+\s*\$/\$Version: $file_props->{version} \$/g;
+	    }
 
             # Did we change ?
             my $content_chksum = chksum($file_props);
@@ -405,7 +409,7 @@ sub set_version_file {
         my $file_props = $file_props->{$file} ||
             die "Assertion: No data for $file";
         if ($file_props->{content_chksum} ne $file_props->{disk_chksum}) {
-            spew($file, $file_props->{content});
+            spew($file, $file_props->{content}, $file_props->{binary});
             print STDERR "Restored $file\n" if $file_props->{old_chksum} && $file_props->{old_chksum} eq $file_props->{content_chksum};
         }
         $content .=
