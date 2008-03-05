@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 2791 2008-01-15 14:04:59Z hospelt $
+# $Id: makeppd.pl 2947 2008-03-04 11:53:14Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
@@ -193,6 +193,7 @@ my %replace_package =
      "Time-HiRes"		=> [undef, "1.011"],
      "Net-SMTP"			=> [undef, "1.011"],
      "MIME-Base64"		=> [undef, "1.011"],
+     "Storable"			=> [undef, "1.013"],
      # Test::More is normally only for testing
      "Test-More"		=> [undef, "1.011"],
      "Win32"			=> [undef, "1.011"],
