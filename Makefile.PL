@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: Makefile.PL 2911 2008-02-25 08:40:14Z hospelt $
+# $Id: Makefile.PL 2983 2008-03-28 16:53:58Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
@@ -42,6 +42,7 @@ WriteMakefile
      },
      ABSTRACT		=> 'lib/PackageTools.pm',
      AUTHOR		=> 'Ton Hospel <PackageTools@ton.iguana.be>',
+     PL_FILES		=> {},
      EXE_FILES		=> \@programs_to_install,
      $^O eq "MSWin32" ? (
          PM_FILTER	=> '$(PERL) -p -e1',
