@@ -64,7 +64,7 @@ EOF
 
 $postamble{ppd} = <<'EOF';
 $(DISTNAME).ppd: all ppd
-	makeppd.pl "--perl=$(PERL)" --min_version=1.013 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECTS)" $(DISTNAME).ppd $(VERSION)
+	makeppd.pl "--perl=$(PERL)" --min_version=1.013 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
 EOF
 
 $postamble{cover} = <<'EOF';
