@@ -40,7 +40,7 @@ die "Could not parse your command line (@ARGV) . Try $0 -h\n" unless
                "reinvoke"	=> \my $reinvoked,
                "min_version=s"	=> \my $min_version,
                "map=s"		=> \my %package_map,
-               "binary!"	=> \my $binary,
+               "objects:s"	=> \my $objects,
                "version!"	=> \my $version,
                "U|unsafe!"	=> \my $unsafe,
                "h|help!"	=> \my $help);
@@ -145,7 +145,7 @@ my ($arch) = $pkg =~
     m{^[^\S\n]*<ARCHITECTURE\s+NAME="([^\"]+)"\s*/>[^\S\n]*$}m or
     die "Could not parse architecture from $ppd";
 
-if ($binary) {
+if ($objects) {
     # Fixup for a perl 5.10 bug where
     # ARCHITECTURE NAME is MSWin32-x86-multi-thread-5.1
     my $wrong_version = substr($Config{version},0,3);
