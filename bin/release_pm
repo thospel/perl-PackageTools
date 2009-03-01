@@ -445,6 +445,11 @@ sub set_version_file {
 
 package main;
 eval {
+    # Walk up until we find a 
+    for (1..50) {
+        last if -e "MANIFEST";
+        chdir("..") || die "Could not chdir to ..: $!";
+    }
     my $release_props = PackageTools::Release->get_versions_file;
     $release_props->get_files;
     $release_props->release;
