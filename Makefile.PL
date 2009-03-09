@@ -40,7 +40,7 @@ WriteMakefile
      PREREQ_PM		=> {
 	 "Test::More"		=> "0.01",	# Only for the tests
      },
-     ABSTRACT		=> 'lib/PackageTools.pm',
+     ABSTRACT		=> 'Package management tools',
      AUTHOR		=> 'Ton Hospel <PackageTools@ton.iguana.be>',
      PL_FILES		=> {},
      EXE_FILES		=> \@programs_to_install,
