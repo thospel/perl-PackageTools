@@ -3,6 +3,7 @@
 # $Id: release_pm 3170 2009-03-02 15:51:27Z hospelt $
 use strict;
 use Getopt::Long;
+use IO::Handle;
 
 our $VERSION = "1.006";
 
@@ -94,7 +95,9 @@ sub spew($$;$) {
     binmode $fh if $_[2];
     eval {
         print($fh $_[1]) || croak "Error writing to '$file': $!";
-        close($fh)    || croak "Error closing '$file': $!";
+        $fh->flush	|| croak "Error flushing '$file': $!";
+        $fh->sync	|| croak "Error syncing '$file': $!";
+        close($fh)	|| croak "Error closing '$file': $!";
     };
     if ($@) {
         undef $fh;
@@ -445,7 +448,7 @@ sub set_version_file {
 
 package main;
 eval {
-    # Walk up until we find a 
+    # Walk up until we find a
     for (1..50) {
         last if -e "MANIFEST";
         chdir("..") || die "Could not chdir to ..: $!";

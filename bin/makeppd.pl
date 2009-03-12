@@ -7,6 +7,7 @@
 
 use strict;
 use Config;
+use IO::Handle;
 use File::Temp qw(tempdir);
 use File::Copy qw(move);
 use File::Path qw(rmtree);
@@ -273,9 +274,11 @@ my $new_ppd = "$tmp_dir/$pp_name";
 
 # print $pkg;
 
-open(my $npfh, ">", $new_ppd) || die "Could not create $new_ppd: $!";
-print($npfh $pkg) || die "Error writing to $new_ppd: $!";
-close($npfh) || die "Error closing $new_ppd: $!";
+open(my $npfh, ">", $new_ppd) || die "Could not create '$new_ppd': $!";
+print($npfh $pkg) || die "Error writing to '$new_ppd': $!";
+$npfh->flush	|| die "Error flushing '$new_ppd': $!";
+$npfh->sync	|| die "Error syncing '$new_ppd': $!";
+close($npfh)	|| die "Error closing '$new_ppd': $!";
 
 # Exclude man1 and man3 because windows perls don't have a mapping for these,
 # and they will cause an error on ppm install
