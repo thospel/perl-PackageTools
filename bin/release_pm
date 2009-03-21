@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 3170 2009-03-02 15:51:27Z hospelt $
+# $Id: release_pm 3181 2009-03-12 22:23:30Z hospelt $
 use strict;
 use Getopt::Long;
 use IO::Handle;
