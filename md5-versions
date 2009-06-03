@@ -1,14 +1,14 @@
-# Generated on 2009-03-12 21:07:14 UT using /usr/local/bin/release_pm
+# Generated on 2009-05-28 11:43:14 UT using /usr/local/bin/release_pm
 BEGIN
 DIGITS 3
 RELEASE 1.004
-VERSION f7c5de1c20cfd6bc1b4332dc10a89133 1.004 Changes
+VERSION bcd69a01faf5bf01e8deac132500c7f4 1.004 Changes
 VERSION f987f153c71dbb5fbcfcd4d61a118581 1.001 MANIFEST
 VERSION 7fc28799e003eef758e3ca50aec4cfe8 1.000 MANIFEST.SKIP
 VERSION c4388c99a3516b3b54425a9f6cb0c8d0 1.001 Makefile.PL
 VERSION bd4939f30d10196de0647c1981492aee 1.004 README
-VERSION 5d2fd09d9070dabdd9b5f495bfd7eba2 1.013 bin/makeppd.pl
-VERSION 9e3bfabba618f522ab80fa61a2ba29be 1.006 bin/release_pm
+VERSION 71a40f879ab5f32d0ef57d552d92980f 1.013 bin/makeppd.pl
+VERSION 5ac74c999d1044dba2c2c93336bbc270 1.006 bin/release_pm
 VERSION 171dd4ed3561e697ea8672929a63275e 1.004 lib/PackageTools/Package.pm
 VERSION d1c8a4f9c8da7adb261dc7d88cba1543 1.001 t/00_syntax.t
 RELEASED 1.004 1.004 Changes

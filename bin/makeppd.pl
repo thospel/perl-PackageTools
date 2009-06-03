@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 3181 2009-03-12 22:23:30Z hospelt $
+# $Id: makeppd.pl 3233 2009-05-28 14:02:07Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
@@ -277,7 +277,7 @@ my $new_ppd = "$tmp_dir/$pp_name";
 open(my $npfh, ">", $new_ppd) || die "Could not create '$new_ppd': $!";
 print($npfh $pkg) || die "Error writing to '$new_ppd': $!";
 $npfh->flush	|| die "Error flushing '$new_ppd': $!";
-$npfh->sync	|| die "Error syncing '$new_ppd': $!";
+$^O eq "MSWin32" || $npfh->sync	|| die "Error syncing '$new_ppd': $!";
 close($npfh)	|| die "Error closing '$new_ppd': $!";
 
 # Exclude man1 and man3 because windows perls don't have a mapping for these,
