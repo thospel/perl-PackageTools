@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.004	2009-05-28 11:43:14 UT
+1.004	2009-07-16 12:26:34 UT
 	- Ignore META.yml while versioning
 	- Fixup run suggestion for .t files
 	- Improve import_from and released handling
@@ -52,6 +52,7 @@ Revision history for Perl extension PackageTools.
 	- Replace makeppd boolean option --binary with optional string option
 	  --objects. Then use $(OBJECT) as argument in the release_pm template
 	- Add some fsyncs
+	- Add a DATE field to md5-versions and a release_time to Package.pm
 
 1.003	2007-11-12 09:49:27 UT
 	- propegate ANY changes better so the Changes will get updated
