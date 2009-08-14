@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 3349 2009-07-16 20:22:14Z hospelt $
+# $Id: release_pm 3431 2009-08-14 09:31:34Z hospelt $
 use strict;
 use Getopt::Long;
 use IO::Handle;	# for (f)sync
@@ -275,7 +275,7 @@ sub get_files {
             $release_props->next_release;
         }
         if ($import_version &&
-            $file_props->{content} =~ /^\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*($quot)([[0-9]._]+)\1\s*[;\}]|\$Version:\s*([[0-9].]+)\s*\$/m) {
+            $file_props->{content} =~ /^\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*($quot)([0-9._]+)\1\s*[;\}]|\$Version:\s*([0-9.]+)\s*\$/m) {
             $file_props->{version} = $release_props->next_version($+, 0);
             $file_props->{version_changed} = 1;
             $release_props->next_release;
@@ -314,7 +314,7 @@ sub release {
                     my $now = sprintf("%04d-%02d-%02d %02d:%02d:%02d UT",
                                       $year+1900, $mon+1, $mday,
                                       $hour, $min, $sec);
-                    $file_props->{content} =~ s/^(Revision history for .*\s*\n|)([[0-9].]+)([^\S\n]*.*)/$1 . ($2 eq $release_props->{release} ? "$2\t$now" : "$release_props->{release}\t$now\n\n$2$3")/ie;
+                    $file_props->{content} =~ s/^(Revision history for .*\s*\n|)([0-9.]+)([^\S\n]*.*)/$1 . ($2 eq $release_props->{release} ? "$2\t$now" : "$release_props->{release}\t$now\n\n$2$3")/ie;
                 }
             } elsif ($file eq "Package.pm" || $file =~ m!/Package.pm\z!) {
                 no warnings "once";
@@ -373,8 +373,8 @@ sub postamble {
             }
 
             if (!$file_props->{binary}) {
-                $file_props->{content} =~ s/^(\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*)($quot)[[0-9]._]+\2(\s*[;\}])/$1$2$file_props->{version}$2$3/mg;
-                $file_props->{content} =~ s/\$Version:\s*[[0-9].]+\s*\$/\$Version: $file_props->{version} \$/g;
+                $file_props->{content} =~ s/^(\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*)($quot)[0-9._]+\2(\s*[;\}])/$1$2$file_props->{version}$2$3/mg;
+                $file_props->{content} =~ s/\$Version:\s*[0-9.]+\s*\$/\$Version: $file_props->{version} \$/g;
 	    }
 
             # Did we change ?
