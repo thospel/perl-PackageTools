@@ -1,12 +1,12 @@
 #!/usr/bin/perl -w
-# $Id: Makefile.PL 3174 2009-03-09 09:51:33Z hospelt $
+# $Id: Makefile.PL 3543 2009-10-16 12:01:27Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
 use Config qw(%Config);
 
-our $VERSION = '1.001';
+our $VERSION = '1.002';
 
 # Allows to suppress all program installation with -n (library only)
 use Getopt::Std;
