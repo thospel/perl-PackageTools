@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: Makefile.PL 3543 2009-10-16 12:01:27Z hospelt $
+# $Id: Makefile.PL 3545 2009-10-16 12:17:01Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
