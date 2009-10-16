@@ -5,7 +5,7 @@ use strict;
 use Getopt::Long;
 use IO::Handle;	# for (f)sync
 
-our $VERSION = "1.006";
+our $VERSION = "1.007";
 
 my $quot = qr/[\'\"]?/;
 my $sums = "md5-versions";
@@ -153,7 +153,7 @@ sub get_versions_file {
             } elsif ($line =~ /^DIGITS\s+([0-9]+)\z/) {
                 croak "Duplicate DIGITS\n" if defined $digits;
                 $digits = $1;
-            } elsif (0 && $line =~ /^SEMANTICS\s+([0-9]+\.[0-9]+)\z/) {
+            } elsif ($line =~ /^SEMANTICS\s+([0-9]+\.[0-9]+)\z/) {
                 require FindBin;
                 no warnings 'once';
                 croak "File $sums needs at least $FindBin::Script version $1, but this is version $VERSION" if $1 > $VERSION;
@@ -421,10 +421,10 @@ sub set_version_file {
                            $year+1900, $mon+1, $mday, $hour, $min, $sec);
     my $content = "# Generated on $iso_time UT using $0\n";
     $content .= "BEGIN\n";
-    # $content .= "SEMANTICS\t$VERSION\n";
-    $content .= "DIGITS\t$release_props->{digits}\n";
-    $content .= "RELEASE\t$release_props->{release}\n";
-    $content .= "DATE\t$iso_time\n";
+    $content .= "SEMANTICS\t$VERSION\n";
+    $content .= "DIGITS\t\t$release_props->{digits}\n";
+    $content .= "RELEASE\t\t$release_props->{release}\n";
+    $content .= "DATE\t\t$iso_time\n";
 
     my $file_props = $release_props->{file_props};
     # Same order as files in MANIFEST
