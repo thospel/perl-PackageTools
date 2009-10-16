@@ -153,6 +153,10 @@ sub get_versions_file {
             } elsif ($line =~ /^DIGITS\s+([0-9]+)\z/) {
                 croak "Duplicate DIGITS\n" if defined $digits;
                 $digits = $1;
+            } elsif (0 && $line =~ /^SEMANTICS\s+([0-9]+\.[0-9]+)\z/) {
+                require FindBin;
+                no warnings 'once';
+                croak "File $sums needs at least $FindBin::Script version $1, but this is version $VERSION" if $1 > $VERSION;
             } elsif ($line =~ /^DATE\s+([0-9]{4})-([0-9]{2})-([0-9]{2})\s+([0-9]{2}):([0-9]{2}):([0-9]{2})\z/) {
                 croak "Duplicate DATE\n" if defined $date;
                 croak "Your name isn't Lovelace" if $1 < 1900;
@@ -351,6 +355,7 @@ EOF
 \$postamble{cover} = <<'EOF';
 cover:
 	cover -delete
+	mkdir cover_db
 	-HARNESS_PERL_SWITCHES=-MDevel::Cover make test
 	cover
 EOF
@@ -416,6 +421,7 @@ sub set_version_file {
                            $year+1900, $mon+1, $mday, $hour, $min, $sec);
     my $content = "# Generated on $iso_time UT using $0\n";
     $content .= "BEGIN\n";
+    # $content .= "SEMANTICS\t$VERSION\n";
     $content .= "DIGITS\t$release_props->{digits}\n";
     $content .= "RELEASE\t$release_props->{release}\n";
     $content .= "DATE\t$iso_time\n";
