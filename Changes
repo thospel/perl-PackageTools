@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.005	2009-10-16 12:13:25 UT
+1.005	2009-10-20 17:28:48 UT
 	- Add support for requiring a minimum version of release_pm
 
 1.004	2009-10-16 11:59:10 UT

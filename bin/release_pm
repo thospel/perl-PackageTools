@@ -52,6 +52,8 @@ use Time::Local qw(timegm);
 
 use constant MTIME	=> 9;	# where to find mtime in stat
 
+# Todo: For the next incompatible change, replace $package by $module
+# Maybe also add support for for looking up files --Ton
 our $history = <<'EOF'
 use Carp;
 
