@@ -4,6 +4,7 @@ use 5.008000;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
+use FindBin;
 use Config qw(%Config);
 
 our $VERSION = '1.002';
@@ -34,6 +35,22 @@ if !$opt_y;
         prompt("Install makeppd.pl, a simple ppd generator ?", "y") =~ /^y/i;
 }
 
+my $option_file = "$FindBin::Bin/t/options";
+my $new = "$option_file.new.$$";
+open(my $fh, ">", $new) || die "Could not open '$new': $!";
+printf($fh "KEEP=0\nSTRACE=0\n") ||
+    die "Error writing to '$new': $!";
+eval {
+    close($fh) || die "Could not close '$new': $!";
+    rename($new, $option_file) ||
+        die "Could not rename '$new' to '$option_file': $!";
+};
+if ($@) {
+    $fh = undef;	# close file if open
+    unlink($new) || die "Could not unlink '$new': $! after $@";
+    die $@;
+}
+
 WriteMakefile
     (NAME		=> 'PackageTools',
      VERSION_FROM	=> 'lib/PackageTools/Package.pm', # finds $VERSION
@@ -48,7 +65,7 @@ WriteMakefile
          PM_FILTER	=> '$(PERL) -p -e1',
      ) : (),
      clean		=> {
-         FILES => '$(DISTNAME).ppd ppm cover_db',
+         FILES => '$(DISTNAME).ppd ppm cover_db t/options',
      },
      );
 
@@ -64,7 +81,7 @@ EOF
 
 $postamble{ppd} = <<'EOF';
 $(DISTNAME).ppd: all ppd
-	makeppd.pl "--perl=$(PERL)" --min_version=1.013 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
+	makeppd.pl "--perl=$(PERL)" --min_version=1.014 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
 EOF
 
 $postamble{cover} = <<'EOF';

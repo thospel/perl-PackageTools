@@ -15,12 +15,12 @@ Getopt::Long::Configure ("bundling");
 my $start_digits  = 3;
 my $start_version = 1;
 die "Could not parse your command line. Try $0 -h\n" unless
-    GetOptions("import-revision!"	=> \my $import_revision,
-               "import-version!"	=> \my $import_version,
+    GetOptions("import_revision!"	=> \my $import_revision,
+               "import_version!"	=> \my $import_version,
                "digits=i"		=> \$start_digits,
                "initial:s"		=> \my $start_release,
                "start_version=s",	=> \$start_version,
-               "next"			=> \my $next,
+               "next!"			=> \my $next,
 	       "version!"		=> \my $print_version,
                "U|unsafe!"		=> \my $unsafe,
                "h|help!"		=> \my $help);
@@ -351,7 +351,7 @@ EOF
 
 \$postamble{ppd} = <<'EOF';
 \$(DISTNAME).ppd: all ppd
-	makeppd.pl "--perl=\$(PERL)" --min_version=1.013 "--zip=\$(ZIP)" "--tar=\$(TAR)" "--compress=\$(COMPRESS)" --leave=ppm "--objects=\$(OBJECT)" \$(DISTNAME).ppd \$(VERSION)
+	makeppd.pl "--perl=\$(PERL)" --min_version=1.014 "--zip=\$(ZIP)" "--tar=\$(TAR)" "--compress=\$(COMPRESS)" --leave=ppm "--objects=\$(OBJECT)" \$(DISTNAME).ppd \$(VERSION)
 EOF
 
 \$postamble{cover} = <<'EOF';
@@ -481,3 +481,92 @@ eval {
     $release_props->set_version_file;
 };
 die "Aborted: $@" if $@;
+
+__END__
+
+=head1 NAME
+
+release_pm - Automatically update version information on files and packages
+
+=head1 SYNOPSIS
+
+  release_pm --initial [version] [--digits natural] [--import_version] [--import_revision] [--start_version version]
+  release_pm [--import_version] [--import_revision] [--start_version version]
+  release_pm --next
+  release_pm [-U] [--unsafe] --help
+  release_pm --version
+
+=head1 DESCRIPTION
+
+....
+
+=head1 OPTIONS
+
+=over 4
+
+=item X<option_import_revision>--import_revision
+
+Get the initial version of a file from any C<$Revision> tag that's already in
+there. Such tags are written by source control programs like L<cvs|cvs>,
+
+=item X<option_import_version>--import_version
+
+Get the initial version of a file from any VERSION value that's already in there
+
+=item X<option_digits>--digits natural
+
+How many digits to use in version numbers. Defaults to 3. This means that by
+default the first version of anything is C<1.000>, the next is C<1.001> etc.
+
+=item X<option_initial>--initial [version]
+
+Start a new package. Optionally gives the first version number of the package
+(defaults to 1). The version will be expanded to the requested number of 
+L<digits|"option_digits">.
+
+=item X<option_start_version>--start_version version
+
+Gives the first version number that is assigned to new files. It will be 
+expanded to the requested number of L<digits|"option_digits">
+
+Defaults to 1.
+
+=item X<option_next>--next
+
+Start a new release. The package version is increased
+
+=item X<option_perl>--perl executable
+
+=item X<option_version>--version
+
+Show the the program version.
+
+=item X<option_unsafe>--unsafe, -U
+
+Allows you to run L<--help|"option_help"> even as root. Notice that this implies
+you are trusting this program and the perl installation.
+
+=item X<option_help>--help, -h
+
+Show this help.
+
+=back
+
+=head1 SEE ALSO
+
+L<cvs>,
+L<makeppd.pl|makeppd.pl>
+
+=head1 AUTHOR
+
+Ton Hospel, E<lt>release_pm@ton.iguana.beE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2007 by Ton Hospel
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.4 or,
+at your option, any later version of Perl 5 you may have available.
+
+=cut

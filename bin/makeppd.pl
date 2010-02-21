@@ -17,7 +17,7 @@ use Errno qw(ENOENT ESTALE);
 use Getopt::Long 2.11;
 use ExtUtils::MM_Unix qw();
 
-our $VERSION = "1.013";
+our $VERSION = "1.014";
 
 use constant MIN_VERSION => "1.011";
 my $zip = "zip";
@@ -37,7 +37,7 @@ die "Could not parse your command line (@ARGV) . Try $0 -h\n" unless
                "perl=s"		=> \my $perl,
                "compress=s"	=> \$compress,
                "leave=s"	=> \my $leave,
-               "prerequisite=f"	=> \my %prereq,
+               "dependency|prerequisite=f"	=> \my %prereq,
                "reinvoke"	=> \my $reinvoked,
                "min_version=s"	=> \my $min_version,
                "map=s"		=> \my %package_map,
@@ -74,7 +74,7 @@ if ($help) {
 }
 die "This is $0 version $VERSION, but the caller wants at least version $min_version\n" if $min_version && $VERSION < $min_version;
 
-sub exectable {
+sub executable {
     my ($name) = @_;
     return -x $name ? $name : undef if
         File::Spec->file_name_is_absolute($name);
@@ -120,9 +120,9 @@ sub provides {
 }
 
 # Determine a good tar
-$tar = $bsd_tar unless exectable($tar);
+$tar = $bsd_tar unless executable($tar);
 # print STDERR "tar=$tar\n";
-$zip = $gnuwin_zip unless exectable($zip);
+$zip = $gnuwin_zip unless executable($zip);
 # print STDERR "zip=$zip\n";
 
 my $ppd = shift || die "No ppd argument";
@@ -136,8 +136,16 @@ open(my $pfh, "<", $ppd) || do {
 my $pkg = do { local $/; <$pfh> };
 close($pfh) || die "Error closing $ppd: $!";
 
-my ($pkg_name, $major, $minor) = $pkg =~ /\A.* NAME="([^\"]+)" VERSION="(\d+),(\d+),\d+,\d+">\s*$/m or
+my ($pkg_name, $v) = $pkg =~ /\A\s*<SOFTPKG\s+NAME="([^\"]+)" VERSION="([^\"]+)"(?:\s+DATE="([^\"]+)")?>\s*$/m or
     die "Could not parse package header from $ppd";
+my $ppm_version = 4;
+if ($v =~ /^\d+,\d+,\d+,\d+\z/) {
+    $ppm_version = 3;
+    $v =~ tr/,/./;
+    $v =~ s/(?:.0){1,2}\z//;
+}
+my ($major, $minor) = $v =~ /^(\d+)\.(\d+)\z/  or
+    die "Could not parse version '$v'";
 if (@ARGV) {
     my $version = shift;
     $version eq "$major.$minor" || die "Package is at version $version, but the ppd is at version $major.$minor\n";
@@ -173,10 +181,16 @@ if (%prereq) {
     my $prereq = "";
     for my $pre_name (sort keys %prereq) {
         my $ver = $prereq{$pre_name};
-        $ver =~ s/\./,/g;
-        $ver .= ",0,0";
-        $prereq .=
-            qq(        <DEPENDENCY NAME="$pre_name" VERSION="$ver" />\n);
+        if ($ppm_version == 3) {
+            $ver =~ s/\./,/g;
+            $ver .= ",0" x (4 - $ver =~ tr/,//);
+            $prereq .=
+                qq(        <DEPENDENCY NAME="$pre_name" VERSION="$ver" />\n);
+        } else {
+            # Version 4
+            $prereq .= 
+                qq(        <REQUIRE NAME="$pre_name" VERSION="$ver" />\n);
+        }
     }
     $pkg =~ s{^([^\S\n]*<IMPLEMENTATION>[^\S\n]*\n)}{$1$prereq}gm ||
         die "Assertion: No IMPLEMENTATION";
@@ -191,60 +205,63 @@ $_ = [$_, "0"] for values %package_map;
 my %replace_package =
     (
      # Activestate builtins
-     "Time-HiRes"		=> [undef, "1.011"],
-     "Net-SMTP"			=> [undef, "1.011"],
-     "MIME-Base64"		=> [undef, "1.011"],
+     "Time::HiRes"		=> [undef, "1.011"],
+     "Net::SMTP"			=> [undef, "1.011"],
+     "MIME::Base64"		=> [undef, "1.011"],
      "Storable"			=> [undef, "1.013"],
      # Test::More is normally only for testing
-     "Test-More"		=> [undef, "1.011"],
+     "Test::More"		=> [undef, "1.011"],
      "Win32"			=> [undef, "1.011"],
-     "Win32-ChangeNotify"	=> [undef, "1.013"],
-     "Win32-Clipboard"		=> [undef, "1.013"],
-     "Win32-Console"		=> [undef, "1.013"],
-     "Win32-Event"		=> [undef, "1.013"],
-     "Win32-EventLog"		=> [undef, "1.013"],
-     "Win32-File"		=> [undef, "1.013"],
-     "Win32-FileSecurity"	=> [undef, "1.013"],
-     "Win32-IPC"		=> [undef, "1.013"],
-     "Win32-Internet"		=> [undef, "1.013"],
-     "Win32-Job"		=> [undef, "1.013"],
-     "Win32-Mutex"		=> [undef, "1.013"],
-     "Win32-NetAdmin"		=> [undef, "1.013"],
-     "Win32-NetResource"	=> [undef, "1.013"],
-     "Win32-ODBC"		=> [undef, "1.013"],
-     "Win32-OLE"		=> [undef, "1.013"],
-     "Win32-OLE-Const"		=> [undef, "1.013"],
-     "Win32-OLE-Enum"		=> [undef, "1.013"],
-     "Win32-OLE-NLS"		=> [undef, "1.013"],
-     "Win32-OLE-TypeInfo"	=> [undef, "1.013"],
-     "Win32-OLE-Variant"	=> [undef, "1.013"],
-     "Win32-PerfLib"		=> [undef, "1.013"],
-     "Win32-Pipe"		=> [undef, "1.013"],
-     "Win32-Process"		=> [undef, "1.013"],
-     "Win32-Registry"		=> [undef, "1.013"],
-     "Win32-Semaphore"		=> [undef, "1.013"],
-     "Win32-Service"		=> [undef, "1.013"],
-     "Win32-Shortcut"		=> [undef, "1.013"],
-     "Win32-Sound"		=> [undef, "1.013"],
-     "Win32-TieRegistry"	=> [undef, "1.013"],
-     "Win32-WinError"		=> [undef, "1.013"],
-     "Win32API-File"		=> [undef, "1.012"],
-     "Win32API-Net"		=> [undef, "1.013"],
-     "Win32API-Registry"	=> [undef, "1.013"],
+     "Win32::ChangeNotify"	=> [undef, "1.013"],
+     "Win32::Clipboard"		=> [undef, "1.013"],
+     "Win32::Console"		=> [undef, "1.013"],
+     "Win32::Event"		=> [undef, "1.013"],
+     "Win32::EventLog"		=> [undef, "1.013"],
+     "Win32::File"		=> [undef, "1.013"],
+     "Win32::FileSecurity"	=> [undef, "1.013"],
+     "Win32::IPC"		=> [undef, "1.013"],
+     "Win32::Internet"		=> [undef, "1.013"],
+     "Win32::Job"		=> [undef, "1.013"],
+     "Win32::Mutex"		=> [undef, "1.013"],
+     "Win32::NetAdmin"		=> [undef, "1.013"],
+     "Win32::NetResource"	=> [undef, "1.013"],
+     "Win32::ODBC"		=> [undef, "1.013"],
+     "Win32::OLE"		=> [undef, "1.013"],
+     "Win32::OLE::Const"		=> [undef, "1.013"],
+     "Win32::OLE::Enum"		=> [undef, "1.013"],
+     "Win32::OLE::NLS"		=> [undef, "1.013"],
+     "Win32::OLE::TypeInfo"	=> [undef, "1.013"],
+     "Win32::OLE::Variant"	=> [undef, "1.013"],
+     "Win32::PerfLib"		=> [undef, "1.013"],
+     "Win32::Pipe"		=> [undef, "1.013"],
+     "Win32::Process"		=> [undef, "1.013"],
+     "Win32::Registry"		=> [undef, "1.013"],
+     "Win32::Semaphore"		=> [undef, "1.013"],
+     "Win32::Service"		=> [undef, "1.013"],
+     "Win32::Shortcut"		=> [undef, "1.013"],
+     "Win32::Sound"		=> [undef, "1.013"],
+     "Win32::TieRegistry"	=> [undef, "1.013"],
+     "Win32::WinError"		=> [undef, "1.013"],
+     "Win32API::File"		=> [undef, "1.012"],
+     "Win32API::Net"		=> [undef, "1.013"],
+     "Win32API::Registry"	=> [undef, "1.013"],
      # Some info about CPAN modules
-     "Date-Calendar"		=> ["Date-Calc", "1.011"],
-     "Date-Calendar-Profiles"	=> ["Date-Calc", "1.011"],
+     "Date::Calendar"		=> ["Date::Calc", "1.011"],
+     "Date::Calendar::Profiles"	=> ["Date::Calc", "1.011"],
      # Some of our own modules
-     "Email-SMTP-Utils"		=> ["Email-SMTP", "1.013"],
-     "Email-SMTP-Headers"	=> ["Email-SMTP", "1.013"],
-     "Email-SMTP-Transmit"	=> ["Email-SMTP", "1.013"],
-     "Email-Time"		=> ["Email-SMTP", "1.013"],
+     "Email::SMTP::Utils"	=> ["Email::SMTP", "1.013"],
+     "Email::SMTP::Headers"	=> ["Email::SMTP", "1.013"],
+     "Email::SMTP::Transmit"	=> ["Email::SMTP", "1.013"],
+     "Email::Time"		=> ["Email::SMTP", "1.013"],
      # User specified mappings
      %package_map
     );
+if ($ppm_version == 3) {
+    %replace_package = map { my $a = $_; $a =~ s/::/-/g; $a } %replace_package;
+}
 my $change = join "|" => map quotemeta($_) => keys %replace_package;
 my $demand_version = MIN_VERSION;
-$pkg =~ s{^(\s*<DEPENDENCY\s+NAME=")($change)("\s+VERSION="[^\"]+"\s+/>\s*\n)}{
+$pkg =~ s{^(\s*<(?:DEPENDENCY|REQUIRE)\s+NAME=")($change)("\s+VERSION="[^\"]+"\s+/>\s*\n)}{
     if ($replace_package{$2}) {
         $demand_version = $replace_package{$2}[1] if
             $replace_package{$2}[1] > $demand_version;
@@ -312,9 +329,16 @@ makeppd.pl - Generate a ppm file from a standard perl package
 
 =head1 SYNOPSIS
 
-  makeppd.pl [--perl=executable] [--min_version=version_number] [--zip=executable] [--tar=executable] [--compress=executable] [--leave=directory] [--prereq name=version] [--map module=package] ppd_file [version]
-  makeppd.pl --help
+  makeppd.pl [--perl=executable] [--min_version=version_number] [--zip=executable] [--tar=executable] [--compress=executable] [--leave=directory] [--prerequisite name=version] [--dependency name=version] [--map module=package] ppd_file [version]
+  makeppd.pl [-U] [--unsafe] --help
   makeppd.pl --version
+
+=head1 DESCRIPTION
+
+....
+
+If the version argument is given it's checked against the package version in
+the ppd file. They must be the same.
 
 =head1 OPTIONS
 
@@ -322,33 +346,81 @@ makeppd.pl - Generate a ppm file from a standard perl package
 
 =item X<option_perl>--perl=executable
 
+The name of the perl executable to use to execute makeppd.pl. This obviously
+only gets checked once makeppd is already running under some perl executable.
+The program will restart itself with the same arguments and the appropiate
+perl executable.
+
 =item X<option_min_version>--min_version=version_number
+
+The minimum version of the makeppd program itself that is acceptable. The
+program will do a version check and error out if the version number is too low.
 
 =item X<option_zip>--zip=executable
 
+The name of the commandline zip program to use. Defaults to just C<zip>. An
+appropiate zip executable for windows can be found on
+L<http://gnuwin32.sourceforge.net/packages/zip.htm>.
+
 =item X<option_tar>--tar=executable
+
+The name of the commandline tar program to use. Defaults to just C<tar>. An
+appropiate tar executable for windows can be found on
+L<http://gnuwin32.sourceforge.net/packages/bsdtar.htm>.
 
 =item X<option_compress>--compress=executable
 
+The name of the commandline compress program to use. Defaults to just
+C<gzip --best>.
+
 =item X<option_leave>--leave=directory
 
-=item X<option_prereq>--prereq name=version
+By default the working directory where the distribution file is constructed
+is cleaned up after running the program. By giving a directory argument to this
+option that directory will be used as the working directory to create the ppm
+package and this directory then does not get cleaned up afterward.
+
+=item X<option_prerequisite>--prerequisite name=version
+
+=item X<option_prerequisite>--dependency name=version
+
+Allows you to add explicite prerequisites that will get added to the ppd file.
+You can give this option as often as required.
 
 =item X<option_map>--map module=package
 
 available since version 1.012
 
+Most Makefile.PL prerequisites are of modules instead of packages but ppd
+prerequisites are in terms of packages. makeppd has a number of often occuring
+mappings from modules to packages built in, but the majority are not known.
+You can use this option to declare that a given module comes with a given
+package.
+
+Even with this it still won't know how to convert required module versions to
+required package version though.
+
+You can give this option as often as required.
+
 =item X<option_version>--version
+
+Show the the program version.
 
 =item X<option_unsafe>--unsafe, -U
 
+Allows you to run L<--help|"option_help"> even as root. Notice that this implies
+you are trusting this program and the perl installation.
+
 =item X<option_help>--help, -h
+
+Show this help.
 
 =back
 
 =head1 EXAMPLE
 
-Typical use in a Makefile.PL so that you can do C<nmake ppm>:
+Typical use in a Makefile.PL so that you can do L<name|nmake> or L<dmake|dmake>
+on targets like C<ppm> or C<ppm_install>:
 
   ...
   WriteMakefile
@@ -366,9 +438,15 @@ Typical use in a Makefile.PL so that you can do C<nmake ppm>:
   ppm: \$(DISTVNAME).ppm
 
   \$(DISTVNAME).ppm: all ppd
-	makeppd.pl --perl=\$(PERL) --min_version=1.011 --zip=\$(ZIP) --tar=\$(TAR) --compress="\$(COMPRESS)" --leave=ppm \$(DISTNAME).ppd \$(VERSION)
+	makeppd.pl "--perl=\$(PERL)" --min_version=1.014 "--zip=\$(ZIP)" "--tar=\$(TAR)" "--compress="\$(COMPRESS)" --leave=ppm \$(DISTNAME).ppd \$(VERSION)
 EOF
   }
+
+You can use L<release_pm|"release_pm"> to insert such a section automatically.
+
+=head1 SEE ALSO
+
+L<release_pm|release_pm>
 
 =head1 AUTHOR
 

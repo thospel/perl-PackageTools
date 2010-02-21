@@ -8,3 +8,16 @@ bin/release_pm
 lib/PackageTools/Package.pm
 md5-versions
 t/00_syntax.t
+t/02_makeppd.t
+t/02_makeppd_ppm3.t
+t/TestDrive.pm
+t/makeppd/LogParse/LogParse.ppd
+t/makeppd/LogParse/blib/lib/LogParse.pm
+t/makeppd/LogParse/blib/lib/LogParse/Attributes.pm
+t/makeppd/LogParse/blib/lib/LogParse/Info.pm
+t/makeppd/LogParse/blib/lib/LogParse/Info/Record.pm
+t/makeppd/LogParse/blib/lib/LogParse/Package.pm
+t/makeppd/LogParse/blib/lib/LogParse/Record.pm
+t/makeppd/LogParse/blib/lib/LogParse/State.pm
+t/makeppd/LogParse/blib/lib/LogParse/Transaction.pm
+t/makeppd/LogParse/blib/lib/LogParse/Transaction/Record.pm
