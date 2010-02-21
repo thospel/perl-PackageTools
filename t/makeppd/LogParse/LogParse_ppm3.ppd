@@ -1,0 +1,12 @@
+<SOFTPKG NAME="LogParse" VERSION="1,001,0,0">
+    <TITLE>LogParse</TITLE>
+    <ABSTRACT>Baseclass for logfile parsers</ABSTRACT>
+    <AUTHOR>Ton Hospel &lt;LogParse@ton.iguana.be&gt;</AUTHOR>
+    <IMPLEMENTATION>
+        <DEPENDENCY NAME="Test-More" VERSION="0,01,0,0" />
+        <DEPENDENCY NAME="URI" VERSION="1,33,0,0" />
+        <OS NAME="MSWin32" />
+        <ARCHITECTURE NAME="MSWin32-x86-multi-thread-5.8" />
+        <CODEBASE HREF="" />
+    </IMPLEMENTATION>
+</SOFTPKG>
