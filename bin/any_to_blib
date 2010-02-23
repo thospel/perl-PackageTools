@@ -1,0 +1,765 @@
+#!/usr/bin/perl -w
+# $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/any_to_blib $
+# $Id: any_to_blib 3820 2010-02-23 17:00:11Z hospelt $
+use strict;
+use Getopt::Long 2.11;
+use ExtUtils::Install;
+use FindBin qw($Bin $Script);
+use File::Basename qw(dirname);
+use Time::Local qw(timegm);
+use Errno qw(ENOENT ESTALE);
+use IO::Handle;
+use Carp;
+
+our $VERSION = "1.000";
+
+our $Bin = $FindBin::Bin;
+$Bin =~ s{/+\z}{};
+
+sub time_string {
+    my $full_time = shift;
+    my $us = @_ % 2 ? shift : 0;
+    my %params = @_;
+
+    my $fractional_digits = 0;
+    my $power		  = 1e6;
+    if (delete $params{us}) {
+        $fractional_digits = 6;
+        $power	= 1;
+    } elsif (delete $params{ms}) {
+        $fractional_digits = 3;
+        $power = 1e3;
+    }
+    my $xml = delete $params{xml};
+    my $ut  = delete $params{ut};
+
+    croak("Unknown parameter ", join(", ",map "'$_'", keys %params)) if %params;
+
+    $full_time = time if !defined $full_time;
+    # croak "Negative time" if $full_time < 0;
+
+    my $time = int $full_time;
+    my $fraction = ($full_time-$time) * 1e6 + int($us || 0);
+    # The magic 0.012 is just enough to avoid float truncation from the
+    # ($full_time-$time) * 1e6
+    # perl -wle '$a=4259060321.987; $a-=int$a; printf "%.20f\n", $a*1e6'
+    # gives 986999.98855590820312500000
+    $fraction = $fraction < 0 ?
+        int($fraction - 0.012) : int($fraction + 0.012);
+    if ($fraction) {
+        if ($fraction >= 1e6 || $fraction < 0) {
+            my $more = int($fraction / 1e6);
+            $fraction -= $more * 1e6;
+            $time += $more;
+        }
+        if ($fraction < 0) {
+            $fraction += 1e6;
+            $time--;
+            croak "Assertion: Negative fraction '$fraction'" if $fraction < 0;
+        }
+    }
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday) =
+        $ut ? gmtime($time) : localtime($time);
+    # Avoid the guessing timegm does for 2 digit dates
+    $year += 1900;
+    return sprintf("%04d-%02d-%02d%s%02d:%02d:%02d%s%.*d%s",
+		   $year, $mon+1, $mday,
+                   $xml ? "T" : " ",
+                   $hour, $min, $sec,
+                   $fractional_digits ? "." : "",
+		   $fractional_digits, int($fraction/$power+1e-7),
+                   $xml ? "Z" : "") if $ut;
+    my $nominal_time = timegm($sec, $min, $hour, $mday, $mon, $year);
+    my $offset = $nominal_time - $time;
+    my $sign;
+    if ($offset < 0) {
+	$sign   = "-";
+	$offset = - $offset;
+    } else {
+	$sign = "+";
+    }
+    $offset = int($offset / 60+0.5);
+    return sprintf("%04d-%02d-%02d%s%02d:%02d:%02d%s%.*d%s%s%02d%s%02d",
+		   $year, $mon+1, $mday,
+                   $xml ? "T" : " ",
+                   $hour, $min, $sec,
+                   $fractional_digits ? "." : "",
+		   $fractional_digits, int($fraction/$power+1e-7),
+                   $xml ? "" : " ",
+                   $sign, int($offset / 60),
+                   $xml ? ":" : "",
+                   $offset % 60);
+}
+
+# Import a complete file and return the contents as a single string
+sub slurp {
+    my $file = shift;
+    my ($maybe_gone, $binmode);
+    if (@_) {
+        if (@_ == 1) {
+            $maybe_gone = shift;
+        } else {
+            my %params = @_;
+            $maybe_gone = delete $params{maybe_gone};
+            $binmode	= delete $params{binmode};
+            croak "Unknown parameter ", join(", ", map "'$_'", keys %params) if
+                %params;
+        }
+    }
+    croak "filename is undefined" if !defined $file;
+    open(my $fh, "<", $file) or
+        $maybe_gone && ($! == ENOENT || $! == ESTALE) ?
+	return undef : croak "Could not open '$file': $!";
+    binmode($fh) if $binmode;
+    my $rc = read($fh, my $slurp, -s $fh);
+    croak "File '$file' is still growing" if $rc &&= read($fh, my $more, 1);
+    croak "Error reading from '$file': $!" if !defined $rc;
+    close($fh) || croak "Error while closing '$file': $!";
+    return $slurp;
+}
+
+# Write remaining arguments to the file named in the first argument
+# File is deleted on failure
+# (When copying this code into test files you probably want to change the
+#  default for fsync to 0 and depending on what is being tested maybe the
+#  default for binmode to 1)
+sub spew {
+    my $file = shift;
+    croak "filename is undefined" if !defined $file;
+    defined || croak "undef value" for @_;
+
+    my $fsync = 1;
+    my $binmode = 0;
+    if (ref $_[0]) {
+        ref $_[0] eq "HASH" || croak "Invalid spew parameters";
+        my %params = %{+shift};
+
+        $fsync = delete $params{fsync} if exists $params{fsync};
+        $binmode = delete $params{binmode};
+        croak "Unknown parameter ", join(", ", map "'$_'", keys %params) if
+            %params;
+
+    }
+    open(my $fh, ">", $file) || croak "Could not create '$file': $!";
+    binmode $fh if $binmode;
+    eval {
+        print($fh @_)	|| croak "Error writing to '$file': $!";
+        $fh->flush	|| croak "Error flushing '$file': $!";
+        $^O eq "MSWin32" || $fh->sync || croak "Error syncing '$file': $!" if
+            $fsync;
+        close($fh)	|| croak "Error closing '$file': $!";
+    };
+    if ($@) {
+        undef $fh;
+        unlink($file) || die "Could not unlink '$file' after $@";
+        die $@;
+    }
+}
+
+sub self_help {
+    my ($unsafe) = @_;
+    require Config;
+    $ENV{PATH} .= ":" unless $ENV{PATH} eq "";
+    $ENV{PATH} = "$ENV{PATH}$Config::Config{'installscript'}";
+    exec("perldoc", "-F", $unsafe ? "-U" : (), "$Bin/$Script") || exit 1;
+    # make parser happy
+    %Config::Config = ();
+}
+
+sub self_version {
+    my ($program_name, $package_name) = @_;
+    defined(my $program_version = main->VERSION) ||
+        croak "Cannot get VERSION from package main";
+    my $package = "${package_name}::Package";
+    my $package_file = "$package.pm";
+    $package_file =~ s{::}{/}g;
+    require $package_file;
+    defined(my $package_version = $package->VERSION) ||
+        croak "Cannot get VERSION from $package";
+    # $package_name =~ s{::}{/}g;
+    my $version = "$program_name $program_version (package $package_name $package_version)\n";
+    if ($package->can("release_time")) {
+        my $release_time = $package->release_time;
+        my $strftime = strftime("%e %b %Y", localtime($release_time));
+        $strftime =~ s{^\s+}{};
+        $version .= sprintf("Date: %s (%s)\n",
+                            time_string($release_time), $strftime);
+    }
+    print $version;
+    exit 0;
+}
+
+&Getopt::Long::config("bundling", "require_order");
+my $to_dir = "blib";
+die "Could not parse your command line. Try $Script -h\n" unless
+    GetOptions("blib|to_dir=s"	=> \$to_dir,
+               "pairs!"		=> \my $pairs,
+               "filter=s"	=> \my @filter,
+               "force!"		=> \my $force,
+               "P|proxy_file=s"	=> \my $proxy_file,
+               "min_version=s"	=> \my $min_version,
+               "verbose!"	=> \my $verbose,
+               "version!"	=> \my $version,
+               "U|unsafe!"	=> \my $unsafe,
+               "h|help!"	=> \my $help);
+self_version("any_to_blib", "PackageTools") if $version;
+self_help() if $help;
+die "This is $Script version $VERSION, but the caller wants at least version $min_version\n" if $min_version && $VERSION < $min_version;
+
+die "Odd number of arguments" if $pairs && @ARGV %2;
+@filter = map {split m{,}, $_ } @filter;
+my %filter = map {$_ => 1 } @filter;
+$force = 1 if $proxy_file && (!-e $proxy_file || -M _ > -M "$Bin/$Script");
+
+###################### BEGIN copy from ExtUtils::Install #######################
+
+my $Is_VMS	= $^O eq 'VMS' ? 1 : 0;
+my $Is_VMS_noefs = $Is_VMS;
+my $Is_Win32	= $^O eq 'MSWin32' ? 1 : 0;
+my $Is_cygwin	= $^O eq 'cygwin' ? 1 : 0;
+
+if ($Is_VMS) {
+    my $vms_unix_rpt;
+    my $vms_efs;
+    my $vms_case;
+
+    if (eval { local $SIG{__DIE__}; require VMS::Feature; }) {
+        $vms_unix_rpt = VMS::Feature::current("filename_unix_report");
+        $vms_efs = VMS::Feature::current("efs_charset");
+        $vms_case = VMS::Feature::current("efs_case_preserve");
+    } else {
+        my $unix_rpt = $ENV{'DECC$FILENAME_UNIX_REPORT'} || '';
+        my $efs_charset = $ENV{'DECC$EFS_CHARSET'} || '';
+        my $efs_case = $ENV{'DECC$EFS_CASE_PRESERVE'} || '';
+        $vms_unix_rpt = $unix_rpt =~ /^[ET1]/i;
+        $vms_efs = $efs_charset =~ /^[ET1]/i;
+        $vms_case = $efs_case =~ /^[ET1]/i;
+    }
+    $Is_VMS_noefs = 0 if ($vms_efs);
+}
+
+sub _estr(@) {
+    return join "\n",'!' x 72,@_,'!' x 72,'';
+}
+
+{
+    my %warned;
+    sub _warnonce(@) {
+        my $first = shift;
+        my $msg =_estr("WARNING: $first", @_);
+        warn $msg unless $warned{$msg}++;
+    }
+}
+
+sub _choke(@) {
+    my $first = shift;
+    my $msg = _estr("ERROR: $first", @_);
+    Carp::croak($msg);
+}
+
+sub _chmod($$;$ ) {
+    my ( $mode, $item, $verbose )=@_;
+    $verbose ||= 0;
+    if (chmod $mode, $item) {
+        printf "chmod(0%o, %s)\n",$mode, $item if $verbose > 1;
+    } else {
+        my $err="$!";
+        _warnonce(sprintf("WARNING: Failed chmod(0%o, %s): %s\n",
+                          $mode, $item, $err)) if -e $item;
+    }
+}
+
+=item _have_write_access
+
+Abstract a -w check that tries to use POSIX::access() if possible.
+
+=cut
+
+{
+    my  $has_posix;
+    sub _have_write_access {
+        my $dir=shift;
+        unless (defined $has_posix) {
+            $has_posix= (!$Is_cygwin && !$Is_Win32
+             && eval 'local $^W; require POSIX; 1') || 0;
+        }
+        if ($has_posix) {
+            return POSIX::access($dir, POSIX::W_OK());
+        } else {
+            return -w $dir;
+        }
+    }
+}
+
+=item _can_write_dir(C<$dir>)
+
+Checks whether a given directory is writable, taking account
+the possibility that the directory might not exist and would have to
+be created first.
+
+Returns a list, containing: C<($writable, $determined_by, @create)>
+
+C<$writable> says whether whether the directory is (hypothetically) writable
+
+C<$determined_by> is the directory the status was determined from. It will be
+either the C<$dir>, or one of its parents.
+
+C<@create> is a list of directories that would probably have to be created
+to make the requested directory. It may not actually be correct on
+relative paths with C<..> in them. But for our purposes it should work ok
+
+=cut
+
+sub _can_write_dir {
+    my $dir=shift;
+    return
+        unless defined $dir and length $dir;
+
+    my ($vol, $dirs, $file) = File::Spec->splitpath($dir,1);
+    my @dirs = File::Spec->splitdir($dirs);
+    unshift @dirs, File::Spec->curdir
+        unless File::Spec->file_name_is_absolute($dir);
+
+    my $path='';
+    my @make;
+    while (@dirs) {
+        if ($Is_VMS_noefs) {
+            # There is a bug in catdir that is fixed when the EFS character
+            # set is enabled, which requires this VMS specific code.
+            $dir = File::Spec->catdir($vol,@dirs);
+        }
+        else {
+            $dir = File::Spec->catdir(@dirs);
+            $dir = File::Spec->catpath($vol,$dir,'')
+                    if defined $vol and length $vol;
+        }
+        next if ( $dir eq $path );
+        if ( ! -e $dir ) {
+            unshift @make,$dir;
+            next;
+        }
+        if ( _have_write_access($dir) ) {
+            return 1,$dir,@make
+        } else {
+            return 0,$dir,@make
+        }
+    } continue {
+        pop @dirs;
+    }
+    return 0;
+}
+
+=item _mkpath($dir,$show,$verbose,$dry_run)
+
+Wrapper around File::Path::mkpath() to handle errors.
+
+If $verbose is true and >1 then additional diagnostics will be produced, also
+this will force $show to true.
+
+If $dry_run is true then the directory will not be created but a check will be
+made to see whether it would be possible to write to the directory, or that
+it would be possible to create the directory.
+
+If $dry_run is not true dies if the directory can not be created or is not
+writable.
+
+=cut
+
+sub _mkpath {
+    my ($dir,$show,$verbose,$dry_run)=@_;
+    if ( $verbose && $verbose > 1 && ! -d $dir) {
+        $show= 1;
+        printf "mkpath(%s,%d)\n", $dir, $show;
+    }
+    if (!$dry_run) {
+        if ( ! eval { File::Path::mkpath($dir,$show); 1 } ) {
+            _choke("Can't create '$dir'","$@");
+        }
+
+    }
+    my ($can,$root,@make)=_can_write_dir($dir);
+    if (!$can) {
+        my @msg=(
+            "Can't create '$dir'",
+            $root ? "Do not have write permissions on '$root'"
+                  : "Unknown Error"
+        );
+        if ($dry_run) {
+            _warnonce @msg;
+        } else {
+            _choke @msg;
+        }
+    } elsif ($show and $dry_run) {
+        print "$_\n" for @make;
+    }
+
+}
+
+###################### END copy from ExtUtils::Install #######################
+
+sub filter_substitute {
+    my ($pre_space, $pre_char, $conds, $body, $post_char, $post_space) = @_;
+    #print STDERR "=" x 20, "\n";
+    #print STDERR "pre_space=$pre_space|\n";
+    #print STDERR "pre_char=$pre_char|\n";
+    #print STDERR "conds=$conds|\n";
+    #print STDERR "body=$body|\n";
+    #print STDERR "post_char=$post_char|\n";
+    #print STDERR "post_space=$post_space|\n";
+    $pre_space = ""  if $pre_char  eq "-";
+    $post_space = "" if $post_char eq "-";
+    for my $cond (split /\s*\|\s*/, $conds) {
+        if ($cond =~ s/^!//) {
+            return $pre_space . $body . $post_space if !$filter{$cond};
+        } else {
+            return $pre_space . $body . $post_space if $filter{$cond};
+        }
+    }
+    #print(STDERR "Miss\n");
+    return $pre_space . $post_space;
+}
+
+sub check_comment {
+    my ($file, $str, $xml) = @_;
+
+    # First remove any TMPL stuff while checking consistency since it will
+    # be gone in the final string too
+    $str =~ s{(<(!--\s*|)/?TMPL_\w+.*?\s*(--|)>)}{
+        my $directive = $1;
+        if ($2 && !$3 || !$2 && $3) {
+            my $line = (substr($str, 0, $-[0]) =~ tr/\n// || 0)+1;
+            die "File $file line $line: Dubious TMPL directive '$directive'\n";
+        }
+        $directive =~ tr/\n//cd;
+        # Leave as many newlines as there were in the directive
+        "...$directive";
+    }seg;
+
+    if ($xml) {
+        $str =~ s{((?><!)(?:--(?:-?[^-])*--)*>)}{
+            my $comment = $1;
+            $comment =~ tr/\n//cd;
+            # Leave as many newlines as there were in the comment
+            "...$comment";
+        }eg;
+        if ($str =~ m{(<!.*?>)}s) {
+            my $comment = $1;
+            my $line = (substr($str, 0, $-[0]) =~ tr/\n// || 0)+1;
+            die "File $file line $line: Dubious comment '$comment'\n";
+        }
+    } else {
+        # Detect dubious HTML comments
+        # Also protests on perfectly valid things like <!------> hello-->
+        # That's a feature. Many browsers handle this case wrong so avoid it.
+        # We also need to detect these cases since the later substitutes might
+        # otherwise eliminate real content
+        while ($str =~ /(<!--.*?>)/gs) {
+            if ($1 !~ /-->\z/) {
+                my $comment = $1;
+                my $line = (substr($str, 0, $-[0]) =~ tr/\n// || 0)+1;
+                die "File $file line $line: Dubious comment '$comment'\n";
+            }
+        }
+    }
+}
+
+sub run_filter {
+    my ($from, $to) = @_;
+    # We assume the files are relatively small,
+    # so slurping them into memory is not a problem
+    my $content = slurp($from);
+    # Remove windows \r (in case a windows file gets processed on unix)
+    # The later write will be done in native mode so in the actual files on
+    # windows they will reappear
+    # The end result should be that the blib files are in native format
+    $content =~ s/\r+\n/\n/g;
+
+    if ($from =~ /\.tmpl\z|\.xmpl\z/) {
+        check_comment($from, $content, $from =~ /\.xmpl\z/);
+
+	# Simple text filter.
+        #
+        # A range starts with {+ or {- and ends with -} or +}
+        # {- eats whitspace left to and including newline,
+        # -} eats whitespace right to and including newline
+        # Conditions are separated by , and may start with a ! (not)
+        # Conditions end on : or \n
+        #
+        # Example:
+        #   {-foo,!bar: Waf +}
+        # This will exapand to " Waf " if foo is set or bar is not set, to ""
+        # otherwise. In both cases the whole line to the left of the {- is
+        # removed (as if you had started with {+ at the end of the previous
+        # line). The right side is preserved.
+        #
+        # You can use a non-matching filter to collapse whitespace
+        #     foo  {-eat_me:-}\nbar  {-eat_me:-}\n
+        # will become foobar
+
+        1 while
+            $content =~ s{
+           # leading whitespace and {+ or {-
+           (?>
+             (\n?[^\S\n]*)
+             \{([+-])\s*
+           )
+           # condition of the form   cond1|!cond2|...
+           (?>
+             (!?\w+(?:\s*\|\s*!?\w+)*)
+           )
+           # the body starts at : or after the first \n
+           (?>
+             [^\S\n]*[:\n]
+           )
+           (?>
+             # The body itself should not end or start new subsitutions
+             ((?:
+                 (?!   \{[+-]  |  [+-]\}  )
+                 .)*)
+             # terminating -} or +}
+             ([+-])\}
+           )
+           # trailing whitespace
+           ([^\S\n]*\n?)
+        }{filter_substitute($1,$2,$3,$4,$5,$6)}sexg;
+        # Remove arguments from closing templates
+        # to avoid confusing HTML::Template::Pro
+        $content =~ s{(<(?:!--\s*)?(?:/TMPL_\w+|TMPL_ELSE)).*?\s*((?:--)?>)}{$1$2}sig;
+
+        # Remove leading whitespace if a HTML::Template directive is the first
+        # thing on a line
+        $content =~ s{\s*\n[^\S\n]*(<(?:!--\s*)?/?TMPL_\w)}{$1}ig;
+
+        # Remove zero comments while eating whitespace around it
+        $content =~ s/\s*<!>\s*//g;
+
+        # Remove empty single comments without eating whitespace around it
+        # You can use this to stop whitespace eaters
+        $content =~ s{<!---->}{}g;
+    }
+    # Remove final newline so we don't get dummy line from <!-- TMPL_INCLUDE -->
+    # $content =~ s/\n\z// if $from =~ /\.tmpl\z/;
+    spew($to, $content);
+}
+
+while (@ARGV) {
+    my $from = shift;
+    my $to;
+    if ($pairs) {
+        $to = $to_dir . "/" . shift;
+    } else {
+        $to = "$to_dir/$from";
+    }
+
+    if (-f $to){
+        if (!$force && (-M _)+$Is_VMS == -M $from) {
+            print "Skip $to (unchanged)\n" if $verbose;
+            next;
+        }
+        # we wont try hard here. its too likely to mess things up.
+        ExtUtils::Install::forceunlink($to);
+    } else {
+        _mkpath(dirname($to),0,0755);
+    }
+    run_filter($from, $to);
+    print "filter($Script) $from >$to\n";
+    my($mode,$atime,$mtime) = (stat $from)[2,8,9];
+    utime($atime,$mtime+$Is_VMS,$to);
+    _chmod(0444 | ( $mode & 0111 ? 0111 : 0 ),$to);
+}
+__END__
+
+=head1 NAME
+
+any_to_blib - A variatoin on ExtUtils::Install::pm_to_blib
+
+=head1 SYNOPSIS
+
+ any_to_blib [--proxy_file proxy_file] [--blib blib_directory] {--filter condition} {file}
+ any_to_blib [--proxy_file proxy_file] [--blib blib_directory] {--filter condition} --pairs {from to}
+ any_to_blib [--version] [--unsafe] [-U] [-h] [--help]
+
+=head1 DESCRIPTION
+
+B<any_to_blib> copies the files mentioned as arguments to the blib directory
+after applying some filtering. The default filter that is always done is
+converting newlines to the ones native on the current system.
+
+For tmpl files (assumed to be L<HTML::Template|HTML::Template> template files)
+the following transformations are done:
+
+=over
+
+=item X<filter_macro> [explain the macro filter here]
+
+=item X<filter_pro>attribute filtering
+
+All attributes to closing and intermeditate HTML::Template directives are
+removed.
+
+So code like:
+
+  <!-- TMPL_IF NAME=foo" -->
+  ...
+  <!-- TMPL_ELSE NAME=foo" -->
+  ...
+  <!-- /TMPL_IF NAME=foo" -->
+
+becomes:
+
+  <!-- TMPL_IF NAME=foo" -->
+  ...
+  <!-- TMPL_ELSE -->
+  ...
+  <!-- /TMPL_IF -->
+
+(this applies not only to the <!-- TMPL... --> version of the directives but
+also to the <TMPL...> versions)
+
+This is needed for L<HTML::Template::Pro|HTML::Template::Pro> which cannot
+handle these attributes (unless a compile time flag is set)
+
+=item X<filter_whitespace_left>Remove all whitespace left of an HTML::Template directive that is the first thing on aline
+
+If an L<HTML::Template|HTML::Template> directive is the first thing on a line
+all whitespace to the left is removed, even whitespace before the newline before
+the directive.
+
+So the above example will actually become:
+
+  <!-- TMPL_IF NAME=foo" -->
+  ...<!-- TMPL_ELSE -->
+  ...<!-- /TMPL_IF -->
+
+=item X<filter_zero_coments>Remove empty comments with their whitespace
+
+Completely empty comments with their surrounding whitespace are removed.
+For example:
+
+  foo    <!>     bar
+
+will become:
+
+  foo<!>bar
+
+This allows you to spread things over multiple lines for clarity without
+introducing sprious spaces. It is also useful to use at the end of a file
+that will get included with <!-- TMPL_INCLUDE --> since this will remove the
+extra most editors will put there.
+
+=item X<filter_single_empty_coments>Remove single empty comments without their whitespace
+
+This will remove single empty comments of the form <!----> B<without> eating
+the surrounding whitespace. This is useful if the above whitespace removels are
+too aggressive. For example
+
+  foo <!---->
+  <!>
+  bar
+
+will become
+
+  foo bar
+
+=back
+
+=head1 OPTIONS
+
+=over 4
+
+=item X<option_blib>--blib directory, --to_dir directory
+
+The target directory for the copies. Defaults to F<blib>
+
+=item X<option_pairs>--pairs
+
+By default the arguments are files to be copied. If this option is given the
+arguments are from/to pairs. This allows you to do renames during copying.
+The L<blib directory|"option_blib"> is still prepended to the F<to> name.
+
+For example:
+
+  any_to_blib --blib foo bar baz
+
+will copy the file F<bar> to F<blib/baz>
+
+=item X<option_filter>--filter condition
+
+Will make the named condition true for L<macro filtering|"filter_macro">.
+
+=item X<option_force>--force
+
+The copied file is given the same timestamp as the file it is copied from.
+As an optimization copying is not done if the target file already exists and has
+the same timestamp as the original file. By giving this option that test is
+shortcircuited and the copy is always done
+
+=item X<option_proxy_file>--proxy_file file, -P file
+
+If the any_to_blib script is more recently modified than the given file the
+L<force flag|"option_force"> is automatically turned on. When using any_to_blib
+in Makefiles the rule target is usually a file that gets touched when the copy
+to blib is finished. This file is the natural target for this option. This is a
+developer option.
+
+Typical use in a Makefile:
+
+  foo_to_blib: any_to_blib foo
+	$(NOECHO) any_to_blib -P foo_to_blib foo
+	$(NOECHO) $(TOUCH) foo_to_blib
+
+=item X<option_min_version>--min_version=version_number
+
+The minimum version of the any_to_blib program itself that is acceptable. The
+program will do a version check and error out if the version number is too low.
+
+=item X<verbose>--verbose
+
+Be a bit more verbose. In particular shows which files get skipped because
+the result already exists and has the expected date.
+
+=item X<help>-h, --help
+
+Show this help.
+
+=item X<unsafe>-U, --unsafe
+
+Allow even root to run the perldoc.
+Remember, the reason this is off by default is because it B<IS> unsafe.
+
+=item X<version>--version
+
+Print version info.
+
+=back
+
+=head1 EXAMPLE
+
+A typical use would be:
+
+  find -name "*.mp3" -print0 | random -0 | xargs -0 amp
+
+to play all mp3 files in a directory tree in a random order
+
+=head1 BUGS
+
+None known
+
+=head1 SEE ALSO
+
+L<find(1)>,
+L<xargs(1)>
+
+=head1 AUTHOR
+
+Ton Hospel, E<lt>random@ton.iguana.beE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2002 by Ton Hospel
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.2 or,
+at your option, any later version of Perl 5 you may have available.
+
+=cut

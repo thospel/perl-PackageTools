@@ -3,6 +3,7 @@ MANIFEST
 MANIFEST.SKIP
 Makefile.PL
 README
+bin/any_to_blib
 bin/makeppd.pl
 bin/release_pm
 lib/PackageTools/Package.pm

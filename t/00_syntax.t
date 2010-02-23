@@ -2,7 +2,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 00_syntax.t'
 #########################
-# $Id: 00_syntax.t 3799 2010-02-21 14:49:58Z hospelt $
+# $Id: 00_syntax.t 3820 2010-02-23 17:00:11Z hospelt $
 our $VERSION = "1.002";
 
 use strict;
@@ -17,7 +17,7 @@ BEGIN {
 
 use TestDrive qw($tmp_dir $bin_dir slurp work_area);
 
-use Test::More tests => 2;
+use Test::More tests => 3;
 
 sub check {
     # Normally I would put the local inside the open, but this also counts as
@@ -38,6 +38,6 @@ sub check {
 }
 
 work_area();
-for my $file qw(release_pm makeppd.pl) {
+for my $file qw(release_pm makeppd.pl any_to_blib) {
     ok(!check("$bin_dir/$file"), "Can compile $file");
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 3799 2010-02-21 14:49:58Z hospelt $
+# $Id: makeppd.pl 3815 2010-02-23 11:08:23Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
@@ -188,7 +188,7 @@ if (%prereq) {
                 qq(        <DEPENDENCY NAME="$pre_name" VERSION="$ver" />\n);
         } else {
             # Version 4
-            $prereq .= 
+            $prereq .=
                 qq(        <REQUIRE NAME="$pre_name" VERSION="$ver" />\n);
         }
     }
@@ -202,11 +202,12 @@ $_ = [$_, "0"] for values %package_map;
 
 # Map from module name to package name and
 # the first version of this program that had the mapping
+# Name undef means the dependency is dropped
 my %replace_package =
     (
      # Activestate builtins
      "Time::HiRes"		=> [undef, "1.011"],
-     "Net::SMTP"			=> [undef, "1.011"],
+     "Net::SMTP"		=> [undef, "1.011"],
      "MIME::Base64"		=> [undef, "1.011"],
      "Storable"			=> [undef, "1.013"],
      # Test::More is normally only for testing
@@ -227,7 +228,7 @@ my %replace_package =
      "Win32::NetResource"	=> [undef, "1.013"],
      "Win32::ODBC"		=> [undef, "1.013"],
      "Win32::OLE"		=> [undef, "1.013"],
-     "Win32::OLE::Const"		=> [undef, "1.013"],
+     "Win32::OLE::Const"	=> [undef, "1.013"],
      "Win32::OLE::Enum"		=> [undef, "1.013"],
      "Win32::OLE::NLS"		=> [undef, "1.013"],
      "Win32::OLE::TypeInfo"	=> [undef, "1.013"],
@@ -253,6 +254,8 @@ my %replace_package =
      "Email::SMTP::Headers"	=> ["Email::SMTP", "1.013"],
      "Email::SMTP::Transmit"	=> ["Email::SMTP", "1.013"],
      "Email::Time"		=> ["Email::SMTP", "1.013"],
+     # PackageTools: Only for make install
+     "PackageTools"		=> [undef, "1.014"],
      # User specified mappings
      %package_map
     );

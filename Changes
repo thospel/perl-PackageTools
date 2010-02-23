@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.005	2010-02-21 14:34:28 UT
+1.005	2010-02-23 16:35:45 UT
 	- Add support for requiring a minimum version of release_pm
 	- Some support for the newer ppm format. VERSION may now be a float or
 	  or 4 numbers separated by ,
@@ -8,6 +8,9 @@ Revision history for Perl extension PackageTools.
 	- Add some real tests
 	- Start requiring makeppd 1.014 in the generated Makefile.PLs (the one
 	  with the changes in this release)
+	- Added any_to_pm since it was getting more and more general use
+	- If a Package.pm file does not exist yet (or is empty) but is mentioned
+	  in the MANIFEST then create a generic one
 
 1.004	2009-10-16 11:59:10 UT
 	- Ignore META.yml while versioning

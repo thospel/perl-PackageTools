@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: Makefile.PL 3799 2010-02-21 14:49:58Z hospelt $
+# $Id: Makefile.PL 3814 2010-02-23 11:01:27Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
@@ -33,6 +33,9 @@ if !$opt_y;
     push @programs_to_install, "bin/makeppd.pl" if
         $opt_y ||
         prompt("Install makeppd.pl, a simple ppd generator ?", "y") =~ /^y/i;
+    push @programs_to_install, "bin/any_to_blib" if
+        $opt_y ||
+        prompt("Install any_to_blib, a pm_to_blib replacement ?", "y") =~ /^y/i;
 }
 
 my $option_file = "$FindBin::Bin/t/options";

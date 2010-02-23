@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 3799 2010-02-21 14:49:58Z hospelt $
+# $Id: release_pm 3820 2010-02-23 17:00:11Z hospelt $
 use strict;
 use Getopt::Long;
 use IO::Handle;	# for (f)sync
@@ -271,7 +271,29 @@ sub get_files {
             $release_props->next_release;
             print STDERR "New $file\n";
         }
-        ($file_props->{binary}, $file_props->{content}) = slurp($file);
+        if ($file =~ m{\bPackage\.pm\z}) {
+            ($file_props->{binary}, $file_props->{content}) = slurp($file, 1);
+            if (!defined $file_props->{content} ||
+                $file_props->{content} eq "") {
+                my $package_name = $file;
+                $package_name =~ s/\.pm\z//;
+                $package_name =~ s{/}{::}g;
+                print STDERR "Generating initial content for $file\n"; 
+                $file_props->{content} = <<"EOF";
+package $package_name;
+# \$HeadURL: xxx \$
+# \$Id: xxx \$
+
+# START HISTORY
+# END HISTORY
+
+1;
+EOF
+    ;
+            }
+        } else {
+            ($file_props->{binary}, $file_props->{content}) = slurp($file);
+        }
         $file_props->{content_chksum} = $file_props->{disk_chksum} =
             chksum($file_props);
         if ($import_revision &&
@@ -470,7 +492,7 @@ sub set_version_file {
 
 package main;
 eval {
-    # Walk up until we find a
+    # Walk up until we find a MANIFEST
     for (1..50) {
         last if -e "MANIFEST";
         chdir("..") || die "Could not chdir to ..: $!";
@@ -521,12 +543,12 @@ default the first version of anything is C<1.000>, the next is C<1.001> etc.
 =item X<option_initial>--initial [version]
 
 Start a new package. Optionally gives the first version number of the package
-(defaults to 1). The version will be expanded to the requested number of 
+(defaults to 1). The version will be expanded to the requested number of
 L<digits|"option_digits">.
 
 =item X<option_start_version>--start_version version
 
-Gives the first version number that is assigned to new files. It will be 
+Gives the first version number that is assigned to new files. It will be
 expanded to the requested number of L<digits|"option_digits">
 
 Defaults to 1.
