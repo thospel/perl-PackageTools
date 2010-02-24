@@ -137,7 +137,7 @@ sub get_versions_file {
             }
             croak "Unexpected data after END at line $line_nr in file $sums" if
                 $ended;
-            if ($line =~ /^VERSION\s+([a-fA-F0-9]{32})\s+([0-9]+\.[0-9]+)\s+(\S+)\z/) {
+            if ($line =~ /^VERSION\s+([a-fA-F0-9]{32})\s+([0-9]+(?:\.[0-9]+)?)\s+(\S+)\z/) {
                 croak "Duplicate VERSION entry for file $3\n" if
                     exists $file_props{$3};
                 $file_props{$3} = {
@@ -145,11 +145,11 @@ sub get_versions_file {
                     version	=> $2,
                     file	=> $3,
                 };
-            } elsif ($line =~ /^RELEASED\s+([0-9]+\.[0-9]+)\s+([0-9]+\.[0-9]+)\s+(\S+)\z/) {
+            } elsif ($line =~ /^RELEASED\s+([0-9]+(?:\.[0-9]+)?)\s+([0-9]+(?:\.[0-9]+)?)\s+(\S+)\z/) {
                 croak "Duplicate RELEASED entry for file $3 version $1\n" if
                     exists $released{$3}{$1};
                 $released{$3}{$1} = $2;
-            } elsif ($line =~ /^RELEASE\s+([0-9]+\.[0-9]+)\z/) {
+            } elsif ($line =~ /^RELEASE\s+([0-9]+(?:\.[0-9]+)?)\z/) {
                 croak "Duplicate RELEASE\n" if defined $release;
                 $release = $1;
             } elsif ($line =~ /^DIGITS\s+([0-9]+)\z/) {
@@ -278,7 +278,7 @@ sub get_files {
                 my $package_name = $file;
                 $package_name =~ s/\.pm\z//;
                 $package_name =~ s{/}{::}g;
-                print STDERR "Generating initial content for $file\n"; 
+                print STDERR "Generating initial content for $file\n";
                 $file_props->{content} = <<"EOF";
 package $package_name;
 # \$HeadURL: xxx \$

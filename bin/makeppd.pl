@@ -136,19 +136,18 @@ open(my $pfh, "<", $ppd) || do {
 my $pkg = do { local $/; <$pfh> };
 close($pfh) || die "Error closing $ppd: $!";
 
-my ($pkg_name, $v) = $pkg =~ /\A\s*<SOFTPKG\s+NAME="([^\"]+)" VERSION="([^\"]+)"(?:\s+DATE="([^\"]+)")?>\s*$/m or
+my ($pkg_name, $pkg_version) =
+    $pkg =~ /\A\s*<SOFTPKG\s+NAME="([^\"]+)" VERSION="([^\"]+)"(?:\s+DATE="([^\"]+)")?>\s*$/m or
     die "Could not parse package header from $ppd";
 my $ppm_version = 4;
-if ($v =~ /^\d+,\d+,\d+,\d+\z/) {
+if ($pkg_version =~ /^\d+,\d+,\d+,\d+\z/) {
     $ppm_version = 3;
-    $v =~ tr/,/./;
-    $v =~ s/(?:.0){1,2}\z//;
+    $pkg_version =~ tr/,/./;
+    $pkg_version =~ s/(?:.0){1,2}\z//;
 }
-my ($major, $minor) = $v =~ /^(\d+)\.(\d+)\z/  or
-    die "Could not parse version '$v'";
 if (@ARGV) {
     my $version = shift;
-    $version eq "$major.$minor" || die "Package is at version $version, but the ppd is at version $major.$minor\n";
+    $version eq $pkg_version || die "Package is at version $version, but the ppd is at version $pkg_version\n";
 }
 my ($arch) = $pkg =~
     m{^[^\S\n]*<ARCHITECTURE\s+NAME="([^\"]+)"\s*/>[^\S\n]*$}m or
@@ -173,7 +172,7 @@ if ($objects) {
     $arch = "Any";
 }
 
-my $dist = "$pkg_name-$major.$minor.tar.gz";
+my $dist = "$pkg_name-$pkg_version.tar.gz";
 my $code_base = "$arch/$dist";
 $pkg =~ s{^(\s*<CODEBASE\s+HREF=")[^\"]*("\s*/>\s*\n)}{$1$code_base$2}m or
     die "Could not substitute codebase";
@@ -288,7 +287,7 @@ if ($leave) {
 }
 my ($pp_dir, $pp_name) = $ppd =~ m{^(.*?)([^/]+)\z}s or
     die "Could not parse $ppd";
-# print STDERR "$pp_dir, $pp_name, $pkg_name, $major, $minor, $arch\n";
+# print STDERR "$pp_dir, $pp_name, $pkg_name, $pkg_version, $arch\n";
 mkdir("$tmp_dir/$arch") || die "Could not mkdir $tmp_dir/$arch: $!";
 my $new_ppd = "$tmp_dir/$pp_name";
 
@@ -322,7 +321,7 @@ system($zip, "-r", "foo", ".") and do {
     die "Could not zip (rc $?)";
 };
 chdir($from_dir) || die "Could not chdir $from_dir: $!";
-my $ppm = "$pp_dir$pkg_name-$major.$minor.ppm";
+my $ppm = "$pp_dir$pkg_name-$pkg_version.ppm";
 move("$tmp_dir/foo.zip", $ppm) || die "Could not move $tmp_dir/foo.zip to $ppm: $!";
 __END__
 
