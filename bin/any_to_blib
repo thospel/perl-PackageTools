@@ -467,14 +467,25 @@ sub run_filter {
     my ($from, $to) = @_;
     # We assume the files are relatively small,
     # so slurping them into memory is not a problem
-    my $content = slurp($from);
+    my $binary = -B $from;
+    my $content = slurp($from, binmode => $binary);
     # Remove windows \r (in case a windows file gets processed on unix)
     # The later write will be done in native mode so in the actual files on
     # windows they will reappear
     # The end result should be that the blib files are in native format
-    $content =~ s/\r+\n/\n/g;
+    if (!$binary) {
+        $content =~ s/\r\n/\n/g;
+        if ($content !~ /\n\z/) {
+            print "File '$from' does not end in a newline. Adding one to '$to'\n";
+            $content .= "\n";
+        }
+        print "File '$from' has trailing whitespace on lines. Removing it from '$to'\n" if $content =~ s/[^\S\n]+\n/\n/g;
+        print "File '$from' has trailing empty lines. Removing them from '$to'"
+            if $content =~ s/\n+\n\z/\n/;
+    }
 
     if ($from =~ /\.tmpl\z|\.xmpl\z/) {
+        die "File '$from' is unexpectedly binary" if $binary;
         check_comment($from, $content, $from =~ /\.xmpl\z/);
 
 	# Simple text filter.
@@ -539,7 +550,7 @@ sub run_filter {
     }
     # Remove final newline so we don't get dummy line from <!-- TMPL_INCLUDE -->
     # $content =~ s/\n\z// if $from =~ /\.tmpl\z/;
-    spew($to, $content);
+    spew($to, { binmode => $binary }, $content);
 }
 
 while (@ARGV) {
