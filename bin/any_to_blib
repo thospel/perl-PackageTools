@@ -474,7 +474,8 @@ sub run_filter {
     # windows they will reappear
     # The end result should be that the blib files are in native format
     if (!$binary) {
-        $content =~ s/\r\n/\n/g;
+        print "File '$from' uses CRLF. Removing CRs from '$to'\n";
+        if $content =~ s/\r\n/\n/g && $^O ne "MSWin32"
         if ($content !~ /\n\z/) {
             print "File '$from' does not end in a newline. Adding one to '$to'\n";
             $content .= "\n";
