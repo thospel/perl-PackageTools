@@ -13,6 +13,7 @@ t/02_makeppd.t
 t/02_makeppd_ppm3.t
 t/TestDrive.pm
 t/makeppd/LogParse/LogParse.ppd
+t/makeppd/LogParse/LogParse_ppm3.ppd
 t/makeppd/LogParse/blib/lib/LogParse.pm
 t/makeppd/LogParse/blib/lib/LogParse/Attributes.pm
 t/makeppd/LogParse/blib/lib/LogParse/Info.pm
