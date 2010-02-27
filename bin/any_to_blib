@@ -1,20 +1,36 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/any_to_blib $
-# $Id: any_to_blib 3831 2010-02-25 10:23:44Z hospelt $
+# $Id: any_to_blib 3835 2010-02-25 13:00:47Z hospelt $
 use strict;
+use FindBin qw($Script);
+
+our $VERSION = "1.000";
+our $Bin = $FindBin::Bin;
+
+# If the program runs as /foobar/bin/program, find libraries in /foobar/lib
+BEGIN {
+    # Even on windows FindBin uses / in the reported path
+    $Bin = $FindBin::Bin;
+    $Bin =~ s{/+\z}{};
+    $Bin =~
+        ($^O eq "MSWin32" ?
+         qr!^((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*)/[a-zA-Z0-9_.-]+/*\z! :
+         qr!^((?:/[a-zA-Z0-9_:.-]+)*)/[a-zA-Z0-9_.-]+/*\z!) ||
+         die "Could not parse bin directory '$Bin'";
+    # Use untainted version of lib
+    require lib;
+    # Support a simple --blib option for pre-install testing
+    "lib"->import(@ARGV && $ARGV[0] eq "--blib" ? shift && "$1/blib/lib" : "$1/lib");
+}
+
 use Getopt::Long 2.11;
 use ExtUtils::Install;
-use FindBin qw($Bin $Script);
 use File::Basename qw(dirname);
 use Time::Local qw(timegm);
 use Errno qw(ENOENT ESTALE);
 use IO::Handle;
+use POSIX qw(strftime _exit);
 use Carp;
-
-our $VERSION = "1.000";
-
-our $Bin = $FindBin::Bin;
-$Bin =~ s{/+\z}{};
 
 sub time_string {
     my $full_time = shift;
@@ -161,7 +177,7 @@ sub self_help {
     require Config;
     $ENV{PATH} .= ":" unless $ENV{PATH} eq "";
     $ENV{PATH} = "$ENV{PATH}$Config::Config{'installscript'}";
-    exec("perldoc", "-F", $unsafe ? "-U" : (), "$Bin/$Script") || exit 1;
+    exec("perldoc", "-F", $unsafe ? "-U" : (), "$Bin/$Script") || _exit 1;
     # make parser happy
     %Config::Config = ();
 }
@@ -202,9 +218,10 @@ die "Could not parse your command line. Try $Script -h\n" unless
                "version!"	=> \my $version,
                "U|unsafe!"	=> \my $unsafe,
                "h|help!"	=> \my $help);
+die "This is $Script version $VERSION, but the caller wants at least version $min_version\n" if $min_version && $VERSION < $min_version;
+
 self_version("any_to_blib", "PackageTools") if $version;
 self_help() if $help;
-die "This is $Script version $VERSION, but the caller wants at least version $min_version\n" if $min_version && $VERSION < $min_version;
 
 die "Odd number of arguments" if $pairs && @ARGV %2;
 @filter = map {split m{,}, $_ } @filter;
@@ -474,8 +491,8 @@ sub run_filter {
     # windows they will reappear
     # The end result should be that the blib files are in native format
     if (!$binary) {
-        print "File '$from' uses CRLF. Removing CRs from '$to'\n";
-        if $content =~ s/\r\n/\n/g && $^O ne "MSWin32"
+        print "File '$from' uses CRLF. Removing CRs from '$to'\n" if
+            $content =~ s/\r\n/\n/g && $^O ne "MSWin32";
         if ($content !~ /\n\z/) {
             print "File '$from' does not end in a newline. Adding one to '$to'\n";
             $content .= "\n";
