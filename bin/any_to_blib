@@ -211,6 +211,7 @@ die "Could not parse your command line. Try $Script -h\n" unless
     GetOptions("blib|to_dir=s"	=> \$to_dir,
                "pairs!"		=> \my $pairs,
                "filter=s"	=> \my @filter,
+               "do=s"		=> \my @do,
                "force!"		=> \my $force,
                "P|proxy_file=s"	=> \my $proxy_file,
                "min_version=s"	=> \my $min_version,
@@ -226,7 +227,20 @@ self_help() if $help;
 die "Odd number of arguments" if $pairs && @ARGV %2;
 @filter = map {split m{,}, $_ } @filter;
 my %filter = map {$_ => 1 } @filter;
-$force = 1 if $proxy_file && (!-e $proxy_file || -M _ > -M "$Bin/$Script");
+if ($proxy_file) {
+    if (!-e $proxy_file) {
+        $force = 1;
+    } else {
+        my $proxy_time = -M _;
+        for my $script ("$Bin/$Script", @do) {
+            # printf STDERR "%s: %s vs %s\n", $script, $proxy_time, -M $script;
+            if ($proxy_time <= -M $script) {
+                $force = 1;
+                last;
+            }
+        }
+    }
+}
 
 ###################### BEGIN copy from ExtUtils::Install #######################
 
@@ -286,12 +300,6 @@ sub _chmod($$;$ ) {
     }
 }
 
-=item _have_write_access
-
-Abstract a -w check that tries to use POSIX::access() if possible.
-
-=cut
-
 {
     my  $has_posix;
     sub _have_write_access {
@@ -307,25 +315,6 @@ Abstract a -w check that tries to use POSIX::access() if possible.
         }
     }
 }
-
-=item _can_write_dir(C<$dir>)
-
-Checks whether a given directory is writable, taking account
-the possibility that the directory might not exist and would have to
-be created first.
-
-Returns a list, containing: C<($writable, $determined_by, @create)>
-
-C<$writable> says whether whether the directory is (hypothetically) writable
-
-C<$determined_by> is the directory the status was determined from. It will be
-either the C<$dir>, or one of its parents.
-
-C<@create> is a list of directories that would probably have to be created
-to make the requested directory. It may not actually be correct on
-relative paths with C<..> in them. But for our purposes it should work ok
-
-=cut
 
 sub _can_write_dir {
     my $dir=shift;
@@ -365,22 +354,6 @@ sub _can_write_dir {
     }
     return 0;
 }
-
-=item _mkpath($dir,$show,$verbose,$dry_run)
-
-Wrapper around File::Path::mkpath() to handle errors.
-
-If $verbose is true and >1 then additional diagnostics will be produced, also
-this will force $show to true.
-
-If $dry_run is true then the directory will not be created but a check will be
-made to see whether it would be possible to write to the directory, or that
-it would be possible to create the directory.
-
-If $dry_run is not true dies if the directory can not be created or is not
-writable.
-
-=cut
 
 sub _mkpath {
     my ($dir,$show,$verbose,$dry_run)=@_;
@@ -485,26 +458,26 @@ sub run_filter {
     # We assume the files are relatively small,
     # so slurping them into memory is not a problem
     my $binary = -B $from;
-    my $content = slurp($from, binmode => $binary);
+    local $_ = slurp($from, binmode => $binary);
     # Remove windows \r (in case a windows file gets processed on unix)
     # The later write will be done in native mode so in the actual files on
     # windows they will reappear
     # The end result should be that the blib files are in native format
     if (!$binary) {
         print "File '$from' uses CRLF. Removing CRs from '$to'\n" if
-            $content =~ s/\r\n/\n/g && $^O ne "MSWin32";
-        if ($content !~ /\n\z/) {
+            s/\r\n/\n/g && $^O ne "MSWin32";
+        if (! /\n\z/) {
             print "File '$from' does not end in a newline. Adding one to '$to'\n";
-            $content .= "\n";
+            $_ .= "\n";
         }
-        print "File '$from' has trailing whitespace on lines. Removing it from '$to'\n" if $content =~ s/[^\S\n]+\n/\n/g;
+        print "File '$from' has trailing whitespace on lines. Removing it from '$to'\n" if s/[^\S\n]+\n/\n/g;
         print "File '$from' has trailing empty lines. Removing them from '$to'"
-            if $content =~ s/\n+\n\z/\n/;
+            if s/\n+\n\z/\n/;
     }
 
     if ($from =~ /\.tmpl\z|\.xmpl\z/) {
         die "File '$from' is unexpectedly binary" if $binary;
-        check_comment($from, $content, $from =~ /\.xmpl\z/);
+        check_comment($from, $_, $from =~ /\.xmpl\z/);
 
 	# Simple text filter.
         #
@@ -526,7 +499,7 @@ sub run_filter {
         # will become foobar
 
         1 while
-            $content =~ s{
+            s{
            # leading whitespace and {+ or {-
            (?>
              (\n?[^\S\n]*)
@@ -553,22 +526,28 @@ sub run_filter {
         }{filter_substitute($1,$2,$3,$4,$5,$6)}sexg;
         # Remove arguments from closing templates
         # to avoid confusing HTML::Template::Pro
-        $content =~ s{(<(?:!--\s*)?(?:/TMPL_\w+|TMPL_ELSE)).*?\s*((?:--)?>)}{$1$2}sig;
+        s{(<(?:!--\s*)?(?:/TMPL_\w+|TMPL_ELSE)).*?\s*((?:--)?>)}{$1$2}sig;
 
         # Remove leading whitespace if a HTML::Template directive is the first
         # thing on a line
-        $content =~ s{\s*\n[^\S\n]*(<(?:!--\s*)?/?TMPL_\w)}{$1}ig;
+        s{\s*\n[^\S\n]*(<(?:!--\s*)?/?TMPL_\w)}{$1}ig;
 
         # Remove zero comments while eating whitespace around it
-        $content =~ s/\s*<!>\s*//g;
+        s/\s*<!>\s*//g;
 
         # Remove empty single comments without eating whitespace around it
         # You can use this to stop whitespace eaters
-        $content =~ s{<!---->}{}g;
+        s{<!---->}{}g;
     }
     # Remove final newline so we don't get dummy line from <!-- TMPL_INCLUDE -->
-    # $content =~ s/\n\z// if $from =~ /\.tmpl\z/;
-    spew($to, { binmode => $binary }, $content);
+    # s/\n\z// if $from =~ /\.tmpl\z/;
+    for my $do (@do) {
+        if (!do $do) {
+            die $@ if $@;
+            croak "do '$do': $!";
+        }
+    }
+    spew($to, { binmode => $binary }, $_);
 }
 
 while (@ARGV) {
@@ -604,8 +583,8 @@ any_to_blib - A variatoin on ExtUtils::Install::pm_to_blib
 
 =head1 SYNOPSIS
 
- any_to_blib [--proxy_file proxy_file] [--blib blib_directory] {--filter condition} {file}
- any_to_blib [--proxy_file proxy_file] [--blib blib_directory] {--filter condition} --pairs {from to}
+ any_to_blib [--proxy_file proxy_file] [--blib blib_directory] {--filter condition} {--do do_file} {file}
+ any_to_blib [--proxy_file proxy_file] [--blib blib_directory] {--filter condition} {--do do_file} --pairs {from to}
  any_to_blib [--version] [--unsafe] [-U] [-h] [--help]
 
 =head1 DESCRIPTION
@@ -715,6 +694,21 @@ will copy the file F<bar> to F<blib/baz>
 =item X<option_filter>--filter condition
 
 Will make the named condition true for L<macro filtering|"filter_macro">.
+
+=item X<option_do>--do do_file
+
+Preprocess by doing a perl C<do> with F<do_file> as argument. The current 
+content is available in C<$_> to the code in F<do_file>. The F<do_file> should
+return a true value
+
+For example to change all C<foo> to C<bar> you could create a file F<change>
+containing:
+
+  s/foo/bar/g
+
+and then process it using:
+
+  any_to_blib --do change input_file
 
 =item X<option_force>--force
 

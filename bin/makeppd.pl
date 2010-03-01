@@ -1,19 +1,18 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 3825 2010-02-24 08:57:11Z hospelt $
+# $Id: makeppd.pl 3859 2010-03-01 09:41:46Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
 
 use strict;
-use FindBin qw($Script);
+use FindBin qw($Bin $Script);
 
 our $VERSION = "1.014";
 
 # If the program runs as /foobar/bin/program, find libraries in /foobar/lib
 BEGIN {
     # Even on windows FindBin uses / in the reported path
-    $Bin = $FindBin::Bin;
     $Bin =~ s{/+\z}{};
     $Bin =~
         ($^O eq "MSWin32" ?
@@ -49,7 +48,7 @@ my $gnuwin_zip	= 'C:/Program Files/GnuWin32/bin/zip';
 
 &Getopt::Long::config("bundling", "require_order");
 my @OLD_ARGV = @ARGV;
-die "Could not parse your command line (@ARGV) . Try $0 -h\n" unless
+die "Could not parse your command line (@ARGV) . Try $Bin/$Script -h\n" unless
     GetOptions("zip=s"		=> \$zip,
                "tar=s"		=> \$tar,
                "perl=s"		=> \my $perl,
@@ -77,7 +76,7 @@ if ($perl && !$reinvoked) {
     exit $rc >> 8;
 }
 
-die "This is $0 version $VERSION, but the caller wants at least version $min_version\n" if $min_version && $VERSION < $min_version;
+die "This is $Bin/$Script version $VERSION, but the caller wants at least version $min_version\n" if $min_version && $VERSION < $min_version;
 
 if ($version) {
     require PackageTools::Package;
@@ -89,7 +88,7 @@ EOF
 if ($help) {
     $ENV{PATH} .= ":" unless $ENV{PATH} eq "";
     $ENV{PATH} = "$ENV{PATH}$Config{installscript}";
-    exec("perldoc", "-F", $unsafe ? "-U" : (), $0) || exit 1;
+    exec("perldoc", "-F", $unsafe ? "-U" : (), "$Bin/$Script") || exit 1;
 }
 
 sub executable {
