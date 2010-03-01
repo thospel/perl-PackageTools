@@ -6,6 +6,26 @@
 # Create a ppm
 
 use strict;
+use FindBin qw($Script);
+
+our $VERSION = "1.014";
+
+# If the program runs as /foobar/bin/program, find libraries in /foobar/lib
+BEGIN {
+    # Even on windows FindBin uses / in the reported path
+    $Bin = $FindBin::Bin;
+    $Bin =~ s{/+\z}{};
+    $Bin =~
+        ($^O eq "MSWin32" ?
+         qr!^((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*)/[a-zA-Z0-9_.-]+/*\z! :
+         qr!^((?:/[a-zA-Z0-9_:.-]+)*)/[a-zA-Z0-9_.-]+/*\z!) ||
+         die "Could not parse bin directory '$Bin'";
+    # Use untainted version of lib
+    require lib;
+    # Support a simple --blib option for pre-install testing
+    "lib"->import(@ARGV && $ARGV[0] eq "--blib" ? shift && "$1/blib/lib" : "$1/lib");
+}
+
 use Config;
 use IO::Handle;
 use File::Temp qw(tempdir);
@@ -16,8 +36,6 @@ use Cwd;
 use Errno qw(ENOENT ESTALE);
 use Getopt::Long 2.11;
 use ExtUtils::MM_Unix qw();
-
-our $VERSION = "1.014";
 
 use constant MIN_VERSION => "1.011";
 my $zip = "zip";
@@ -49,8 +67,7 @@ die "Could not parse your command line (@ARGV) . Try $0 -h\n" unless
 if ($perl && !$reinvoked) {
     # Reinvoke protects against endless recursive calls
     no warnings "once";
-    require FindBin;
-    my $program = File::Spec->catfile($FindBin::Bin, $FindBin::Script);
+    my $program = File::Spec->catfile($Bin, $Script);
     if ($^O eq "MSWin32") {
         $_ = qq("$_") for $program, @OLD_ARGV;
     }
@@ -59,6 +76,8 @@ if ($perl && !$reinvoked) {
     die "Signal $rc failure on re-exec of re-exec as $perl $program --reinvoke @OLD_ARGV" if $rc & 0xff;
     exit $rc >> 8;
 }
+
+die "This is $0 version $VERSION, but the caller wants at least version $min_version\n" if $min_version && $VERSION < $min_version;
 
 if ($version) {
     require PackageTools::Package;
@@ -72,7 +91,6 @@ if ($help) {
     $ENV{PATH} = "$ENV{PATH}$Config{installscript}";
     exec("perldoc", "-F", $unsafe ? "-U" : (), $0) || exit 1;
 }
-die "This is $0 version $VERSION, but the caller wants at least version $min_version\n" if $min_version && $VERSION < $min_version;
 
 sub executable {
     my ($name) = @_;
