@@ -1,18 +1,18 @@
-# Generated on 2010-03-03 10:46:38 UT using /usr/local/bin/release_pm
+# Generated on 2010-03-03 16:59:00 UT using /usr/local/bin/release_pm
 BEGIN
 SEMANTICS	1.008
 DIGITS		3
 RELEASE		1.005
-DATE		2010-03-03 10:46:38
-VERSION	1d1f6dbf07290326d3ac9f87c3ab0820 1.005 Changes
+DATE		2010-03-03 16:59:00
+VERSION	0615106d043860db4fc8ceb4d35d00d2 1.005 Changes
 VERSION	c1cc5ac698e526df4e1e52f0350b28c3 1.002 MANIFEST
 VERSION	7fc28799e003eef758e3ca50aec4cfe8 1.000 MANIFEST.SKIP
-VERSION	2ebb14cd35c5bda85c2e9b323c3618a7 1.002 Makefile.PL
+VERSION	55ed018a5f03982e0bc1478924aa87b9 1.002 Makefile.PL
 VERSION	98ba89d4f45cd974d97559fa9ec517eb 1.005 README
 VERSION	b65d55c56a03064c09faa6174340ca30 1.000 bin/any_to_blib
 VERSION	d28b4eb8af2e224d3f6348bbb50af4bd 1.014 bin/makeppd.pl
-VERSION	130c0020c7e8c7282117dcb90458460c 1.008 bin/release_pm
-VERSION	10bacda698993eaa6744158adfdc129b 1.005 lib/PackageTools/Package.pm
+VERSION	3aef248daf73d66173a1725e12b90874 1.008 bin/release_pm
+VERSION	ffe1103ae3e543580c8256fae8bfb2d7 1.005 lib/PackageTools/Package.pm
 VERSION	18156955163e72e7f48fe6563b3bdba3 1.002 t/00_syntax.t
 VERSION	0a9660533dd91eccbfdad742b9365371 1.000 t/02_makeppd.t
 VERSION	c23b3db1cb40323e3992db9c3d527df2 1.000 t/02_makeppd_ppm3.t
@@ -23,7 +23,7 @@ VERSION	c4dff79fb06e5ac01aebd42b333887fb 1.002 t/makeppd/LogParse/blib/lib/LogPa
 VERSION	c26e865f85f4335ed05f5c99b55cbe64 1.000 t/makeppd/LogParse/blib/lib/LogParse/Attributes.pm
 VERSION	6e0729c265d3807a0a609c96e936018f 1.000 t/makeppd/LogParse/blib/lib/LogParse/Info.pm
 VERSION	d32984c3cae55a09a84807d285045520 1.000 t/makeppd/LogParse/blib/lib/LogParse/Info/Record.pm
-VERSION	7f4222a0c386cd84e9b6a648c7a706fe 1.005 t/makeppd/LogParse/blib/lib/LogParse/Package.pm
+VERSION	1f1d9b29160e689ac27f4c151551c6c7 1.005 t/makeppd/LogParse/blib/lib/LogParse/Package.pm
 VERSION	527910531ab90c373da9ce7409345585 1.001 t/makeppd/LogParse/blib/lib/LogParse/Record.pm
 VERSION	c43b6d4af64b06d78bcf72b4b61b21b8 1.000 t/makeppd/LogParse/blib/lib/LogParse/State.pm
 VERSION	4b9fc984428cf95ed93014f62301fa93 1.001 t/makeppd/LogParse/blib/lib/LogParse/Transaction.pm

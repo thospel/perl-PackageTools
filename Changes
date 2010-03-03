@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.005	2010-03-03 10:46:38 UT
+1.005	2010-03-03 16:59:00 UT
 	- Add support for requiring a minimum version of release_pm
 	- Some support for the newer ppm format. VERSION may now be a float or
 	  or 4 numbers separated by ,
@@ -13,9 +13,10 @@ Revision history for Perl extension PackageTools.
 	  in the MANIFEST then create a generic one
 	- Accept 0 digit versions on reread in release_pm
 	- Accept 0 digit versions for the package in makeppd.pl
-	- Scripts find libraries relative to the executable. Mostly needed to 
+	- Scripts find libraries relative to the executable. Mostly needed to
 	  make --version work
 	- release_pm also works on deeper Makefile.PLs
+        - release_pm can now generate ANY_TO_BLIB sections
 	- Use $(PERLRUN) instead of $(PERL)
 
 1.004	2009-10-16 11:59:10 UT
