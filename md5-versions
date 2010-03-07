@@ -1,18 +1,18 @@
-# Generated on 2010-03-04 10:58:37 UT using /usr/local/bin/release_pm
+# Generated on 2010-03-04 11:17:19 UT using /home/ton/perl-modules/PackageTools/bin/release_pm
 BEGIN
 SEMANTICS	1.008
 DIGITS		3
 RELEASE		1.005
-DATE		2010-03-04 10:58:37
-VERSION	bbf2026d85f2084652b5fa1ef1313adc 1.005 Changes
+DATE		2010-03-04 11:17:19
+VERSION	f07f1f263413d0b56e075a72e977d243 1.005 Changes
 VERSION	c1cc5ac698e526df4e1e52f0350b28c3 1.002 MANIFEST
 VERSION	7fc28799e003eef758e3ca50aec4cfe8 1.000 MANIFEST.SKIP
 VERSION	55ed018a5f03982e0bc1478924aa87b9 1.002 Makefile.PL
 VERSION	98ba89d4f45cd974d97559fa9ec517eb 1.005 README
 VERSION	b65d55c56a03064c09faa6174340ca30 1.000 bin/any_to_blib
 VERSION	d28b4eb8af2e224d3f6348bbb50af4bd 1.014 bin/makeppd.pl
-VERSION	d99d7402d4852a8d9e1a62b46db0b2e4 1.008 bin/release_pm
-VERSION	e1502bb6c9cbd83db9c84bd3b78e900e 1.005 lib/PackageTools/Package.pm
+VERSION	08a2c23a1c878b654d0d87a83221d711 1.008 bin/release_pm
+VERSION	91135b3e19235a105a2b91c9aefc6427 1.005 lib/PackageTools/Package.pm
 VERSION	18156955163e72e7f48fe6563b3bdba3 1.002 t/00_syntax.t
 VERSION	0a9660533dd91eccbfdad742b9365371 1.000 t/02_makeppd.t
 VERSION	c23b3db1cb40323e3992db9c3d527df2 1.000 t/02_makeppd_ppm3.t
@@ -23,7 +23,7 @@ VERSION	c4dff79fb06e5ac01aebd42b333887fb 1.002 t/makeppd/LogParse/blib/lib/LogPa
 VERSION	c26e865f85f4335ed05f5c99b55cbe64 1.000 t/makeppd/LogParse/blib/lib/LogParse/Attributes.pm
 VERSION	6e0729c265d3807a0a609c96e936018f 1.000 t/makeppd/LogParse/blib/lib/LogParse/Info.pm
 VERSION	d32984c3cae55a09a84807d285045520 1.000 t/makeppd/LogParse/blib/lib/LogParse/Info/Record.pm
-VERSION	e1a93fa71bf9a368d7bca5a7c4568f42 1.005 t/makeppd/LogParse/blib/lib/LogParse/Package.pm
+VERSION	5648fee3a761866347074533a7d15ba4 1.005 t/makeppd/LogParse/blib/lib/LogParse/Package.pm
 VERSION	527910531ab90c373da9ce7409345585 1.001 t/makeppd/LogParse/blib/lib/LogParse/Record.pm
 VERSION	c43b6d4af64b06d78bcf72b4b61b21b8 1.000 t/makeppd/LogParse/blib/lib/LogParse/State.pm
 VERSION	4b9fc984428cf95ed93014f62301fa93 1.001 t/makeppd/LogParse/blib/lib/LogParse/Transaction.pm
