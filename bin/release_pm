@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 3883 2010-03-03 17:50:43Z hospelt $
+# $Id: release_pm 3893 2010-03-07 12:30:05Z hospelt $
 use strict;
 use FindBin qw($Script);
 
