@@ -295,7 +295,8 @@ sub get_files {
             if (!defined $file_props->{content} ||
                 $file_props->{content} eq "") {
                 my $package_name = $file;
-                $package_name =~ s/\.pm\z//;
+                $package_name =~ s{^lib/}{} || die "No lib/ in '$package_name'";
+                $package_name =~ s{\.pm\z}{};
                 $package_name =~ s{/}{::}g;
                 print STDERR "Generating initial content for $file\n";
                 $file_props->{content} = <<"EOF";
