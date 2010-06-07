@@ -19,6 +19,8 @@ Revision history for Perl extension PackageTools.
         - release_pm can now generate ANY_TO_BLIB sections
 	- release_pm now recognizes a -T option in .t files
 	- Use $(PERLRUN) instead of $(PERL)
+	- Empty file doesn't count as binary
+	- Empty file does not count as not ending in newline
 
 1.004	2009-10-16 11:59:10 UT
 	- Ignore META.yml while versioning

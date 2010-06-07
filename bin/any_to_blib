@@ -457,7 +457,7 @@ sub run_filter {
     my ($from, $to) = @_;
     # We assume the files are relatively small,
     # so slurping them into memory is not a problem
-    my $binary = -B $from;
+    my $binary = !-T $from;
     local $_ = slurp($from, binmode => $binary);
     # Remove windows \r (in case a windows file gets processed on unix)
     # The later write will be done in native mode so in the actual files on
@@ -466,7 +466,7 @@ sub run_filter {
     if (!$binary) {
         print "File '$from' uses CRLF. Removing CRs from '$to'\n" if
             s/\r\n/\n/g && $^O ne "MSWin32";
-        if (! /\n\z/) {
+        if (/.\z/) {
             print "File '$from' does not end in a newline. Adding one to '$to'\n";
             $_ .= "\n";
         }
