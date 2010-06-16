@@ -1,10 +1,10 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 4062 2010-03-29 06:34:57Z hospelt $
+# $Id: release_pm 4128 2010-06-16 13:11:10Z hospelt $
 use strict;
 use FindBin qw($Script);
 
-our $VERSION = "1.008";
+our $VERSION = "1.009";
 our $Bin = $FindBin::Bin;
 
 # If the program runs as /foobar/bin/program, find libraries in /foobar/lib
@@ -364,7 +364,9 @@ sub release {
                                       $hour, $min, $sec);
                     $file_props->{content} =~ s/^(Revision history for .*\s*\n|)([0-9.]+)([^\S\n]*.*)/$1 . ($2 eq $release_props->{release} ? "$2\t$now" : "$release_props->{release}\t$now\n\n$2$3")/ie;
                 }
-            } elsif ($file eq "Package.pm" || $file =~ m{/Package\.pm\z}) {
+            } elsif ($file eq "Package.pm" ||
+                     $file =~ m{/Package\.pm\z} &&
+                     $file !~ m{^t/} && $file !~ m{/t/}) {
                 no warnings "once";
                 require Data::Dumper;
                 local $Data::Dumper::Indent = 1;
@@ -392,11 +394,11 @@ sub release {
 
 $postamble{ppm} = <<'EOF';
 ppm: $(DISTNAME).ppd
+	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.014 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
 EOF
 
 $postamble{ppd} = <<'EOF';
 $(DISTNAME).ppd: all ppd
-	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.014 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
 EOF
 
 $postamble{cover} = <<'EOF';
@@ -408,7 +410,7 @@ cover:
 EOF
 
 $postamble{ppm_install} = <<'EOF';
-ppm_install: $(DISTNAME).ppd
+ppm_install: ppm
 	ppm install ppm/$(DISTNAME).ppd
 EOF
 

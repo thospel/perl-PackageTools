@@ -1,21 +1,21 @@
-# Generated on 2010-06-07 12:38:55 UT using /usr/local/bin/release_pm
+# Generated on 2010-06-16 13:04:01 UT using /usr/local/bin/release_pm
 BEGIN
-SEMANTICS	1.008
+SEMANTICS	1.009
 DIGITS		3
-RELEASE		1.005
-DATE		2010-06-07 12:38:55
-VERSION	418b3f9bf987894714a1a43e46c8a046 1.005 Changes
+RELEASE		1.007
+DATE		2010-06-16 13:04:01
+VERSION	54dd557d3128a510aba8e55818cacc24 1.007 Changes
 VERSION	c1cc5ac698e526df4e1e52f0350b28c3 1.002 MANIFEST
 VERSION	7fc28799e003eef758e3ca50aec4cfe8 1.000 MANIFEST.SKIP
-VERSION	55ed018a5f03982e0bc1478924aa87b9 1.002 Makefile.PL
-VERSION	98ba89d4f45cd974d97559fa9ec517eb 1.005 README
+VERSION	c4a860d29f6ce1acdc63bf2e0341a578 1.003 Makefile.PL
+VERSION	aa86230699d2e13f5b6b2ab73de9b4d4 1.007 README
 VERSION	168207b85facf93d89ee83879e576e84 1.000 bin/any_to_blib
 VERSION	d28b4eb8af2e224d3f6348bbb50af4bd 1.014 bin/makeppd.pl
-VERSION	81c8948d4891a876792eea2134ef4dc1 1.008 bin/release_pm
-VERSION	8cb97358418ba9c79b0dc05e73b12236 1.005 lib/PackageTools/Package.pm
+VERSION	89de87c9b8596536196bf166311e4957 1.009 bin/release_pm
+VERSION	b83dc16dd4a40caee43eb89f744389e3 1.007 lib/PackageTools/Package.pm
 VERSION	18156955163e72e7f48fe6563b3bdba3 1.002 t/00_syntax.t
-VERSION	0a9660533dd91eccbfdad742b9365371 1.000 t/02_makeppd.t
-VERSION	c23b3db1cb40323e3992db9c3d527df2 1.000 t/02_makeppd_ppm3.t
+VERSION	65d5bcd8c33fbf095af4d5476a453b80 1.001 t/02_makeppd.t
+VERSION	656e390ee88a40fb7b4e471fe33ded06 1.001 t/02_makeppd_ppm3.t
 VERSION	1a3ddf896f5d2d9e1097c3b577ca9cdf 1.000 t/TestDrive.pm
 VERSION	00e27811d36e0b73c4887db5291cd520 1.000 t/makeppd/LogParse/LogParse.ppd
 VERSION	c87f881f371c1e98f6892e9529f2d760 1.000 t/makeppd/LogParse/LogParse_ppm3.ppd
@@ -23,11 +23,13 @@ VERSION	c4dff79fb06e5ac01aebd42b333887fb 1.002 t/makeppd/LogParse/blib/lib/LogPa
 VERSION	c26e865f85f4335ed05f5c99b55cbe64 1.000 t/makeppd/LogParse/blib/lib/LogParse/Attributes.pm
 VERSION	6e0729c265d3807a0a609c96e936018f 1.000 t/makeppd/LogParse/blib/lib/LogParse/Info.pm
 VERSION	d32984c3cae55a09a84807d285045520 1.000 t/makeppd/LogParse/blib/lib/LogParse/Info/Record.pm
-VERSION	cd2c14049ffb871b82419d317dafe126 1.005 t/makeppd/LogParse/blib/lib/LogParse/Package.pm
+VERSION	759f7cb54530817b55b4b50aca242219 1.006 t/makeppd/LogParse/blib/lib/LogParse/Package.pm
 VERSION	527910531ab90c373da9ce7409345585 1.001 t/makeppd/LogParse/blib/lib/LogParse/Record.pm
 VERSION	c43b6d4af64b06d78bcf72b4b61b21b8 1.000 t/makeppd/LogParse/blib/lib/LogParse/State.pm
 VERSION	4b9fc984428cf95ed93014f62301fa93 1.001 t/makeppd/LogParse/blib/lib/LogParse/Transaction.pm
 VERSION	4dea568034288164b7d2d538148516f7 1.001 t/makeppd/LogParse/blib/lib/LogParse/Transaction/Record.pm
+RELEASED 1.007 1.007 Changes
+RELEASED 1.006 1.006 Changes
 RELEASED 1.005 1.005 Changes
 RELEASED 1.004 1.004 Changes
 RELEASED 1.003 1.003 Changes
@@ -38,9 +40,12 @@ RELEASED 1.002 1.005 MANIFEST
 RELEASED 1.001 1.004 MANIFEST
 RELEASED 1.000 1.000 MANIFEST
 RELEASED 1.000 1.004 MANIFEST.SKIP
+RELEASED 1.003 1.006 Makefile.PL
 RELEASED 1.002 1.005 Makefile.PL
 RELEASED 1.001 1.004 Makefile.PL
 RELEASED 1.000 1.001 Makefile.PL
+RELEASED 1.007 1.007 README
+RELEASED 1.006 1.006 README
 RELEASED 1.005 1.005 README
 RELEASED 1.004 1.004 README
 RELEASED 1.003 1.003 README
@@ -52,6 +57,7 @@ RELEASED 1.014 1.005 bin/makeppd.pl
 RELEASED 1.013 1.004 bin/makeppd.pl
 RELEASED 1.012 1.002 bin/makeppd.pl
 RELEASED 1.011 1.000 bin/makeppd.pl
+RELEASED 1.009 1.006 bin/release_pm
 RELEASED 1.008 1.005 bin/release_pm
 RELEASED 1.007 1.005 bin/release_pm
 RELEASED 1.006 1.004 bin/release_pm
@@ -59,6 +65,8 @@ RELEASED 1.005 1.003 bin/release_pm
 RELEASED 1.004 1.002 bin/release_pm
 RELEASED 1.003 1.001 bin/release_pm
 RELEASED 1.002 1.000 bin/release_pm
+RELEASED 1.007 1.007 lib/PackageTools/Package.pm
+RELEASED 1.006 1.006 lib/PackageTools/Package.pm
 RELEASED 1.005 1.005 lib/PackageTools/Package.pm
 RELEASED 1.004 1.004 lib/PackageTools/Package.pm
 RELEASED 1.003 1.003 lib/PackageTools/Package.pm
@@ -68,7 +76,9 @@ RELEASED 1.000 1.000 lib/PackageTools/Package.pm
 RELEASED 1.002 1.005 t/00_syntax.t
 RELEASED 1.001 1.004 t/00_syntax.t
 RELEASED 1.000 1.001 t/00_syntax.t
+RELEASED 1.001 1.006 t/02_makeppd.t
 RELEASED 1.000 1.005 t/02_makeppd.t
+RELEASED 1.001 1.006 t/02_makeppd_ppm3.t
 RELEASED 1.000 1.005 t/02_makeppd_ppm3.t
 RELEASED 1.000 1.005 t/TestDrive.pm
 RELEASED 1.000 1.005 t/makeppd/LogParse/LogParse.ppd
@@ -77,6 +87,7 @@ RELEASED 1.002 1.005 t/makeppd/LogParse/blib/lib/LogParse.pm
 RELEASED 1.000 1.005 t/makeppd/LogParse/blib/lib/LogParse/Attributes.pm
 RELEASED 1.000 1.005 t/makeppd/LogParse/blib/lib/LogParse/Info.pm
 RELEASED 1.000 1.005 t/makeppd/LogParse/blib/lib/LogParse/Info/Record.pm
+RELEASED 1.006 1.006 t/makeppd/LogParse/blib/lib/LogParse/Package.pm
 RELEASED 1.005 1.005 t/makeppd/LogParse/blib/lib/LogParse/Package.pm
 RELEASED 1.003 1.005 t/makeppd/LogParse/blib/lib/LogParse/Package.pm
 RELEASED 1.001 1.005 t/makeppd/LogParse/blib/lib/LogParse/Record.pm
