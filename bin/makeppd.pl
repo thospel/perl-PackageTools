@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 3859 2010-03-01 09:41:46Z hospelt $
+# $Id: makeppd.pl 4146 2010-06-17 12:35:58Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
@@ -8,7 +8,7 @@
 use strict;
 use FindBin qw($Bin $Script);
 
-our $VERSION = "1.014";
+our $VERSION = "1.015";
 
 # If the program runs as /foobar/bin/program, find libraries in /foobar/lib
 BEGIN {
@@ -226,6 +226,11 @@ my %replace_package =
      "Net::SMTP"		=> [undef, "1.011"],
      "MIME::Base64"		=> [undef, "1.011"],
      "Storable"			=> [undef, "1.013"],
+     "Carp"			=> [undef, "1.015"],
+     "File::Spec"		=> [undef, "1.015"],
+     "IO::Handle"		=> [undef, "1.015"],
+     "POSIX"			=> [undef, "1.015"],
+     "Socket"			=> [undef, "1.015"],
      # Test::More is normally only for testing
      "Test::More"		=> [undef, "1.011"],
      "Win32"			=> [undef, "1.011"],

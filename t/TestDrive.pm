@@ -1,6 +1,6 @@
 package TestDrive;
-# $Id: TestDrive.pm 3799 2010-02-21 14:49:58Z hospelt $
-our $VERSION = "1.000";
+# $Id: TestDrive.pm 4142 2010-06-17 09:39:09Z hospelt $
+our $VERSION = "1.001";
 
 use warnings;
 use strict;
@@ -66,7 +66,7 @@ sub executable {
     my (@lcs_cache, @old, @new);
 
     # Simple recursive memoized longest common subsequence
-    # This code is a bit silly. It walks the diagonal as long as the ends are 
+    # This code is a bit silly. It walks the diagonal as long as the ends are
     # the same. But as soon as they differ it will suddenly fill the whole
     # remaining square. Better to eleminate the common start and end and then
     # fill the complete square non-recursively
@@ -305,13 +305,13 @@ sub work_area(%) {
 
     if ($programs) {
         my $makefile = slurp("$base_dir/Makefile");
-        ($tar) = $makefile =~ /^TAR =\s*(.*\S)\s*\n/m or 
+        ($tar) = $makefile =~ /^TAR =\s*(.*\S)\s*\n/m or
             croak "Could not get TAR from $base_dir/Makefile";
         $tar = $bsd_tar if !executable($tar);
-        ($zip) = $makefile =~ /^ZIP =\s*(.*\S)\s*\n/m or 
+        ($zip) = $makefile =~ /^ZIP =\s*(.*\S)\s*\n/m or
             croak "Could not get ZIP from $base_dir/Makefile";
         $zip = $gnuwin_zip unless executable($zip);
-        ($compress) = $makefile =~ /^COMPRESS =\s*(.*\S)\s*\n/m or 
+        ($compress) = $makefile =~ /^COMPRESS =\s*(.*\S)\s*\n/m or
             croak "Could not get COMPRESS from $base_dir/Makefile";
     }
     # Run is the directory for private test stuff

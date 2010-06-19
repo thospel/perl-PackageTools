@@ -1,10 +1,10 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 4128 2010-06-16 13:11:10Z hospelt $
+# $Id: release_pm 4146 2010-06-17 12:35:58Z hospelt $
 use strict;
 use FindBin qw($Script);
 
-our $VERSION = "1.009";
+our $VERSION = "1.010";
 our $Bin = $FindBin::Bin;
 
 # If the program runs as /foobar/bin/program, find libraries in /foobar/lib
@@ -351,7 +351,11 @@ sub release {
             $release_props->{any_changes};
         for my $file (@{$release_props->{files}}) {
             my $file_props = $file_props->{$file} ||
-                die "Assertion: Unknown file $file";;
+                die "Assertion: Unknown file $file";
+            if (!$file_props->{binary}) {
+                $file_props->{content} =~ s{[^\S\n]+\n}{\n}g;
+                $file_props->{content} =~ s{(?:^\n)+\z}{}m;
+            }
             if ($file eq "README") {
                 $file_props->{content} =~ s/^(.* version )(.*)\n/$1$release_props->{release}\n/i;
                 $file_props->{content} =~ s/^(.*)\n=+\n/"$1\n" . "=" x length($1) . "\n"/ie;
@@ -390,11 +394,13 @@ sub release {
                 my $my_section = "";
                 my $my_any_to_blib = "";
                 if ($file eq "Makefile.PL") {
+                    # We should check the dependencies and then set the makeppd
+                    # min_version based on that
                     $my_section .= << 'POSTAMBLES';
 
 $postamble{ppm} = <<'EOF';
 ppm: $(DISTNAME).ppd
-	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.014 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
+	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.015 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
 EOF
 
 $postamble{ppd} = <<'EOF';

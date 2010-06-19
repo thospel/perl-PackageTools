@@ -2,8 +2,8 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 02_makeppd_ppm3.t'
 #########################
-# $Id: 02_makeppd_ppm3.t 4125 2010-06-16 12:14:58Z hospelt $
-our $VERSION = "1.001";
+# $Id: 02_makeppd_ppm3.t 4142 2010-06-17 09:39:09Z hospelt $
+our $VERSION = "1.002";
 
 use strict;
 use warnings;
@@ -25,7 +25,7 @@ work_area("copy", "$t_dir/makeppd/LogParse",
           programs => 1);
 chdir("$tmp_dir/LogParse");
 my $err = perl_run("$bin_dir/makeppd.pl",
-                   "--leave", "$tmp_dir/LogParse/ppm", 
+                   "--leave", "$tmp_dir/LogParse/ppm",
                    "--prerequisite", "Foo=1.03",
                    "LogParse_ppm3.ppd");
 chdir($base_dir) || die "Could not chdir to $base_dir: $!";

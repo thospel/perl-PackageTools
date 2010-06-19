@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: Makefile.PL 4125 2010-06-16 12:14:58Z hospelt $
+# $Id: Makefile.PL 4146 2010-06-17 12:35:58Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
@@ -7,7 +7,7 @@ use ExtUtils::MakeMaker;
 use FindBin;
 use Config qw(%Config);
 
-our $VERSION = '1.003';
+our $VERSION = '1.004';
 
 # Allows to suppress all program installation with -n (library only)
 use Getopt::Std;
@@ -80,7 +80,7 @@ use vars qw(%postamble);
 
 $postamble{ppm} = <<'EOF';
 ppm: $(DISTNAME).ppd
-	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.014 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
+	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.015 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
 EOF
 
 $postamble{ppd} = <<'EOF';

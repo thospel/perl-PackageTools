@@ -1,10 +1,14 @@
 Revision history for Perl extension PackageTools.
 
-1.007	2010-06-16 13:04:01 UT
+1.007	2010-06-17 12:32:01 UT
 	- Don't update Package.pm files inside a t directory
+	- Remove trailing spaces from all non-binary files
+	- Remove trailing empty lines from all non-binary files
+	- Add Carp, File::Spec, IO::Handle, POSIX and Socket to the known
+	  builtins
 
 1.006	2010-06-16 12:12:23 UT
-	- makeppd.pl is ran by the ppm target instead of the $(DISTNAME).ppd 
+	- makeppd.pl is ran by the ppm target instead of the $(DISTNAME).ppd
 	  target. ppm_install now depends on ppm.
 
 1.005	2010-06-07 12:38:55 UT
