@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 4146 2010-06-17 12:35:58Z hospelt $
+# $Id: release_pm 4156 2010-06-23 14:27:34Z hospelt $
 use strict;
 use FindBin qw($Script);
 
@@ -72,13 +72,21 @@ use FindBin qw($Script);
 
 use constant MTIME	=> 9;	# where to find mtime in stat
 
+my $epoch_base = timegm(0,0,0,1,0,70);
+
 # Todo: For the next incompatible change, replace $package by $module
 # Maybe also add support for for looking up files --Ton
 our $history = <<'EOF'
 use Carp;
 
+my $epoch_base;
+
 sub release_time {
-    return $release_time;
+    if (!defined $epoch_base) {
+        require Time::Local;
+        $epoch_base = Time::Local::timegm(0,0,0,1,0,70);
+    }
+    return $release_time + $epoch_base;
 }
 
 sub released {
@@ -95,6 +103,78 @@ sub released {
         $lowest == 9**9**9;
     return $history->{$lowest};
 }
+
+=head1 NAME
+
+PACKAGE::Package.pm - Version and history of PACKAGE
+
+=head1 SYNOPSIS
+
+  use PACKAGE::Package;
+
+  $epoch_time = PACKAGE::Package->release_time();
+
+  $package_version = PACKAGE::Package->VERSION;
+
+  $min_package_version = PACKAGE::Package::released($module, $module_version);
+
+=head1 DESCRIPTION
+
+In the context of this documentation a C<package> is a set of files that
+together make up a perl extension, not to be confused with the more normal
+perl concept of a namespace for globals.
+
+A package release with a certain package version number contains a number of
+modules and other files with their own version numbers. This module contains a
+history of which files with which versions where in which package release and
+also knows when the current package was released.
+
+This module contains a few simple methods to query this.
+
+The version number of this Package.pm module is always equal to the version
+number of the package release. This means you can use this to query this
+release number and also makes it a convenient target for Makefile.PL
+dependencies.
+
+=head1 METHODS
+
+=over
+
+=item X<release_time>$epoch_time = PACKAGE::Package->release_time()
+
+Returns the the number of non-leap seconds since whatever time the system that
+calls this function considers to be the epoch the last time
+L<release_pm(1)|release_pm> was run (even if that was on another system with a
+different epoch). Since the idea is to run L<release_pm(1)|release_pm> just
+before releasing the package this is therefore the value of
+L<time()|perlfunc/time> on the system calling this function at the moment the
+package was released. This number is suitable for feeding to
+L<gmtime()|perlfunc/gmtime> and L<local_time()|perlfunc/local_time>
+
+=item X<VERSION>$package_version = PACKAGE::Package->VERSION
+
+This is the normal L<UNIVERSAL::VERSION|UNIVERSAL/VERSION> method you can use
+on all modules, but this particular module is guaranteed to have a version
+number that is the same as that of the package
+
+=item X<released>$min_package_version = PACKAGE::Package::released($module, $module_version)
+
+Given a module name (e.g. Foo::Bar) and a module version number (e.g. 1.023)
+returns the lowest package version in which that module (as the file
+F<Foo/Bar.pm>) had at least that module version
+
+=back
+
+=head1 EXPORTS
+
+None.
+
+=head1 SEE ALSO
+
+L<release_pm(1)> which can be used to keep Package.pm files up to date.
+
+=cut
+
 EOF
     ;
 # Import a complete file and return the contents as a single string
@@ -352,7 +432,7 @@ sub release {
         for my $file (@{$release_props->{files}}) {
             my $file_props = $file_props->{$file} ||
                 die "Assertion: Unknown file $file";
-            if (!$file_props->{binary}) {
+            if (!$file_props->{binary} && $file !~ /\.(?:diff|patch)\z/i) {
                 $file_props->{content} =~ s{[^\S\n]+\n}{\n}g;
                 $file_props->{content} =~ s{(?:^\n)+\z}{}m;
             }
@@ -375,9 +455,16 @@ sub release {
                 require Data::Dumper;
                 local $Data::Dumper::Indent = 1;
                 local $Data::Dumper::Sortkeys = 1;
+                my $time_stamp = $release_props->{time_stamp} - $epoch_base;
+                my $package_name = $file;
+                $package_name =~ s{^lib/}{} || die "No lib/ in '$package_name'";
+                $package_name =~ s{/*Package\.pm\z}{};
+                $package_name =~ s{/}{::}g;
+                my $his = $history;
+                $his =~ s/PACKAGE/$package_name/g;
                 my $released_string =
                     Data::Dumper::Dumper($release_props->{released});
-                $released_string =~ s/^\s*\$VAR1\s*=\s*{(.*)}\s*;\s*\z/use vars qw(\$VERSION \$release_time %history);\n\$VERSION = "$release_props->{release}";\n\$release_time = $release_props->{time_stamp};\n%history = ($1);\n\n$history/s || die "Assertion: Unexpected Dumper output";
+                $released_string =~ s/^\s*\$VAR1\s*=\s*{(.*)}\s*;\s*\z/use vars qw(\$VERSION \$release_time %history);\n\$VERSION = "$release_props->{release}";\n\$release_time = $time_stamp;\n%history = ($1);\n\n$his/s || die "Assertion: Unexpected Dumper output";
                 $file_props->{content} =~ s/^[^\S\n]*\#\s*START\s+HISTORY\s*\n(.*?)^\s*\#\s*END\s+HISTORY[^\S\n]*\n/\# START HISTORY\n# autogenerated by $Script\n$released_string\# END HISTORY\n/sm;
                 $file_props->{version_changed} = 1;
                 $file_props->{version} = $release_props->{release};
@@ -401,6 +488,16 @@ sub release {
 $postamble{ppm} = <<'EOF';
 ppm: $(DISTNAME).ppd
 	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.015 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
+EOF
+
+$postamble{ppm3} = <<'EOF';
+ppm3: $(DISTNAME).ppd
+	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.015 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --ppm_version=3 --leave=ppm3 "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
+EOF
+
+$postamble{ppm4} = <<'EOF';
+ppm4: $(DISTNAME).ppd
+	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.015 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --ppm_version=4 --leave=ppm4 "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
 EOF
 
 $postamble{ppd} = <<'EOF';

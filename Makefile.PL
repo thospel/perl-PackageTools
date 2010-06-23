@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: Makefile.PL 4146 2010-06-17 12:35:58Z hospelt $
+# $Id: Makefile.PL 4156 2010-06-23 14:27:34Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
@@ -81,6 +81,16 @@ use vars qw(%postamble);
 $postamble{ppm} = <<'EOF';
 ppm: $(DISTNAME).ppd
 	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.015 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
+EOF
+
+$postamble{ppm3} = <<'EOF';
+ppm3: $(DISTNAME).ppd
+	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.015 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --ppm_version=3 --leave=ppm3 "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
+EOF
+
+$postamble{ppm4} = <<'EOF';
+ppm4: $(DISTNAME).ppd
+	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.015 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --ppm_version=4 --leave=ppm4 "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
 EOF
 
 $postamble{ppd} = <<'EOF';

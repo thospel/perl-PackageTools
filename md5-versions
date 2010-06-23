@@ -1,24 +1,26 @@
-# Generated on 2010-06-17 12:32:01 UT using /usr/local/bin/release_pm
+# Generated on 2010-06-23 13:58:47 UT using /home/tonh/perl-modules/PackageTools/bin/release_pm
 BEGIN
 SEMANTICS	1.010
 DIGITS		3
 RELEASE		1.007
-DATE		2010-06-17 12:32:01
-VERSION	a1bee605bb6d058b81058ecd56771c48 1.007 Changes
-VERSION	c1cc5ac698e526df4e1e52f0350b28c3 1.002 MANIFEST
+DATE		2010-06-23 13:58:47
+VERSION	88c623f644b7ca7714bfc13a74a669c2 1.007 Changes
+VERSION	e1a70773c66be67c9dc4cd6dcc931033 1.003 MANIFEST
 VERSION	7fc28799e003eef758e3ca50aec4cfe8 1.000 MANIFEST.SKIP
-VERSION	c9aa7661cc917e6ac15e8eb5a8de7d85 1.004 Makefile.PL
+VERSION	a11a920f3ef7099e48a4bd11c0850e35 1.004 Makefile.PL
 VERSION	aa86230699d2e13f5b6b2ab73de9b4d4 1.007 README
 VERSION	c7bac57999ba70f355475673b9c65007 1.001 bin/any_to_blib
-VERSION	ba4d9f3b8d4b411a7e0e1685e5899136 1.015 bin/makeppd.pl
-VERSION	63270e53ea4ef759064e8541197dd4b7 1.010 bin/release_pm
-VERSION	50b586ca262331d5baa8fc2952811d5d 1.007 lib/PackageTools/Package.pm
+VERSION	1662b8781e8805bbde69bd19b20509a8 1.015 bin/makeppd.pl
+VERSION	52325f0431148d8f5d4334c617bbfed8 1.010 bin/release_pm
+VERSION	e7d17ed828fee3c37e432275de5e2fa7 1.007 lib/PackageTools/Package.pm
+VERSION	8e65899191ac9dd10aebd173ddacec9b 1.000 t/00_load.t
 VERSION	18156955163e72e7f48fe6563b3bdba3 1.002 t/00_syntax.t
-VERSION	65d5bcd8c33fbf095af4d5476a453b80 1.001 t/02_makeppd.t
-VERSION	dfdd9e219f96a8bce952468c3abb3f75 1.002 t/02_makeppd_ppm3.t
-VERSION	52a6bf69b4d502b5261f456aecc90355 1.001 t/TestDrive.pm
-VERSION	00e27811d36e0b73c4887db5291cd520 1.000 t/makeppd/LogParse/LogParse.ppd
-VERSION	c87f881f371c1e98f6892e9529f2d760 1.000 t/makeppd/LogParse/LogParse_ppm3.ppd
+VERSION	ccee3afd625d2db718c44ac88b332ba7 1.002 t/02_makeppd.t
+VERSION	85e99c7751f94983e22a02931b54bbba 1.002 t/02_makeppd_ppm3.t
+VERSION	18c857566299385aa7d466a5f4cf254a 1.000 t/02_makeppd_ppm4_3.t
+VERSION	d136bbdcc96e397560e14020c3234815 1.001 t/TestDrive.pm
+VERSION	2d5541247b6b7ba535ae4415ee650967 1.001 t/makeppd/LogParse/LogParse.ppd
+VERSION	bab451733706fc19935bce5eae2c13b9 1.001 t/makeppd/LogParse/LogParse_ppm3.ppd
 VERSION	c4dff79fb06e5ac01aebd42b333887fb 1.002 t/makeppd/LogParse/blib/lib/LogParse.pm
 VERSION	c26e865f85f4335ed05f5c99b55cbe64 1.000 t/makeppd/LogParse/blib/lib/LogParse/Attributes.pm
 VERSION	6e0729c265d3807a0a609c96e936018f 1.000 t/makeppd/LogParse/blib/lib/LogParse/Info.pm
@@ -36,6 +38,7 @@ RELEASED 1.003 1.003 Changes
 RELEASED 1.002 1.002 Changes
 RELEASED 1.001 1.001 Changes
 RELEASED 1.000 1.000 Changes
+RELEASED 1.003 1.007 MANIFEST
 RELEASED 1.002 1.005 MANIFEST
 RELEASED 1.001 1.004 MANIFEST
 RELEASED 1.000 1.000 MANIFEST
@@ -77,17 +80,22 @@ RELEASED 1.003 1.003 lib/PackageTools/Package.pm
 RELEASED 1.002 1.002 lib/PackageTools/Package.pm
 RELEASED 1.001 1.001 lib/PackageTools/Package.pm
 RELEASED 1.000 1.000 lib/PackageTools/Package.pm
+RELEASED 1.000 1.007 t/00_load.t
 RELEASED 1.002 1.005 t/00_syntax.t
 RELEASED 1.001 1.004 t/00_syntax.t
 RELEASED 1.000 1.001 t/00_syntax.t
+RELEASED 1.002 1.007 t/02_makeppd.t
 RELEASED 1.001 1.006 t/02_makeppd.t
 RELEASED 1.000 1.005 t/02_makeppd.t
 RELEASED 1.002 1.007 t/02_makeppd_ppm3.t
 RELEASED 1.001 1.006 t/02_makeppd_ppm3.t
 RELEASED 1.000 1.005 t/02_makeppd_ppm3.t
+RELEASED 1.000 1.007 t/02_makeppd_ppm4_3.t
 RELEASED 1.001 1.007 t/TestDrive.pm
 RELEASED 1.000 1.005 t/TestDrive.pm
+RELEASED 1.001 1.007 t/makeppd/LogParse/LogParse.ppd
 RELEASED 1.000 1.005 t/makeppd/LogParse/LogParse.ppd
+RELEASED 1.001 1.007 t/makeppd/LogParse/LogParse_ppm3.ppd
 RELEASED 1.000 1.005 t/makeppd/LogParse/LogParse_ppm3.ppd
 RELEASED 1.002 1.005 t/makeppd/LogParse/blib/lib/LogParse.pm
 RELEASED 1.000 1.005 t/makeppd/LogParse/blib/lib/LogParse/Attributes.pm

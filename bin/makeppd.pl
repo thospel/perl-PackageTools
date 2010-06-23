@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 4146 2010-06-17 12:35:58Z hospelt $
+# $Id: makeppd.pl 4156 2010-06-23 14:27:34Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
@@ -54,7 +54,9 @@ die "Could not parse your command line (@ARGV) . Try $Bin/$Script -h\n" unless
                "perl=s"		=> \my $perl,
                "compress=s"	=> \$compress,
                "leave=s"	=> \my $leave,
+               "root=s"		=> \my $prefix_dir,
                "dependency|prerequisite=f"	=> \my %prereq,
+               "ppm_version=i"	=> \my $ppm_out_version,
                "reinvoke"	=> \my $reinvoked,
                "min_version=s"	=> \my $min_version,
                "map=s"		=> \my %package_map,
@@ -70,7 +72,9 @@ if ($perl && !$reinvoked) {
     if ($^O eq "MSWin32") {
         $_ = qq("$_") for $program, @OLD_ARGV;
     }
-    my $rc = system($perl, $program, "--reinvoke", @OLD_ARGV);
+    # Should also propagate cover options
+    my $rc = system($perl, $INC{"Devel/Cover.pm"} ? "-MDevel::Cover" : (),
+                    $program, "--reinvoke", @OLD_ARGV);
     die "Could not re-exec as $perl $program --reinvoke @OLD_ARGV: $!" if $rc < 0;
     die "Signal $rc failure on re-exec of re-exec as $perl $program --reinvoke @OLD_ARGV" if $rc & 0xff;
     exit $rc >> 8;
@@ -107,26 +111,49 @@ sub executable {
 sub provides {
     my $provides = "";
     my @dirs = "blib/lib";
+    my (%seen, @stat);
     while (defined(my $dir = shift @dirs)) {
-        opendir(my $dh, $dir) || die "Could not opendir '$dir': $!";
+        my $dh;
+        if (defined $prefix_dir) {
+            opendir($dh, "$prefix_dir/$dir") ||
+                die "Could not opendir '$prefix_dir/$dir': $!";
+        } else {
+            opendir($dh, $dir) ||
+                die "Could not opendir '$dir': $!";
+        }
         my @files = sort readdir($dh);
         closedir($dh) || die "Could not closedir '$dir': $!";
         for my $f (@files) {
             next if $f eq "." || $f eq "..";
             my $file = "$dir/$f";
-            my @stat = lstat($file) or die "Could not lstat $file: $!";
+            if (defined $prefix_dir) {
+                @stat = lstat("$prefix_dir/$file") or
+                    die "Could not lstat $prefix_dir/$file: $!";
+            } else {
+                @stat = lstat($file) or
+                    die "Could not lstat $file: $!";
+            }
             if (-d _) {
                 unshift @dirs, $file;
             } elsif (-f _) {
                 next unless $f =~ /\.pm\z/i;
-                my $v = ExtUtils::MM_Unix->parse_version($file);
+                my $v = ExtUtils::MM_Unix->parse_version
+                    (defined $prefix_dir ? "$prefix_dir/$file" : $file);
                 if (defined $v) {
                     $file =~ s!^blib/lib/!! ||
                         die "Assertion: File '$file' does not start with blib/lib/";
                     $file =~ s!\.pm\z!!i ||
                         die "Assertion: File '$file' does not end on .pm";
+                    # if ($ppm_out_version == 3) {
+                    #    $v =~ s/\./,/g;
+                    #    $v .= ",0" x (3 - $v =~ tr/,//);
+                    #    $file =~ s!/!-!g;
+                    #} else {
+                    # ppm version 4
                     $file =~ s!/!::!g;
-                    $provides .= qq(        <PROVIDE NAME="$file" VERSION="$v" />\n);
+                    #}
+                    my $provide = qq(        <PROVIDE NAME="$file" VERSION="$v" />\n);
+                    $provides .= $provide unless $seen{$provide}++;
                 }
             } else {
                 die "Unhandled filetype for '$file'";
@@ -136,6 +163,34 @@ sub provides {
     return $provides;
 }
 
+my $ppm_in_version = 4;
+my (%seen_dep, $demand_version, %replace_package);
+sub depend {
+    # print STDERR "Replace $name\n";
+    my ($pre, $name, $version, $post) = @_;
+    if ($ppm_in_version == 3) {
+        $name =~ s{-}{::}g;
+        $version =~ tr/,/./;
+        $version =~ s/(?:.0){1,2}\z//;
+    }
+    if ($replace_package{$name}) {
+        $demand_version = $replace_package{$name}[1] if
+            $replace_package{$name}[1] > $demand_version;
+        defined($name = $replace_package{$name}[0]) || return "";
+    }
+    my $dep;
+    if ($ppm_out_version == 3) {
+        $name =~ s{::\z}{};
+        $name =~ s{::}{-}g;
+        $version =~ s/\./,/g;
+        $version .= ",0" x (3 - $version =~ tr/,//);
+        $dep = qq(DEPENDENCY NAME="$name" VERSION="$version");
+    } else {
+        $dep = qq(REQUIRE NAME="$name" VERSION="$version");
+    }
+    return $seen_dep{$dep}++ ? "" : $pre . $dep . $post;
+}
+
 # Determine a good tar
 $tar = $bsd_tar unless executable($tar);
 # print STDERR "tar=$tar\n";
@@ -143,8 +198,8 @@ $zip = $gnuwin_zip unless executable($zip);
 # print STDERR "zip=$zip\n";
 
 my $ppd = shift || die "No ppd argument";
-
-my $provides = provides();
+$ppd = "$prefix_dir/$ppd" if
+    defined $prefix_dir && !File::Spec->file_name_is_absolute($ppd);
 
 open(my $pfh, "<", $ppd) || do {
     die "$ppd does not exist yet.\n" if $! == ENOENT || $! == ESTALE;
@@ -156,12 +211,12 @@ close($pfh) || die "Error closing $ppd: $!";
 my ($pkg_name, $pkg_version) =
     $pkg =~ /\A\s*<SOFTPKG\s+NAME="([^\"]+)" VERSION="([^\"]+)"(?:\s+DATE="([^\"]+)")?>\s*$/m or
     die "Could not parse package header from $ppd";
-my $ppm_version = 4;
 if ($pkg_version =~ /^\d+,\d+,\d+,\d+\z/) {
-    $ppm_version = 3;
+    $ppm_in_version = 3;
     $pkg_version =~ tr/,/./;
     $pkg_version =~ s/(?:.0){1,2}\z//;
 }
+$ppm_out_version ||= $ppm_in_version;
 if (@ARGV) {
     my $version = shift;
     $version eq $pkg_version || die "Package is at version $version, but the ppd is at version $pkg_version\n";
@@ -197,9 +252,10 @@ if (%prereq) {
     my $prereq = "";
     for my $pre_name (sort keys %prereq) {
         my $ver = $prereq{$pre_name};
-        if ($ppm_version == 3) {
+        if ($ppm_out_version == 3) {
             $ver =~ s/\./,/g;
-            $ver .= ",0" x (4 - $ver =~ tr/,//);
+            $ver .= ",0" x (3 - $ver =~ tr/,//);
+            $pre_name =~ s{::}{-}g;
             $prereq .=
                 qq(        <DEPENDENCY NAME="$pre_name" VERSION="$ver" />\n);
         } else {
@@ -211,15 +267,18 @@ if (%prereq) {
     $pkg =~ s{^([^\S\n]*<IMPLEMENTATION>[^\S\n]*\n)}{$1$prereq}gm ||
         die "Assertion: No IMPLEMENTATION";
 }
-$pkg =~ s{^([^\S\n]*<IMPLEMENTATION>[^\S\n]*\n)}{$1$provides}gm ||
-    die "Assertion: No IMPLEMENTATION";
+if ($ppm_out_version != 3) {
+    my $provides = provides();
+    $pkg =~ s{^([^\S\n]*<IMPLEMENTATION>[^\S\n]*\n)}{$1$provides}gm ||
+        die "Assertion: No IMPLEMENTATION";
+}
 
 $_ = [$_, "0"] for values %package_map;
 
 # Map from module name to package name and
 # the first version of this program that had the mapping
 # Name undef means the dependency is dropped
-my %replace_package =
+%replace_package =
     (
      # Activestate builtins
      "Time::HiRes"		=> [undef, "1.011"],
@@ -227,10 +286,14 @@ my %replace_package =
      "MIME::Base64"		=> [undef, "1.011"],
      "Storable"			=> [undef, "1.013"],
      "Carp"			=> [undef, "1.015"],
+     "Errno"			=> [undef, "1.015"],
+     "Exporter"			=> [undef, "1.015"],
      "File::Spec"		=> [undef, "1.015"],
      "IO::Handle"		=> [undef, "1.015"],
      "POSIX"			=> [undef, "1.015"],
      "Socket"			=> [undef, "1.015"],
+     "Test::Harness"		=> [undef, "1.015"],
+     "URI"			=> [undef, "1.015"],
      # Test::More is normally only for testing
      "Test::More"		=> [undef, "1.011"],
      "Win32"			=> [undef, "1.011"],
@@ -280,20 +343,14 @@ my %replace_package =
      # User specified mappings
      %package_map
     );
-if ($ppm_version == 3) {
-    %replace_package = map { my $a = $_; $a =~ s/::/-/g; $a } %replace_package;
-}
-my $change = join "|" => map quotemeta($_) => keys %replace_package;
-my $demand_version = MIN_VERSION;
-$pkg =~ s{^(\s*<(?:DEPENDENCY|REQUIRE)\s+NAME=")($change)("\s+VERSION="[^\"]+"\s+/>\s*\n)}{
-    if ($replace_package{$2}) {
-        $demand_version = $replace_package{$2}[1] if
-            $replace_package{$2}[1] > $demand_version;
-        defined $replace_package{$2}[0] ? "$1$replace_package{$2}[0]$3" : "";
-    } else {
-        "";
+if ($ppm_out_version == 3) {
+    for my $replace_package (values %replace_package) {
+        $replace_package->[0] =~ s{::}{-}g if defined $replace_package->[0];
     }
-}meg;
+}
+$demand_version = MIN_VERSION;
+%seen_dep = ();
+$pkg =~ s{^(\s*<)(?:DEPENDENCY|REQUIRE)\s+NAME="([^\"]+)"\s+VERSION="([^\"]+)"(\s+/>\s*\n)}{depend($1, $2, $3, $4)}meg;
 warn("Warning: minimum needed version is $demand_version, not $min_version") if
     $min_version && $demand_version > $min_version;
 $pkg =~ s!^(\s*<DEPENDENCY\s+NAME=")([^\"]*)-Package("\s+VERSION="[^\"]+"\s+/>\s*\n)!$1$2$3!mg;
@@ -330,12 +387,12 @@ print STDERR "\t$tar ", "-czf $tmp_dir/$arch/$dist --exclude \"blib/man*\"", $pp
 system($tar,
        "-czf", "$tmp_dir/$arch/$dist",
        "--exclude", $^O eq "MSWin32" ? qq("blib/man*") : "blib/man*",
-       ($pp_dir eq "" ? () : ("-C", $pp_dir)),
+       $pp_dir eq "" ? () : ("-C", $pp_dir),
        "blib") and do {
            warn("If you don't have bsd tar, you can get it from http://gnuwin32.sourceforge.net/packages/bsdtar.htm\n") if $? == -1 || $? == 256;
            die "Could not tar (rc $?)";
 };
-my $from_dir = getcwd;
+my $from_dir = getcwd();
 chdir($tmp_dir) || die "Could not chdir $tmp_dir: $!";
 print STDERR "\t$zip -r foo .\n";
 system($zip, "-r", "foo", ".") and do {
@@ -353,7 +410,7 @@ makeppd.pl - Generate a ppm file from a standard perl package
 
 =head1 SYNOPSIS
 
-  makeppd.pl [--perl=executable] [--min_version=version_number] [--zip=executable] [--tar=executable] [--compress=executable] [--leave=directory] [--prerequisite name=version] [--dependency name=version] [--map module=package] ppd_file [version]
+  makeppd.pl [--perl=executable] [--min_version=version_number] [--zip=executable] [--tar=executable] [--compress=executable] [--leave=directory] [--root=directory] [--ppm_version] {--prerequisite name=version} {--dependency name=version} {--map module=package} {--objects=object} ppd_file [version]
   makeppd.pl [-U] [--unsafe] --help
   makeppd.pl --version
 
@@ -404,6 +461,10 @@ is cleaned up after running the program. By giving a directory argument to this
 option that directory will be used as the working directory to create the ppm
 package and this directory then does not get cleaned up afterward.
 
+=item X<option_dir>--root=directory
+
+The package base directory. If not given the current directory is used
+
 =item X<option_prerequisite>--prerequisite name=version
 
 =item X<option_prerequisite>--dependency name=version
@@ -411,13 +472,27 @@ package and this directory then does not get cleaned up afterward.
 Allows you to add explicite prerequisites that will get added to the ppd file.
 You can give this option as often as required.
 
+The name should always use :: to separate module parts,even for ppm3 where in
+the ouptut a - will be used).
+
+The version should always be a plain version number, even for ppm3 where the
+version will be split into digits separated by commas.
+
+=item X<ppm_version>--ppm_version
+
+available since version 1.015
+
+Determines ppm version of the ppd output file that will be generated. If not
+given it will be the same as the version of the ppd input file.
+
 =item X<option_map>--map module=package
 
 available since version 1.012
 
 Most Makefile.PL prerequisites are of modules instead of packages but ppd
-prerequisites are in terms of packages. makeppd has a number of often occuring
-mappings from modules to packages built in, but the majority are not known.
+prerequisites (for ppm3) are in terms of packages. makeppd has a number of
+often occuring mappings from modules to packages built in, but the majority are
+not known.
 You can use this option to declare that a given module comes with a given
 package.
 
@@ -425,6 +500,11 @@ Even with this it still won't know how to convert required module versions to
 required package version though.
 
 You can give this option as often as required.
+
+=item X<option_objects>--objects object
+
+This indicates that it is a binary package and the architacture will not be
+removed from the result ppd.
 
 =item X<option_version>--version
 
@@ -459,10 +539,10 @@ on targets like C<ppm> or C<ppm_install>:
   package MY;
   sub postamble {
     return shift->SUPER::postamble() . <<"EOF";
-  ppm: \$(DISTVNAME).ppm
-
-  \$(DISTVNAME).ppm: all ppd
+  ppm: \$(DISTNAME).ppm
 	makeppd.pl "--perl=\$(PERL)" --min_version=1.014 "--zip=\$(ZIP)" "--tar=\$(TAR)" "--compress="\$(COMPRESS)" --leave=ppm \$(DISTNAME).ppd \$(VERSION)
+
+  \$(DISTNAME).ppd: all ppd
 EOF
   }
 

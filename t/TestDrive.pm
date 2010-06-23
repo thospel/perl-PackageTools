@@ -1,5 +1,5 @@
 package TestDrive;
-# $Id: TestDrive.pm 4142 2010-06-17 09:39:09Z hospelt $
+# $Id: TestDrive.pm 4156 2010-06-23 14:27:34Z hospelt $
 our $VERSION = "1.001";
 
 use warnings;
@@ -324,7 +324,8 @@ sub perl_run {
     open(local *OLDERR, ">&STDERR") || die "Can't dup STDERR: $!";
     open(STDERR, ">", "$tmp_dir/run/stderr") ||
         die "Could not open '$tmp_dir/run/stderr' for writing: $!";
-    my $ec = system($^X, @_);
+    my $ec = system($^X, $cover ? "-MDevel::Cover" : (),
+                    shift, "--blib", @_);
     open(STDERR, ">&OLDERR") || die "Can't dup OLDERR: $!";
     my $err = slurp("$tmp_dir/run/stderr");
     if ($ec) {
