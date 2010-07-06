@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 4156 2010-06-23 14:27:34Z hospelt $
+# $Id: makeppd.pl 4159 2010-07-05 14:31:10Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
@@ -170,8 +170,10 @@ sub depend {
     my ($pre, $name, $version, $post) = @_;
     if ($ppm_in_version == 3) {
         $name =~ s{-}{::}g;
-        $version =~ tr/,/./;
-        $version =~ s/(?:.0){1,2}\z//;
+        if (defined $version) {
+            $version =~ tr/,/./;
+            $version =~ s/(?:.0){1,2}\z//;
+        }
     }
     if ($replace_package{$name}) {
         $demand_version = $replace_package{$name}[1] if
@@ -182,11 +184,17 @@ sub depend {
     if ($ppm_out_version == 3) {
         $name =~ s{::\z}{};
         $name =~ s{::}{-}g;
-        $version =~ s/\./,/g;
-        $version .= ",0" x (3 - $version =~ tr/,//);
-        $dep = qq(DEPENDENCY NAME="$name" VERSION="$version");
-    } else {
+        if (defined $version) {
+            $version =~ s/\./,/g;
+            $version .= ",0" x (3 - $version =~ tr/,//);
+            $dep = qq(DEPENDENCY NAME="$name" VERSION="$version");
+        } else {
+            $dep = qq(DEPENDENCY NAME="$name");
+        }
+    } elsif (defined $version) {
         $dep = qq(REQUIRE NAME="$name" VERSION="$version");
+    } else {
+        $dep = qq(REQUIRE NAME="$name");
     }
     return $seen_dep{$dep}++ ? "" : $pre . $dep . $post;
 }
@@ -350,10 +358,10 @@ if ($ppm_out_version == 3) {
 }
 $demand_version = MIN_VERSION;
 %seen_dep = ();
-$pkg =~ s{^(\s*<)(?:DEPENDENCY|REQUIRE)\s+NAME="([^\"]+)"\s+VERSION="([^\"]+)"(\s+/>\s*\n)}{depend($1, $2, $3, $4)}meg;
+$pkg =~ s{^(\s*<)(?:DEPENDENCY|REQUIRE)\s+NAME="([^\"]+)"(?:\s+VERSION="([^\"]+)"|)(\s*/>\s*\n)}{depend($1, $2, $3, $4)}meg;
 warn("Warning: minimum needed version is $demand_version, not $min_version") if
     $min_version && $demand_version > $min_version;
-$pkg =~ s!^(\s*<DEPENDENCY\s+NAME=")([^\"]*)-Package("\s+VERSION="[^\"]+"\s+/>\s*\n)!$1$2$3!mg;
+$pkg =~ s!^(\s*<DEPENDENCY\s+NAME=")([^\"]*)-Package("\s+VERSION="[^\"]+"\s*/>\s*\n)!$1$2$3!mg;
 
 my $tmp_dir = $leave || tempdir(CLEANUP => 1);
 if ($leave) {
@@ -368,7 +376,7 @@ my ($pp_dir, $pp_name) = $ppd =~ m{^(.*?)([^/]+)\z}s or
     die "Could not parse $ppd";
 # print STDERR "$pp_dir, $pp_name, $pkg_name, $pkg_version, $arch\n";
 mkdir("$tmp_dir/$arch") || die "Could not mkdir $tmp_dir/$arch: $!";
-my $new_ppd = "$tmp_dir/$pp_name";
+my $new_ppd = "$tmp_dir/$pkg_name.ppd";
 
 # print $pkg;
 

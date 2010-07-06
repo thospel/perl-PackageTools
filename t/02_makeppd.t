@@ -2,7 +2,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 02_makeppd.t'
 #########################
-# $Id: 02_makeppd.t 4156 2010-06-23 14:27:34Z hospelt $
+# $Id: 02_makeppd.t 4158 2010-07-05 12:59:49Z hospelt $
 our $VERSION = "1.002";
 
 use strict;
@@ -47,7 +47,7 @@ diff(slurp("$tmp_dir/LogParse/ppm/LogParse.ppd"),
         <PROVIDE NAME="LogParse::Transaction::Record" VERSION="1.001" />
         <PROVIDE NAME="LogParse::Info::Record" VERSION="1.000" />
         <REQUIRE NAME="Foo::Bloz" VERSION="1.03" />
-        <REQUIRE NAME="MURI::" VERSION="1.33" />
+        <REQUIRE NAME="MURI::" VERSION="1.33"/>
         <REQUIRE NAME="Bar::Baz" VERSION="1.06" />
         <CODEBASE HREF="Any/LogParse-1.003.tar.gz" />
     </IMPLEMENTATION>

@@ -3,7 +3,7 @@
     <AUTHOR>Ton Hospel &lt;LogParse@ton.iguana.be&gt;</AUTHOR>
     <IMPLEMENTATION>
         <REQUIRE NAME="Test::More" VERSION="0.01" />
-        <REQUIRE NAME="MURI::" VERSION="1.33" />
+        <REQUIRE NAME="MURI::" VERSION="1.33"/>
         <REQUIRE NAME="Bar::Baz" VERSION="1.06" />
         <ARCHITECTURE NAME="MSWin32-x86-multi-thread-5.10" />
         <CODEBASE HREF="" />
