@@ -13,6 +13,7 @@ t/00_syntax.t
 t/02_makeppd.t
 t/02_makeppd_ppm3.t
 t/02_makeppd_ppm4_3.t
+t/02_makeppd_ppm3_4.t
 t/TestDrive.pm
 t/makeppd/LogParse/LogParse.ppd
 t/makeppd/LogParse/LogParse_ppm3.ppd
