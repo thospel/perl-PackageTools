@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.007	2010-07-05 15:07:52 UT
+1.007	2010-08-16 16:52:06 UT
 	- Don't update Package.pm files inside a t directory
 	- Remove trailing spaces from all non-binary files
 	- Remove trailing empty lines from all non-binary files
