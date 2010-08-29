@@ -403,7 +403,11 @@ EOF
             $release_props->next_release;
         }
         if ($import_version &&
-            $file_props->{content} =~ /^\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*($quot)([0-9._]+)\1\s*[;\}]|\$Version:\s*([0-9.]+)\s*\$/m) {
+            $file_props->{content} =~
+            /^\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=
+                       \s*(?:($quot)([0-9._]+)\1	|
+                             qq?\{([0-9._]+)\})\s*[;\}]	|
+                    \$Version:\s*([0-9.]+)\s*\$/mx) {
             $file_props->{version} = $release_props->next_version($+, 0);
             $file_props->{version_changed} = 1;
             $release_props->next_release;
