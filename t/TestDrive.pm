@@ -63,13 +63,14 @@ sub executable {
 }
 
 {
+    no warnings 'recursion';
     my (@lcs_cache, @old, @new);
 
     # Simple recursive memoized longest common subsequence
     # This code is a bit silly. It walks the diagonal as long as the ends are
     # the same. But as soon as they differ it will suddenly fill the whole
-    # remaining square. Better to eleminate the common start and end and then
-    # fill the complete square non-recursively
+    # remaining square. Better would be to eleminate the common start and end
+    # and then fill the complete square non-recursively
     sub lcs_length {
         my ($old_l, $new_l) = @_;
         return 1 if !$old_l-- || !$new_l--;
@@ -87,8 +88,8 @@ sub executable {
             defined $expect && defined $got && $expect eq $got ||
             !defined $expect && !defined $got;
 
-        @old = $got    =~ /(.*\n?)/g;
-        @new = $expect =~ /(.*\n?)/g;
+        @old = $got    =~ /(.*\n|.+)/g;
+        @new = $expect =~ /(.*\n|.+)/g;
         my $old_l = @old;
         my $new_l = @new;
         # Flush cache
@@ -108,28 +109,30 @@ sub executable {
         }
         # Finally output
         $old_l = $new_l = 0;
-        Test::More::diag("");
-        Test::More::diag("--- got");
-        Test::More::diag("+++ expected");
+        my $str = "";
         while (@old_lcs) {
             my $ol = pop @old_lcs;
             for my $i ($old_l..$ol-1) {
-                Test::More::diag("- $old[$i]");
+                $str .= "- $old[$i]";
             }
             my $nl = pop @new_lcs;
             for my $i ($new_l..$nl-1) {
-                Test::More::diag("+ $new[$i]");
+                $str .= "+ $new[$i]";
             }
-            Test::More::diag("  $new[$nl]");
+            $str .= "  $new[$nl]";
             $old_l = $ol+1;
             $new_l = $nl+1;
         }
         for my $i ($old_l..$#old) {
-            Test::More::diag("- $old[$i]");
+            $str .= "- $old[$i]";
         }
         for my $i ($new_l..$#new) {
-            Test::More::diag("+ $new[$i]");
+            $str .= "+ $new[$i]";
         }
+        $str =~ s{(\A|(?:^ .*\n){2})(?:^ .*\n)+(\z|(?:^ .*\n){2})}{$1...\n$2}mg;
+        $str = "\n--- got\n+++ expected\n$str";
+        $str =~ s/\n\z//;
+        Test::More::diag("$str");
 
         goto &Test::More::fail;
     }
