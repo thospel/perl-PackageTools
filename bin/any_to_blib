@@ -670,14 +670,14 @@ will become:
   foo<!>bar
 
 This allows you to spread things over multiple lines for clarity without
-introducing sprious spaces. It is also useful to use at the end of a file
+introducing spurious spaces. It is also useful to use at the end of a file
 that will get included with <!-- TMPL_INCLUDE --> since this will remove the
 extra most editors will put there.
 
 =item X<filter_single_empty_coments>Remove single empty comments without their whitespace
 
 This will remove single empty comments of the form <!----> B<without> eating
-the surrounding whitespace. This is useful if the above whitespace removels are
+the surrounding whitespace. This is useful if the above whitespace removals are
 too aggressive. For example
 
   foo <!---->
