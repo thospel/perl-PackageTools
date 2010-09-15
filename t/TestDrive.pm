@@ -1,5 +1,5 @@
 package TestDrive;
-# $Id: TestDrive.pm 4156 2010-06-23 14:27:34Z hospelt $
+# $Id: TestDrive.pm 4192 2010-09-15 15:31:10Z hospelt $
 our $VERSION = "1.001";
 
 use warnings;
@@ -210,11 +210,11 @@ sub cpr {
     }
     opendir(my $dh, $fd) || die "Could not opendir '$fd': $!";
     my @files = sort readdir $dh;
-    closedir($dh) || die "Error closing $fd: $!";
+    closedir($dh) || die "Error closing '$fd': $!";
     for my $f (@files) {
         next if $f eq "." || $f eq "..";
         my $file = "$fd/$f";
-        lstat($file) || die "Could not lstat $file: $!";
+        lstat($file) || die "Could not lstat '$file': $!";
         if (-d _) {
             cpr($fd, $td, $f);
         } elsif (-f _) {
@@ -228,12 +228,12 @@ sub cpr {
 
 sub options() {
     open(my $fh, "<", $t_option_file) ||
-        die "Could not open $t_option_file: $!";
+        die "Could not open '$t_option_file': $!";
     local $_;
     my %options;
     while (<$fh>) {
         /^\s*(\w+)\s*=\s*(.*\S)\s*\z/ ||
-            die "Could not parse line $. in $t_option_file";
+            die "Could not parse line $. in '$t_option_file'";
         $options{$1} = $2;
     }
     return \%options;

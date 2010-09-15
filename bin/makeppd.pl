@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 4160 2010-07-08 16:13:48Z hospelt $
+# $Id: makeppd.pl 4192 2010-09-15 15:31:10Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
@@ -128,10 +128,10 @@ sub provides {
             my $file = "$dir/$f";
             if (defined $prefix_dir) {
                 @stat = lstat("$prefix_dir/$file") or
-                    die "Could not lstat $prefix_dir/$file: $!";
+                    die "Could not lstat '$prefix_dir/$file': $!";
             } else {
                 @stat = lstat($file) or
-                    die "Could not lstat $file: $!";
+                    die "Could not lstat '$file': $!";
             }
             if (-d _) {
                 unshift @dirs, $file;
@@ -214,7 +214,7 @@ open(my $pfh, "<", $ppd) || do {
     die "Could not open '$ppd': $!";
 };
 my $pkg = do { local $/; <$pfh> };
-close($pfh) || die "Error closing $ppd: $!";
+close($pfh) || die "Error closing '$ppd': $!";
 
 my ($pkg_name, $pkg_version) =
     $pkg =~ /\A\s*<SOFTPKG\s+NAME="([^\"]+)" VERSION="([^\"]+)"(?:\s+DATE="([^\"]+)")?>\s*$/m or
@@ -365,8 +365,8 @@ $pkg =~ s!^(\s*<DEPENDENCY\s+NAME=")([^\"]*)-Package("\s+VERSION="[^\"]+"\s*/>\s
 
 my $tmp_dir = $leave || tempdir(CLEANUP => 1);
 if ($leave) {
-    -d $leave || mkdir($leave) || die "Could not create $leave: $!";
-    opendir(my $dh, $leave) || die "Could not opendir $leave: $!";
+    -d $leave || mkdir($leave) || die "Could not mkdir '$leave': $!";
+    opendir(my $dh, $leave) || die "Could not opendir '$leave': $!";
     for my $f (readdir($dh)) {
         next if $f eq "." || $f eq "..";
         rmtree("$leave/$f");
@@ -375,7 +375,7 @@ if ($leave) {
 my ($pp_dir, $pp_name) = $ppd =~ m{^(.*?)([^/]+)\z}s or
     die "Could not parse $ppd";
 # print STDERR "$pp_dir, $pp_name, $pkg_name, $pkg_version, $arch\n";
-mkdir("$tmp_dir/$arch") || die "Could not mkdir $tmp_dir/$arch: $!";
+mkdir("$tmp_dir/$arch") || die "Could not mkdir '$tmp_dir/$arch': $!";
 my $new_ppd = "$tmp_dir/$pkg_name.ppd";
 
 # print $pkg;
