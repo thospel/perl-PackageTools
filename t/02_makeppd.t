@@ -3,10 +3,11 @@
 # `make test'. After `make install' it should work as `perl 02_makeppd.t'
 #########################
 # $Id: 02_makeppd.t 4158 2010-07-05 12:59:49Z hospelt $
-our $VERSION = "1.002";
-
 use strict;
 use warnings;
+
+our $VERSION = "1.002";
+
 use FindBin;
 
 BEGIN {

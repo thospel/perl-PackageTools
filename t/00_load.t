@@ -3,10 +3,10 @@
 # `make test'. After `make install' it should work as `perl 00_load.t'
 #########################
 # $Id: 00_load.t 4156 2010-06-23 14:27:34Z hospelt $
-our $VERSION = "1.000";
-
-use warnings;
 use strict;
+use warnings;
+
+our $VERSION = "1.000";
 
 use Test::More tests => 7;
 for my $module qw(PackageTools::Package) {

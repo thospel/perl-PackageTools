@@ -1,5 +1,9 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings;
+
+our $VERSION = "1.000";
+
 use PPI;
 use vars qw($package %lexical)
 

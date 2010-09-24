@@ -2,10 +2,12 @@
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/any_to_blib $
 # $Id: any_to_blib 4192 2010-09-15 15:31:10Z hospelt $
 use strict;
-use FindBin qw($Script);
+use warnings;
 
 our $VERSION = "1.001";
-our $Bin = $FindBin::Bin;
+
+use FindBin qw($Script);
+our $Bin;
 
 # If the program runs as /foobar/bin/program, find libraries in /foobar/lib
 BEGIN {
@@ -14,8 +16,8 @@ BEGIN {
     $Bin =~ s{/+\z}{};
     $Bin =~
         ($^O eq "MSWin32" ?
-         qr!^((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*)/[a-zA-Z0-9_.-]+/*\z! :
-         qr!^((?:/[a-zA-Z0-9_:.-]+)*)/[a-zA-Z0-9_.-]+/*\z!) ||
+         qr{^((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*)/[a-zA-Z0-9_.-]+/*\z} :
+         qr{^((?:/[a-zA-Z0-9_:.-]+)*)/[a-zA-Z0-9_.-]+/*\z}) ||
          die "Could not parse bin directory '$Bin'";
     # Use untainted version of lib
     require lib;
@@ -31,6 +33,8 @@ use Errno qw(ENOENT ESTALE);
 use IO::Handle;
 use POSIX qw(strftime _exit);
 use Carp;
+
+use constant LINE_WIDTH	=> 72;
 
 sub time_string {
     my $full_time = shift;
@@ -205,7 +209,7 @@ sub self_version {
     exit 0;
 }
 
-&Getopt::Long::config("bundling", "require_order");
+Getopt::Long::config("bundling", "require_order");
 my $to_dir = "blib";
 die "Could not parse your command line. Try $Script -h\n" unless
     GetOptions("blib|to_dir=s"	=> \$to_dir,
@@ -233,7 +237,7 @@ if ($proxy_file) {
     } else {
         my $proxy_time = -M _;
         for my $script ("$Bin/$Script", @do) {
-            # printf STDERR "%s: %s vs %s\n", $script, $proxy_time, -M $script;
+            # warn "%s: %s vs %s\n", $script, $proxy_time, -M $script;
             if ($proxy_time <= -M $script) {
                 $force = 1;
                 last;
@@ -270,7 +274,7 @@ if ($Is_VMS) {
 }
 
 sub _estr(@) {
-    return join "\n",'!' x 72,@_,'!' x 72,'';
+    return join "\n",'!' x LINE_WIDTH,@_,'!' x LINE_WIDTH,'';
 }
 
 {
@@ -389,13 +393,13 @@ sub _mkpath {
 
 sub filter_substitute {
     my ($pre_space, $pre_char, $conds, $body, $post_char, $post_space) = @_;
-    #print STDERR "=" x 20, "\n";
-    #print STDERR "pre_space=$pre_space|\n";
-    #print STDERR "pre_char=$pre_char|\n";
-    #print STDERR "conds=$conds|\n";
-    #print STDERR "body=$body|\n";
-    #print STDERR "post_char=$post_char|\n";
-    #print STDERR "post_space=$post_space|\n";
+    #warn "=" x 20, "\n";
+    #warn "pre_space=$pre_space|\n";
+    #warn "pre_char=$pre_char|\n";
+    #warn "conds=$conds|\n";
+    #warn "body=$body|\n";
+    #warn "post_char=$post_char|\n";
+    #warn "post_space=$post_space|\n";
     $pre_space = ""  if $pre_char  eq "-";
     $post_space = "" if $post_char eq "-";
     for my $cond (split /\s*\|\s*/, $conds) {
@@ -464,14 +468,14 @@ sub run_filter {
     # windows they will reappear
     # The end result should be that the blib files are in native format
     if (!$binary) {
-        print "File '$from' uses CRLF. Removing CRs from '$to'\n" if
+        warn "File '$from' uses CRLF. Removing CRs from '$to'\n" if
             s/\r\n/\n/g && $^O ne "MSWin32";
         if (/.\z/) {
-            print "File '$from' does not end in a newline. Adding one to '$to'\n";
+            warn "File '$from' does not end in a newline. Adding one to '$to'\n";
             $_ .= "\n";
         }
-        print "File '$from' has trailing whitespace on lines. Removing it from '$to'\n" if s/[^\S\n]+\n/\n/g;
-        print "File '$from' has trailing empty lines. Removing them from '$to'"
+        warn "File '$from' has trailing whitespace on lines. Removing it from '$to'\n" if s/[^\S\n]+\n/\n/g;
+        warn "File '$from' has trailing empty lines. Removing them from '$to'"
             if s/\n+\n\z/\n/;
     }
 
@@ -574,7 +578,7 @@ while (@ARGV) {
 
     if (-f $to){
         if (!$force && (-M _)+$Is_VMS == -M $from) {
-            print "Skip $to (unchanged)\n" if $verbose;
+            warn "Skip $to (unchanged)\n" if $verbose;
             next;
         }
         # we wont try hard here. its too likely to mess things up.
@@ -583,7 +587,7 @@ while (@ARGV) {
         _mkpath(dirname($to),0,0755);
     }
     run_filter($from, $to);
-    print "filter($Script) $from >$to\n";
+    warn "filter($Script) $from >$to\n";
     my($mode,$atime,$mtime) = (stat $from)[2,8,9];
     utime($atime,$mtime+$Is_VMS,$to);
     _chmod(0444 | ( $mode & 0111 ? 0111 : 0 ),$to);
@@ -592,7 +596,7 @@ __END__
 
 =head1 NAME
 
-any_to_blib - A variatoin on ExtUtils::Install::pm_to_blib
+any_to_blib - A variation on ExtUtils::Install::pm_to_blib
 
 =head1 SYNOPSIS
 
@@ -619,7 +623,7 @@ the following transformations are done:
 
 =item X<filter_pro>attribute filtering
 
-All attributes to closing and intermeditate HTML::Template directives are
+All attributes to closing and intermediate HTML::Template directives are
 removed.
 
 So code like:
@@ -646,7 +650,7 @@ handle these attributes (unless a compile time flag is set)
 
 =item X<filter_comments>Remove all C and C++ style comments from .js and .css files
 
-=item X<filter_whitespace_left>Remove all whitespace left of an HTML::Template directive that is the first thing on aline
+=item X<filter_whitespace_left>Remove all whitespace left of an HTML::Template directive that is the first thing on a line
 
 If an L<HTML::Template|HTML::Template> directive is the first thing on a line
 all whitespace to the left is removed, even whitespace before the newline before

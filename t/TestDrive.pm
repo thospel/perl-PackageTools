@@ -1,9 +1,10 @@
 package TestDrive;
 # $Id: TestDrive.pm 4192 2010-09-15 15:31:10Z hospelt $
+use strict;
+use warnings;
+
 our $VERSION = "1.001";
 
-use warnings;
-use strict;
 use Carp;
 use FindBin qw($Bin $Script);
 use Errno qw(ENOENT ESTALE);
@@ -19,12 +20,12 @@ our @EXPORT_OK =
     qw($tmp_dir $t_dir $base_dir $bin_dir $me $cover $tar $zip $compress
        slurp spew rmtree mkpath cpr work_area perl_run diff);
 
-$Bin =~ s!/\z!!;
-$Bin =~ tr!\\!/! if $^O eq "MSWin32";
+$Bin =~ s{/\z}{};
+$Bin =~ tr{\\}{/} if $^O eq "MSWin32";
 our $t_dir = $Bin;
 my $t_option_file = "$t_dir/options";
 our $base_dir = $t_dir;
-$base_dir =~ s!/t\z!! ||
+$base_dir =~ s{/t\z}{} ||
     croak "test directory $t_dir does not seem to end on t";
 our $bin_dir = "$base_dir/bin";
 

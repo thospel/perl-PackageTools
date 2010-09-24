@@ -1,11 +1,14 @@
 #!/usr/bin/perl -w
+## no critic (Modules::ProhibitMultiplePackages)
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
 # $Id: release_pm 4192 2010-09-15 15:31:10Z hospelt $
 use strict;
-use FindBin qw($Script);
+use warnings;
 
 our $VERSION = "1.010";
-our $Bin = $FindBin::Bin;
+
+use FindBin qw($Script);
+our $Bin;
 
 # If the program runs as /foobar/bin/program, find libraries in /foobar/lib
 BEGIN {
@@ -46,6 +49,7 @@ die "Could not parse your command line. Try $Bin/$Script -h\n" unless
 
 if ($print_version) {
     require PackageTools::Package;
+    ## no critic (RequireCheckedSyscalls)
     print <<"EOF";
 release_pm $VERSION (PackageTools $PackageTools::Package::VERSION)
 EOF
@@ -72,7 +76,7 @@ use FindBin qw($Script);
 
 use constant MTIME	=> 9;	# where to find mtime in stat
 
-my $epoch_base = timegm(0,0,0,1,0,70);
+my $epoch_base = timegm(0,0,0,1,0,70);	## no critic (ProhibitMagicNumbers)
 
 # Todo: For the next incompatible change, replace $package by $module
 # Maybe also add support for for looking up files --Ton
@@ -84,7 +88,7 @@ my $epoch_base;
 sub release_time {
     if (!defined $epoch_base) {
         require Time::Local;
-        $epoch_base = Time::Local::timegm(0,0,0,1,0,70);
+        $epoch_base = Time::Local::timegm(0,0,0,1,0,70);	## no critic (ProhibitMagicNumbers)
     }
     return $release_time + $epoch_base;
 }
@@ -92,7 +96,7 @@ sub release_time {
 sub released {
     my ($package, $version) = @_;
     my $p = $package;
-    $p =~ s!::!/!g;
+    $p =~ s{::}{/}g;
     my $history = $history{"lib/$p.pm"} ||
         croak "Could not find a history for package '$package'";
     my $lowest = 9**9**9;
@@ -103,10 +107,11 @@ sub released {
         $lowest == 9**9**9;
     return $history->{$lowest};
 }
-
+1;
+__END__
 =head1 NAME
 
-PACKAGE::Package.pm - Version and history of PACKAGE
+PACKAGE::Package - Version and history of PACKAGE
 
 =head1 SYNOPSIS
 
@@ -229,7 +234,7 @@ sub get_versions_file {
             $line =~ s/^\s+//;
             next if $line eq "" || $line =~ /^\#/;
             if (!$begun) {
-                if ($line =~ /^BEGIN\z/) {
+                if ($line eq "BEGIN") {
                     $begun = 1;
                     next;
                 }
@@ -263,7 +268,7 @@ sub get_versions_file {
                 croak "Your name isn't Lovelace" if $1 < 1900;
                 croak "Newyear in december" if $2 < 1;
                 $date = timegm($6, $5, $4, $3, $2-1, $1-1900);
-            } elsif ($line =~ /^END\z/) {
+            } elsif ($line eq "END") {
                 $ended = 1;
             } else {
                 croak "Could not parse line $line_nr in file $sums: '$line'";
@@ -311,7 +316,7 @@ sub next_release {
     if (!$release_props->{release_changed}) {
         $release_props->{release} = $release_props->next_version($release_props->{release});
         $release_props->{release_changed} = 1;
-        print STDERR "Release $release_props->{release}\n";
+        warn "Release $release_props->{release}\n";
     }
     $release_props->{any_changes} ||= 1;
 }
@@ -328,9 +333,9 @@ sub get_MANIFEST {
     my $manifest = slurp("MANIFEST");
     if ($manifest !~ s/^\s*\Q$sums\E\s*\n//m) {
         croak "$sums is not in MANIFEST\n" if !defined $start_release;
-        print STDERR "Creating empty $sums\n";
+        warn "Creating empty $sums\n";
         spew($sums, "");
-        print STDERR "Adding $sums to MANIFEST\n";
+        warn "Adding $sums to MANIFEST\n";
         spew("MANIFEST", "$manifest$sums\n");
     }
     # META.yml is often generated during the make dist so it's often absent
@@ -357,7 +362,7 @@ sub get_files {
         my $file_props = delete $release_props->{old_file_props}{$file};
         if ($file_props) {
             $released->{$file}{$file_props->{version}} ||= do {
-                print STDERR "Fixup missing RELEASED for $file\n";
+                warn "Fixup missing RELEASED for $file\n";
                 $release_props->{release};
             };
             $file_props->{version_changed} = !$next && $released->{$file}{$file_props->{version}} eq $release_props->{release};
@@ -368,7 +373,7 @@ sub get_files {
                 file	=> $file,
             };
             $release_props->next_release;
-            print STDERR "New $file\n";
+            warn "New $file\n";
         }
         if ($file =~ m{\bPackage\.pm\z}) {
             ($file_props->{binary}, $file_props->{content}) = slurp($file, 1);
@@ -378,7 +383,7 @@ sub get_files {
                 $package_name =~ s{^lib/}{} || die "No lib/ in '$package_name'";
                 $package_name =~ s{\.pm\z}{};
                 $package_name =~ s{/}{::}g;
-                print STDERR "Generating initial content for $file\n";
+                warn "Generating initial content for $file\n";
                 $file_props->{content} = <<"EOF";
 package $package_name;
 # \$HeadURL: xxx \$
@@ -386,8 +391,6 @@ package $package_name;
 
 # START HISTORY
 # END HISTORY
-
-1;
 EOF
     ;
             }
@@ -418,7 +421,7 @@ EOF
     if (%{$release_props->{old_file_props}}) {
         $release_props->next_release;
         for my $file (keys %{$release_props->{old_file_props}}) {
-            print STDERR "Forgetting $file\n";
+            warn "Forgetting $file\n";
         }
     }
     $release_props->{now} = time;
@@ -468,7 +471,7 @@ sub release {
                 $his =~ s/PACKAGE/$package_name/g;
                 my $released_string =
                     Data::Dumper::Dumper($release_props->{released});
-                $released_string =~ s/^\s*\$VAR1\s*=\s*{(.*)}\s*;\s*\z/use vars qw(\$VERSION \$release_time %history);\n\$VERSION = "$release_props->{release}";\n\$release_time = $time_stamp;\n%history = ($1);\n\n$his/s || die "Assertion: Unexpected Dumper output";
+                $released_string =~ s/^\s*\$VAR1\s*=\s*{(.*)}\s*;\s*\z/use strict;\nuse warnings;\nuse vars qw(\$VERSION \$release_time %history);\n\$VERSION = "$release_props->{release}";\n\$release_time = $time_stamp;\t## no critic (ProhibitMagicNumbers)\n%history = ($1);\n\n$his/s || die "Assertion: Unexpected Dumper output";
                 $file_props->{content} =~ s/^[^\S\n]*\#\s*START\s+HISTORY\s*\n(.*?)^\s*\#\s*END\s+HISTORY[^\S\n]*\n/\# START HISTORY\n# autogenerated by $Script\n$released_string\# END HISTORY\n/sm;
                 $file_props->{version_changed} = 1;
                 $file_props->{version} = $release_props->{release};
@@ -594,7 +597,7 @@ $my_any_to_blib# END ANY_TO_BLIB\n}sm;
             my $content_chksum = chksum($file_props);
             if ($file_props->{content_chksum} ne $content_chksum) {
                 $file_props->{content_chksum} = $content_chksum;
-                print STDERR "Updated $file\n";
+                warn "Updated $file\n";
             }
             my $force_package_version =
                 $file =~ /\.pm\z/ &&
@@ -641,7 +644,7 @@ sub set_version_file {
             die "Assertion: No data for $file";
         if ($file_props->{content_chksum} ne $file_props->{disk_chksum}) {
             spew($file, $file_props->{content}, $file_props->{binary});
-            print STDERR "Restored $file\n" if $file_props->{old_chksum} && $file_props->{old_chksum} eq $file_props->{content_chksum};
+            warn "Restored $file\n" if $file_props->{old_chksum} && $file_props->{old_chksum} eq $file_props->{content_chksum};
         }
         $content .=
             sprintf("VERSION\t%s %s %s\n", @$file_props{qw(content_chksum version file)});
@@ -663,9 +666,9 @@ sub set_version_file {
     my $updates = 0;
     if ($c1 ne $c2) {
         if ($release_props->{old_content} eq "") {
-            print STDERR "New $sums\n";
+            warn "New $sums\n";
         } else {
-            print STDERR "Updated $sums\n";
+            warn "Updated $sums\n";
             spew("$sums.old", $release_props->{old_content})
         }
         spew($sums, $content);
@@ -675,10 +678,12 @@ sub set_version_file {
 }
 
 package main;
+use constant MAX_DEPTH => 50;
+
 eval {
     if (!defined $start_release) {
         # Walk up until we find a md5-versions file
-        for (1..50) {
+        for (1..MAX_DEPTH) {
             last if -e $sums;
             chdir("..") || die "Could not chdir to ..: $!";
         }
@@ -792,8 +797,8 @@ numbers of these files until finally you are ready to make the next release.
 
 If it turns out there is a problem with your released version normally you will
 make a new release with all the fixes and a new package version number so that
-people that got the bugy version can recognize this from the package version and
-upgrade. But sometimes you may decide that you want to fix the released
+people that got the buggy version can recognize this from the package version
+and upgrade. But sometimes you may decide that you want to fix the released
 package and make a new distribution instead. You however don't want your working
 copy to reuse file version numbers from the fixed release. In that case you can
 work like this:

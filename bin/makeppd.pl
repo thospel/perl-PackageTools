@@ -6,18 +6,19 @@
 # Create a ppm
 
 use strict;
-use FindBin qw($Bin $Script);
+use warnings;
 
 our $VERSION = "1.015";
 
+use FindBin qw($Bin $Script);
 # If the program runs as /foobar/bin/program, find libraries in /foobar/lib
 BEGIN {
     # Even on windows FindBin uses / in the reported path
     $Bin =~ s{/+\z}{};
     $Bin =~
         ($^O eq "MSWin32" ?
-         qr!^((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*)/[a-zA-Z0-9_.-]+/*\z! :
-         qr!^((?:/[a-zA-Z0-9_:.-]+)*)/[a-zA-Z0-9_.-]+/*\z!) ||
+         qr{^((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*)/[a-zA-Z0-9_.-]+/*\z} :
+         qr{^((?:/[a-zA-Z0-9_:.-]+)*)/[a-zA-Z0-9_.-]+/*\z}) ||
          die "Could not parse bin directory '$Bin'";
     # Use untainted version of lib
     require lib;
@@ -46,7 +47,7 @@ my $bsd_tar	= 'C:/Program Files/GnuWin32/bin/bsdtar';
 # http://gnuwin32.sourceforge.net/packages/zip.htm
 my $gnuwin_zip	= 'C:/Program Files/GnuWin32/bin/zip';
 
-&Getopt::Long::config("bundling", "require_order");
+Getopt::Long::config("bundling", "require_order");
 my @OLD_ARGV = @ARGV;
 die "Could not parse your command line (@ARGV) . Try $Bin/$Script -h\n" unless
     GetOptions("zip=s"		=> \$zip,
@@ -84,6 +85,7 @@ die "This is $Bin/$Script version $VERSION, but the caller wants at least versio
 
 if ($version) {
     require PackageTools::Package;
+    ## no critic (RequireCheckedSyscalls)
     print<<"EOF";
 makeppd.pl $VERSION (PackageTools $PackageTools::Package::VERSION)
 EOF
@@ -140,9 +142,9 @@ sub provides {
                 my $v = ExtUtils::MM_Unix->parse_version
                     (defined $prefix_dir ? "$prefix_dir/$file" : $file);
                 if (defined $v) {
-                    $file =~ s!^blib/lib/!! ||
+                    $file =~ s{^blib/lib/}{} ||
                         die "Assertion: File '$file' does not start with blib/lib/";
-                    $file =~ s!\.pm\z!!i ||
+                    $file =~ s{\.pm\z}{}i ||
                         die "Assertion: File '$file' does not end on .pm";
                     # if ($ppm_out_version == 3) {
                     #    $v =~ s/\./,/g;
@@ -150,7 +152,7 @@ sub provides {
                     #    $file =~ s!/!-!g;
                     #} else {
                     # ppm version 4
-                    $file =~ s!/!::!g;
+                    $file =~ s{/}{::}g;
                     #}
                     my $provide = qq(        <PROVIDE NAME="$file" VERSION="$v" />\n);
                     $provides .= $provide unless $seen{$provide}++;
@@ -166,7 +168,7 @@ sub provides {
 my $ppm_in_version = 4;
 my (%seen_dep, $demand_version, %replace_package);
 sub depend {
-    # print STDERR "Replace $name\n";
+    # warn "Replace $name\n";
     my ($pre, $name, $version, $post) = @_;
     if ($ppm_in_version == 3) {
         $name =~ s{-}{::}g;
@@ -201,9 +203,9 @@ sub depend {
 
 # Determine a good tar
 $tar = $bsd_tar unless executable($tar);
-# print STDERR "tar=$tar\n";
+# warn "tar=$tar\n";
 $zip = $gnuwin_zip unless executable($zip);
-# print STDERR "zip=$zip\n";
+# warn "zip=$zip\n";
 
 my $ppd = shift || die "No ppd argument";
 $ppd = "$prefix_dir/$ppd" if
@@ -243,7 +245,7 @@ if ($objects) {
             die "Could not parse perl version '$Config{version}'";
         $arch = "$arch-$major.$minor";
         $pkg =~ s{^([^\S\n]*<ARCHITECTURE\s+NAME=")[^\"]+("\s*/>[^\S\n]*)$}{$1$arch$2}m || die "Could not fixup ARCHITECTURE NAME";
-        print STDERR "Fixing ARCHITECTURE NAME to $arch\n";
+        warn "Fixing ARCHITECTURE NAME to $arch\n";
     }
 } else {
     $pkg =~ s{^[^\S\n]*<ARCHITECTURE\s+NAME="[^\"]+"\s*/>[^\S\n]*\n}{}m ||
@@ -361,7 +363,7 @@ $demand_version = MIN_VERSION;
 $pkg =~ s{^(\s*<)(?:DEPENDENCY|REQUIRE)\s+NAME="([^\"]+)"(?:\s+VERSION="([^\"]+)"|)(\s*/>\s*\n)}{depend($1, $2, $3, $4)}meg;
 warn("Warning: minimum needed version is $demand_version, not $min_version") if
     $min_version && $demand_version > $min_version;
-$pkg =~ s!^(\s*<DEPENDENCY\s+NAME=")([^\"]*)-Package("\s+VERSION="[^\"]+"\s*/>\s*\n)!$1$2$3!mg;
+$pkg =~ s{^(\s*<DEPENDENCY\s+NAME=")([^\"]*)-Package("\s+VERSION="[^\"]+"\s*/>\s*\n)}{$1$2$3}mg;
 
 my $tmp_dir = $leave || tempdir(CLEANUP => 1);
 if ($leave) {
@@ -374,7 +376,7 @@ if ($leave) {
 }
 my ($pp_dir, $pp_name) = $ppd =~ m{^(.*?)([^/]+)\z}s or
     die "Could not parse $ppd";
-# print STDERR "$pp_dir, $pp_name, $pkg_name, $pkg_version, $arch\n";
+# warn "$pp_dir, $pp_name, $pkg_name, $pkg_version, $arch\n";
 mkdir("$tmp_dir/$arch") || die "Could not mkdir '$tmp_dir/$arch': $!";
 my $new_ppd = "$tmp_dir/$pkg_name.ppd";
 
@@ -391,7 +393,7 @@ close($npfh)	|| die "Error closing '$new_ppd': $!";
 # We are currently assuming gnu tar here
 # (maybe at some point generate a filelist myself and do the compress later)
 
-print STDERR "\t$tar ", "-czf $tmp_dir/$arch/$dist --exclude \"blib/man*\"", $pp_dir eq "" ? "" : " -C $pp_dir", " blib\n";
+warn "\t$tar ", "-czf $tmp_dir/$arch/$dist --exclude \"blib/man*\"", $pp_dir eq "" ? "" : " -C $pp_dir", " blib\n";
 system($tar,
        "-czf", "$tmp_dir/$arch/$dist",
        "--exclude", $^O eq "MSWin32" ? qq("blib/man*") : "blib/man*",
@@ -402,7 +404,7 @@ system($tar,
 };
 my $from_dir = getcwd();
 chdir($tmp_dir) || die "Could not chdir $tmp_dir: $!";
-print STDERR "\t$zip -r foo .\n";
+warn "\t$zip -r foo .\n";
 system($zip, "-r", "foo", ".") and do {
     warn("If you don't have a commandline zip, you can get it from http://gnuwin32.sourceforge.net/packages/zip.htm\n") if $? == -1 || $? == 256;
     die "Could not zip (rc $?)";
@@ -437,7 +439,7 @@ the ppd file. They must be the same.
 
 The name of the perl executable to use to execute makeppd.pl. This obviously
 only gets checked once makeppd is already running under some perl executable.
-The program will restart itself with the same arguments and the appropiate
+The program will restart itself with the same arguments and the appropriate
 perl executable.
 
 =item X<option_min_version>--min_version=version_number
@@ -448,13 +450,13 @@ program will do a version check and error out if the version number is too low.
 =item X<option_zip>--zip=executable
 
 The name of the commandline zip program to use. Defaults to just C<zip>. An
-appropiate zip executable for windows can be found on
+appropriate zip executable for windows can be found on
 L<http://gnuwin32.sourceforge.net/packages/zip.htm>.
 
 =item X<option_tar>--tar=executable
 
 The name of the commandline tar program to use. Defaults to just C<tar>. An
-appropiate tar executable for windows can be found on
+appropriate tar executable for windows can be found on
 L<http://gnuwin32.sourceforge.net/packages/bsdtar.htm>.
 
 =item X<option_compress>--compress=executable
@@ -477,11 +479,11 @@ The package base directory. If not given the current directory is used
 
 =item X<option_prerequisite>--dependency name=version
 
-Allows you to add explicite prerequisites that will get added to the ppd file.
+Allows you to add explicit prerequisites that will get added to the ppd file.
 You can give this option as often as required.
 
 The name should always use :: to separate module parts,even for ppm3 where in
-the ouptut a - will be used).
+the output a - will be used).
 
 The version should always be a plain version number, even for ppm3 where the
 version will be split into digits separated by commas.

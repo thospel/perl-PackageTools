@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.007	2010-09-15 13:13:50 UT
+1.007	2010-09-24 01:37:16 UT
 	- Don't update Package.pm files inside a t directory
 	- Remove trailing spaces from all non-binary files
 	- Remove trailing empty lines from all non-binary files
@@ -17,6 +17,7 @@ Revision history for Perl extension PackageTools.
 	- Make cover tests work
 	- ppd can have no space before final />
 	- Output ppd name now comes from the package name
+	- Make code slightly nicer for perlcritic
 
 1.006	2010-06-16 12:12:23 UT
 	- makeppd.pl is ran by the ppm target instead of the $(DISTNAME).ppd
