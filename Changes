@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.007	2010-09-24 01:37:16 UT
+1.007	2010-09-24 14:30:12 UT
 	- Don't update Package.pm files inside a t directory
 	- Remove trailing spaces from all non-binary files
 	- Remove trailing empty lines from all non-binary files
@@ -44,6 +44,7 @@ Revision history for Perl extension PackageTools.
 	- Use $(PERLRUN) instead of $(PERL)
 	- Empty file doesn't count as binary
 	- Empty file does not count as not ending in newline
+	- Make perlcritic a tiny bit happier
 
 1.004	2009-10-16 11:59:10 UT
 	- Ignore META.yml while versioning

@@ -17,7 +17,7 @@ getopts("ny") || die "Usage: $0 [-n] [-y]\n";
 my @programs_to_install;
 
 if (!$opt_n || $opt_y) {
-    print <<EOT
+    print <<EOT	## no critic (InputOutput::RequireCheckedSyscalls)
 
 This package comes with a programs that I can try
 to install in $Config{installscript}.

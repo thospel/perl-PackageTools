@@ -406,13 +406,15 @@ my $from_dir = getcwd();
 chdir($tmp_dir) || die "Could not chdir $tmp_dir: $!";
 warn "\t$zip -r foo .\n";
 system($zip, "-r", "foo", ".") and do {
-    warn("If you don't have a commandline zip, you can get it from http://gnuwin32.sourceforge.net/packages/zip.htm\n") if $? == -1 || $? == 256;
+    warn("If you don't have a command-line zip, you can get it from http://gnuwin32.sourceforge.net/packages/zip.htm\n") if $? == -1 || $? == 256;
     die "Could not zip (rc $?)";
 };
 chdir($from_dir) || die "Could not chdir $from_dir: $!";
 my $ppm = "$pp_dir$pkg_name-$pkg_version.ppm";
 move("$tmp_dir/foo.zip", $ppm) || die "Could not move $tmp_dir/foo.zip to $ppm: $!";
 __END__
+
+=for stopwords dmake ppd makeppd makeppd.pl
 
 =head1 NAME
 
@@ -449,19 +451,19 @@ program will do a version check and error out if the version number is too low.
 
 =item X<option_zip>--zip=executable
 
-The name of the commandline zip program to use. Defaults to just C<zip>. An
+The name of the command-line zip program to use. Defaults to just C<zip>. An
 appropriate zip executable for windows can be found on
 L<http://gnuwin32.sourceforge.net/packages/zip.htm>.
 
 =item X<option_tar>--tar=executable
 
-The name of the commandline tar program to use. Defaults to just C<tar>. An
+The name of the command-line tar program to use. Defaults to just C<tar>. An
 appropriate tar executable for windows can be found on
 L<http://gnuwin32.sourceforge.net/packages/bsdtar.htm>.
 
 =item X<option_compress>--compress=executable
 
-The name of the commandline compress program to use. Defaults to just
+The name of the command-line compress program to use. Defaults to just
 C<gzip --best>.
 
 =item X<option_leave>--leave=directory
@@ -501,7 +503,7 @@ available since version 1.012
 
 Most Makefile.PL prerequisites are of modules instead of packages but ppd
 prerequisites (for ppm3) are in terms of packages. makeppd has a number of
-often occuring mappings from modules to packages built in, but the majority are
+often occurring mappings from modules to packages built in, but the majority are
 not known.
 You can use this option to declare that a given module comes with a given
 package.
@@ -513,7 +515,7 @@ You can give this option as often as required.
 
 =item X<option_objects>--objects object
 
-This indicates that it is a binary package and the architacture will not be
+This indicates that it is a binary package and the architecture will not be
 removed from the result ppd.
 
 =item X<option_version>--version

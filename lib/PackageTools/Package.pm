@@ -8,7 +8,7 @@ use strict;
 use warnings;
 use vars qw($VERSION $release_time %history);
 $VERSION = "1.007";
-$release_time = 1285292236;	## no critic (ProhibitMagicNumbers)
+$release_time = 1285338612;	## no critic (ProhibitMagicNumbers)
 %history = (
   'Changes' => {
     '1.000' => '1.000',
@@ -179,6 +179,9 @@ sub released {
 }
 1;
 __END__
+
+=for stopwords PackageTools globals
+
 =head1 NAME
 
 PackageTools::Package - Version and history of PackageTools

@@ -65,7 +65,7 @@ sub time_string {
     # perl -wle '$a=4259060321.987; $a-=int$a; printf "%.20f\n", $a*1e6'
     # gives 986999.98855590820312500000
     $fraction = $fraction < 0 ?
-        int($fraction - 0.012) : int($fraction + 0.012);
+        int($fraction - 0.012) : int($fraction + 0.012);	## no critic (ProhibitMagicNumbers)
     if ($fraction) {
         if ($fraction >= 1e6 || $fraction < 0) {
             my $more = int($fraction / 1e6);
@@ -87,7 +87,7 @@ sub time_string {
                    $xml ? "T" : " ",
                    $hour, $min, $sec,
                    $fractional_digits ? "." : "",
-		   $fractional_digits, int($fraction/$power+1e-7),
+		   $fractional_digits, int($fraction/$power+1e-7),	## no critic (ProhibitMagicNumbers)
                    $xml ? "Z" : "") if $ut;
     my $nominal_time = timegm($sec, $min, $hour, $mday, $mon, $year);
     my $offset = $nominal_time - $time;
@@ -104,7 +104,7 @@ sub time_string {
                    $xml ? "T" : " ",
                    $hour, $min, $sec,
                    $fractional_digits ? "." : "",
-		   $fractional_digits, int($fraction/$power+1e-7),
+		   $fractional_digits, int($fraction/$power+1e-7),	## no critic (ProhibitMagicNumbers)
                    $xml ? "" : " ",
                    $sign, int($offset / 60),
                    $xml ? ":" : "",
@@ -205,6 +205,7 @@ sub self_version {
         $version .= sprintf("Date: %s (%s)\n",
                             time_string($release_time), $strftime);
     }
+    ## no critic (RequireCheckedSyscalls)
     print $version;
     exit 0;
 }
@@ -384,7 +385,7 @@ sub _mkpath {
             _choke @msg;
         }
     } elsif ($show and $dry_run) {
-        print "$_\n" for @make;
+        printf "%s\n", $_ for @make;
     }
 
 }
@@ -584,15 +585,19 @@ while (@ARGV) {
         # we wont try hard here. its too likely to mess things up.
         ExtUtils::Install::forceunlink($to);
     } else {
+	## no critic (ProhibitMagicNumbers)
         _mkpath(dirname($to),0,0755);
     }
     run_filter($from, $to);
     warn "filter($Script) $from >$to\n";
     my($mode,$atime,$mtime) = (stat $from)[2,8,9];
     utime($atime,$mtime+$Is_VMS,$to);
+    ## no critic (ProhibitMagicNumbers)
     _chmod(0444 | ( $mode & 0111 ? 0111 : 0 ),$to);
 }
 __END__
+
+=for stopwords tmpl blib --blib .js
 
 =head1 NAME
 
@@ -738,7 +743,7 @@ and then process it using:
 The copied file is given the same timestamp as the file it is copied from.
 As an optimization copying is not done if the target file already exists and has
 the same timestamp as the original file. By giving this option that test is
-shortcircuited and the copy is always done
+short-circuited and the copy is always done
 
 =item X<option_proxy_file>--proxy_file file, -P file
 

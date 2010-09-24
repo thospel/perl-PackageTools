@@ -267,6 +267,7 @@ sub work_area(%) {
                    "help!"		=> \my $help,
                    );
     if ($help) {
+        ## no critic (InputOutput::RequireCheckedSyscalls)
         print STDERR "Usage: $0 [--leave] [--keep] [--cover] [--strace] [--help]\n";
         exit 0;
     }
@@ -325,12 +326,12 @@ sub work_area(%) {
 
 sub perl_run {
     $tmp_dir || croak "Assertion: No work_area";
-    open(local *OLDERR, ">&STDERR") || die "Can't dup STDERR: $!";
+    open(my $old_err, ">&", "STDERR") || die "Can't dup STDERR: $!";
     open(STDERR, ">", "$tmp_dir/run/stderr") ||
         die "Could not open '$tmp_dir/run/stderr' for writing: $!";
     my $ec = system($^X, $cover ? "-MDevel::Cover" : (),
                     shift, "--blib", @_);
-    open(STDERR, ">&OLDERR") || die "Can't dup OLDERR: $!";
+    open(STDERR, ">&", $old_err) || die "Can't dup old STDERR: $!";
     my $err = slurp("$tmp_dir/run/stderr");
     if ($ec) {
         $err =~ s/\s+\z//;

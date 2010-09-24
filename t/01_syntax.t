@@ -24,11 +24,11 @@ sub check {
     # Normally I would put the local inside the open, but this also counts as
     # the second use to avoid a warning
     local *OLDERR;
-    open(*OLDERR, ">&STDERR") || die "Can't dup STDERR: $!";
+    open(*OLDERR, ">&", "STDERR") || die "Can't dup STDERR: $!";
     open(STDERR, ">", "$tmp_dir/stderr") ||
         die "Can't open $tmp_dir/stderr: $!";
     my $rc = system($^X, "-c", @_);
-    open(STDERR, ">&OLDERR")        || die "Can't dup OLDERR: $!";
+    open(STDERR, ">&", "OLDERR")        || die "Can't dup OLDERR: $!";
     my $errors = slurp("$tmp_dir/stderr");
     $errors =~ s/.* syntax OK\n//;
     if ($errors ne "") {
