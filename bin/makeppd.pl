@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 4192 2010-09-15 15:31:10Z hospelt $
+# $Id: makeppd.pl 4211 2010-09-24 23:00:32Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm

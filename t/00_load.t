@@ -2,7 +2,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 00_load.t'
 #########################
-# $Id: 00_load.t 4156 2010-06-23 14:27:34Z hospelt $
+# $Id: 00_load.t 4211 2010-09-24 23:00:32Z hospelt $
 use strict;
 use warnings;
 

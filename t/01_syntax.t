@@ -2,7 +2,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 01_syntax.t'
 #########################
-# $Id: 00_syntax.t 3820 2010-02-23 17:00:11Z hospelt $
+# $Id: 01_syntax.t 4211 2010-09-24 23:00:32Z hospelt $
 use strict;
 use warnings;
 

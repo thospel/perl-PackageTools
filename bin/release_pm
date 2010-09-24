@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 4192 2010-09-15 15:31:10Z hospelt $
+# $Id: release_pm 4211 2010-09-24 23:00:32Z hospelt $
 use strict;
 use warnings;
 
