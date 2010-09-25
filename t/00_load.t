@@ -3,6 +3,7 @@
 # `make test'. After `make install' it should work as `perl 00_load.t'
 #########################
 # $Id: 00_load.t 4211 2010-09-24 23:00:32Z hospelt $
+## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
 use strict;
 use warnings;
 

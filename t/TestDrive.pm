@@ -1,5 +1,6 @@
 package TestDrive;
 # $Id: TestDrive.pm 4211 2010-09-24 23:00:32Z hospelt $
+## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
 use strict;
 use warnings;
 
@@ -299,7 +300,7 @@ sub work_area(%) {
         $tmp = tempdir($leave ? () : (CLEANUP => 1));
     }
     # Bring into unix form
-    $tmp =~ tr!\\!/! if $^O eq "MSWin32";
+    $tmp =~ tr{\\}{/} if $^O eq "MSWin32";
 
     if ($copy) {
         my $from = $copy;

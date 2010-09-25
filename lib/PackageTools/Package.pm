@@ -8,7 +8,7 @@ use strict;
 use warnings;
 use vars qw($VERSION $release_time %history);
 $VERSION = "1.007";
-$release_time = 1285338612;	## no critic (ProhibitMagicNumbers)
+$release_time = 1285419694;	## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
 %history = (
   'Changes' => {
     '1.000' => '1.000',
@@ -158,7 +158,7 @@ my $epoch_base;
 sub release_time {
     if (!defined $epoch_base) {
         require Time::Local;
-        $epoch_base = Time::Local::timegm(0,0,0,1,0,70);	## no critic (ProhibitMagicNumbers)
+        $epoch_base = Time::Local::timegm(0,0,0,1,0,70);	## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
     }
     return $release_time + $epoch_base;
 }
