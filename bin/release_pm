@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 4213 2010-09-27 00:52:37Z hospelt $
+# $Id: release_pm 4214 2010-09-27 10:14:16Z hospelt $
 use strict;
 use warnings;
 
@@ -79,6 +79,8 @@ my $epoch_base = timegm(0,0,0,1,0,70);	## no critic (ProhibitUselessNoCritic Pro
 
 # Todo: For the next incompatible change, replace $package by $module
 # Maybe also add support for for looking up files --Ton
+# Use |= instead of = for the POD keywords so that selfdocumentation of
+# release_pm doesn't improperly pick up the Package POD
 our $history = <<'EOT'
 use Carp;
 
@@ -109,13 +111,13 @@ sub released {
 1;
 __END__
 
-=for stopwords PACKAGE globals
+|=for stopwords PACKAGE globals
 
-=head1 NAME
+|=head1 NAME
 
 PACKAGE::Package - Version and history of PACKAGE
 
-=head1 SYNOPSIS
+|=head1 SYNOPSIS
 
   use PACKAGE::Package;
 
@@ -125,7 +127,7 @@ PACKAGE::Package - Version and history of PACKAGE
 
   $min_package_version = PACKAGE::Package::released($module, $module_version);
 
-=head1 DESCRIPTION
+|=head1 DESCRIPTION
 
 In the context of this documentation a C<package> is a set of files that
 together make up a perl extension, not to be confused with the more normal
@@ -143,47 +145,50 @@ number of the package release. This means you can use this to query this
 release number and also makes it a convenient target for Makefile.PL
 dependencies.
 
-=head1 METHODS
+|=head1 METHODS
 
-=over
+|=over
 
-=item X<release_time>$epoch_time = PACKAGE::Package->release_time()
+|=item X<release_time>$epoch_time = PACKAGE::Package->release_time()
 
 Returns the the number of non-leap seconds since whatever time the system that
 calls this function considers to be the epoch the last time
-L<release_pm(1)|release_pm> was run (even if that was on another system with a
-different epoch). Since the idea is to run L<release_pm(1)|release_pm> just
+L<release_pm|release_pm(1)> was run (even if that was on another system with a
+different epoch). Since the idea is to run L<release_pm|release_pm(1)> just
 before releasing the package this is therefore the value of
 L<time()|perlfunc/time> on the system calling this function at the moment the
 package was released. This number is suitable for feeding to
 L<gmtime()|perlfunc/gmtime> and L<local_time()|perlfunc/local_time>
 
-=item X<VERSION>$package_version = PACKAGE::Package->VERSION
+|=item X<VERSION>$package_version = PACKAGE::Package->VERSION
 
 This is the normal L<UNIVERSAL::VERSION|UNIVERSAL/VERSION> method you can use
 on all modules, but this particular module is guaranteed to have a version
 number that is the same as that of the package
 
-=item X<released>$min_package_version = PACKAGE::Package::released($module, $module_version)
+|=item X<released>$min_package_version = PACKAGE::Package::released($module, $module_version)
 
 Given a module name (e.g. Foo::Bar) and a module version number (e.g. 1.023)
 returns the lowest package version in which that module (as the file
 F<Foo/Bar.pm>) had at least that module version
 
-=back
+|=back
 
-=head1 EXPORTS
+|=head1 EXPORTS
 
 None.
 
-=head1 SEE ALSO
+|=head1 SEE ALSO
 
-L<release_pm(1)> which can be used to keep Package.pm files up to date.
+L<release_pm|release_pm(1)> which can be used to keep Package.pm files up to
+date.
 
-=cut
+|=cut
 
 EOT
     ;
+$history =~ s/^\|=/=/mg;
+
 # Import a complete file and return the contents as a single string
 sub slurp {
     my ($file, $may_not_exist) = @_;
@@ -765,7 +770,7 @@ to set values in %postamble is generated
 =item X<option_import_revision>--import_revision
 
 Get the initial version of a file from any C<$Revision> tag that's already in
-there. Such tags are written by source control programs like L<cvs|cvs>,
+there. Such tags are written by source control programs like L<cvs|cvs(1)>,
 
 =item X<option_import_version>--import_version
 
@@ -859,7 +864,7 @@ Show this help.
 
 =head1 SEE ALSO
 
-L<cvs>,
+L<cvs|cvs(1)>,
 L<makeppd.pl|makeppd.pl>
 
 =head1 AUTHOR

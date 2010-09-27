@@ -1,18 +1,18 @@
-# Generated on 2010-09-25 13:01:34 UT using /home/ton/perl-modules/PackageTools/bin/release_pm
+# Generated on 2010-09-27 10:11:32 UT using /home/tonh/perl-modules/PackageTools/bin/release_pm
 BEGIN
 SEMANTICS	1.010
 DIGITS		3
 RELEASE		1.007
-DATE		2010-09-25 13:01:34
-VERSION	9c7680e89512119d4d1f1694be0e24e1 1.007 Changes
+DATE		2010-09-27 10:11:32
+VERSION	4a3a30f31cebaab2fd15ce5c6e2cd82d 1.007 Changes
 VERSION	e92ea7f7ad32e90ae96f1df3662cafd1 1.003 MANIFEST
 VERSION	7fc28799e003eef758e3ca50aec4cfe8 1.000 MANIFEST.SKIP
 VERSION	ea05545deb57acb07b061379d95d93f1 1.004 Makefile.PL
 VERSION	aa86230699d2e13f5b6b2ab73de9b4d4 1.007 README
-VERSION	97730b56561d6e689133c499ca7cc602 1.001 bin/any_to_blib
+VERSION	1dc6c5ac3cf487dd257b0420efc03842 1.001 bin/any_to_blib
 VERSION	7f20aea9e68710f0bf7adf201ddf02dd 1.015 bin/makeppd.pl
-VERSION	0d11cd85c8186d5e83ce86d3c805e2fd 1.010 bin/release_pm
-VERSION	ea388cc85d4509087ad0cbe487519518 1.007 lib/PackageTools/Package.pm
+VERSION	93edb18836f734bbfc3a545f60f9834b 1.010 bin/release_pm
+VERSION	6f2c315cc46933d8fb40920433817dff 1.007 lib/PackageTools/Package.pm
 VERSION	89a0ea02e6558b988c4f38ba3530a2f1 1.000 t/00_load.t
 VERSION	d1f4bc414d3f4f1f77412356916d00f0 1.000 t/01_syntax.t
 VERSION	f6abd2cc7eabf324ab5b157a7a25a2f4 1.002 t/02_makeppd.t
