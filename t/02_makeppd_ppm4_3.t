@@ -2,7 +2,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 02_makeppd_ppm4_3.t'
 #########################
-# $Id: 02_makeppd_ppm4_3.t 4213 2010-09-27 00:52:37Z hospelt $
+# $Id: 02_makeppd_ppm4_3.t 4228 2010-10-04 14:58:06Z hospelt $
 ## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
 use strict;
 use warnings;
@@ -25,7 +25,7 @@ use Test::More "no_plan";
 
 work_area("copy", "$t_dir/makeppd/LogParse",
           programs => 1);
-my $err = perl_run("$bin_dir/makeppd.pl",
+my $err = perl_run("$base_dir/blib/script/makeppd.pl",
                    "--root", "$tmp_dir/LogParse",
                    "--leave", "$tmp_dir/LogParse/ppm",
                    "--ppm_version=3",

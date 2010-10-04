@@ -1,5 +1,5 @@
 package TestDrive;
-# $Id: TestDrive.pm 4213 2010-09-27 00:52:37Z hospelt $
+# $Id: TestDrive.pm 4228 2010-10-04 14:58:06Z hospelt $
 ## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
 use strict;
 use warnings;
@@ -67,7 +67,7 @@ our ($cover, $tmp_dir, $tar, $zip, $compress);
 our $bsd_tar	= 'C:/Program Files/GnuWin32/bin/bsdtar';
 our $gnuwin_zip	= 'C:/Program Files/GnuWin32/bin/zip';
 
-my ($keep, $leave, $strace);
+my ($keep, $leave, $strace, $real_base);
 
 sub executable {
     my ($name) = @_;
@@ -311,8 +311,8 @@ sub work_area(%) {
         $Script =~ /^([\w-]+\.t\z)/ || die "Weird script name '$Script'";
         $keep = $1;
         # $leave = 1;
-        $tmp = File::Spec->catfile(File::Spec->tmpdir(),
-                                   $me, "PackageTools", $keep);
+        File::Spec->catfile(File::Spec->tmpdir(), $me, "PackageTools", $keep) =~ /(.*)/s;
+        $tmp = $1;
         rmtree($tmp);
         mkpath($tmp);
     } else {
@@ -349,12 +349,14 @@ sub perl_run {
     open(my $old_err, ">&", "STDERR") || die "Can't dup STDERR: $!";
     open(STDERR, ">", "$tmp_dir/run/stderr") ||
         die "Could not open '$tmp_dir/run/stderr' for writing: $!";
+    my $program = shift;
     # Untaint $^X
     $^X =~ ($^O eq "MSWin32" ?
              qr{^((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*/[a-zA-Z0-9_.-]+)\z} :
              qr{^((?:/[a-zA-Z0-9_:.-]+)*/[a-zA-Z0-9_.-]+)\z}) ||
              croak "Could not parse bin directory '$Bin'";
-    my @run = ($1, $cover ? "-MDevel::Cover" : (), shift, "--blib", @_);
+    # No --blib since we always run the scripts from the blib directory already
+    my @run = ($1, $cover ? "-MDevel::Cover" : (), $program, @_);
     # Test::More::diag("run: @run");
     my $ec = eval { system(@run) };
     my $die = $@;	# Taint failure is the only way
@@ -369,7 +371,7 @@ sub perl_run {
     my $err = slurp("$tmp_dir/run/stderr");
     if ($ec) {
         $err =~ s/\s+\z//;
-        Test::More::fail("Unexpected exit $ec code from makeppd: $err");
+        Test::More::fail("Unexpected exit $ec code from '@run': $err");
         exit 1;
     }
     return $err;

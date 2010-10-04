@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/any_to_blib $
-# $Id: any_to_blib 4214 2010-09-27 10:14:16Z hospelt $
+# $Id: any_to_blib 4228 2010-10-04 14:58:06Z hospelt $
 use strict;
 use warnings;
 
@@ -22,7 +22,8 @@ BEGIN {
     # Use untainted version of lib
     require lib;
     # Support a simple --blib option for pre-install testing
-    "lib"->import(@ARGV && $ARGV[0] eq "--blib" ? shift && "$1/blib/lib" : "$1/lib");
+    # "lib"->import(@ARGV && $ARGV[0] eq "--blib" ? shift && "$1/blib/lib" : "$1/lib");
+    "lib"->import("$1/lib");
 }
 
 use Getopt::Long 2.11;
@@ -216,8 +217,10 @@ sub self_version {
 
 Getopt::Long::config("bundling", "require_order");
 my $to_dir = "blib";
+my $base_dir = ".";
 die "Could not parse your command line. Try $Script -h\n" unless
     GetOptions("blib|to_dir=s"	=> \$to_dir,
+               "base_dir=s"	=> \$base_dir,
                "pairs!"		=> \my $pairs,
                "filter=s"	=> \my @filter,
                "do=s"		=> \my @do,
@@ -250,6 +253,10 @@ if ($proxy_file) {
         }
     }
 }
+
+$base_dir = "." if $base_dir eq "";
+$base_dir =~ s{/*\z}{/};
+$base_dir =~ s{^(./)+}{};
 
 ###################### BEGIN copy from ExtUtils::Install #######################
 
@@ -586,6 +593,7 @@ while (@ARGV) {
     } else {
         $to = "$to_dir/$from";
     }
+    $from = $base_dir . $from;
 
     if (-f $to){
         if (!$force && (-M _)+$Is_VMS == -M $from) {
@@ -615,8 +623,8 @@ any_to_blib - A variation on ExtUtils::Install::pm_to_blib
 
 =head1 SYNOPSIS
 
- any_to_blib [--proxy_file proxy_file] [--blib blib_directory] {--filter condition} {--do do_file} {file}
- any_to_blib [--proxy_file proxy_file] [--blib blib_directory] {--filter condition} {--do do_file} --pairs {from to}
+ any_to_blib [--proxy_file proxy_file] [--base_dir directory] [--blib blib_directory] {--filter condition} {--do do_file} {file}
+ any_to_blib [--proxy_file proxy_file] [--base_dir directory] [--blib blib_directory] {--filter condition} {--do do_file} --pairs {from to}
  any_to_blib [--version] [--unsafe] [-U] [-h] [--help]
 
 =head1 DESCRIPTION
@@ -713,11 +721,13 @@ will become
 
 =over 4
 
+=item X<option_base_dir>--base_dir directory
+
+Find the target files relative to base_dir (defaults to C<.>).
+
 =item X<option_blib>--blib directory, --to_dir directory
 
 The target directory for the copies. Defaults to F<blib>.
-Don't use the C<--blib> form as the first option, that triggers an internal
-test mode. C<--to_dir> is safe as a first option.
 
 =item X<option_pairs>--pairs
 
