@@ -539,9 +539,15 @@ sub run_filter {
     }
     if ($from =~ /\.tmpl\z|\.xmpl\z/i) {
         die "File '$from' is unexpectedly binary" if $binary;
+
+        # Convert closing element like <TMPL_INCLUDE NAME=foo/> to
+        # <TMPL_INCLUDE NAME=foo>
+        # Also remove trailing spaces inside HTML::Template directives
+        s{(<TMPL_\w.*?)\s*/?>}{$1>}sig;
+
         # Remove arguments from closing templates
         # to avoid confusing HTML::Template::Pro
-        s{(<(?:!--\s*)?(?:/TMPL_\w+|TMPL_ELSE)).*?\s*((?:--)?>)}{$1$2}sig;
+        s{(<(?:!--\s*)?(?:/TMPL_\w+|TMPL_ELSE)).*?((?:--)?>)}{$1$2}sig;
 
         # Remove leading whitespace if a HTML::Template directive is the first
         # thing on a line
@@ -709,7 +715,9 @@ will become
 
 =item X<option_blib>--blib directory, --to_dir directory
 
-The target directory for the copies. Defaults to F<blib>
+The target directory for the copies. Defaults to F<blib>.
+Don't use the C<--blib> form as the first option, that triggers an internal
+test mode. C<--to_dir> is safe as a first option.
 
 =item X<option_pairs>--pairs
 
@@ -719,9 +727,9 @@ The L<blib directory|"option_blib"> is still prepended to the F<to> name.
 
 For example:
 
-  any_to_blib --blib foo bar baz
+  any_to_blib --blib foo/bar baz
 
-will copy the file F<bar> to F<blib/baz>
+will copy the file F<foo/bar> to F<blib/foo/bar> and file F<baz> to F<blib/baz>
 
 =item X<option_filter>--filter condition
 

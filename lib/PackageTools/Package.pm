@@ -8,7 +8,7 @@ use strict;
 use warnings;
 use vars qw($VERSION $release_time %history);
 $VERSION = "1.007";
-$release_time = 1285582292;	## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
+$release_time = 1286134103;	## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
 %history = (
   'Changes' => {
     '1.000' => '1.000',
@@ -108,6 +108,18 @@ $release_time = 1285582292;	## no critic (ProhibitUselessNoCritic ProhibitMagicN
   't/TestDrive.pm' => {
     '1.000' => '1.005',
     '1.001' => '1.007'
+  },
+  't/any_to_blib/01_basic.in' => {
+    '1.000' => '1.007'
+  },
+  't/any_to_blib/01_basic.out' => {
+    '1.000' => '1.007'
+  },
+  't/any_to_blib/02_filter.tmpl' => {
+    '1.000' => '1.007'
+  },
+  't/any_to_blib/02_filter.tmpl.out' => {
+    '1.000' => '1.007'
   },
   't/makeppd/LogParse/LogParse.ppd' => {
     '1.000' => '1.005',

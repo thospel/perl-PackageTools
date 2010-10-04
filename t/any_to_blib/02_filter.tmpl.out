@@ -1,0 +1,15 @@
+Just some textmore text
+
+even more text
+
+   still more text<!-- TMPL_IF NAME="foo" -->
+            if<!-- TMPL_ELSE-->
+            else<!-- /TMPL_IF-->
+
+
+final text<TMPL_IF NAME=foo>
+            if<TMPL_ELSE>
+            else</TMPL_IF>
+
+
+final text

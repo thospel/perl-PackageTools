@@ -18,20 +18,32 @@ use Getopt::Long;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK =
-    qw($tmp_dir $t_dir $base_dir $bin_dir $me $cover $tar $zip $compress
+    qw(ENOENT ESTALE
+       $tmp_dir $t_dir $base_dir $bin_dir $me $cover $tar $zip $compress
        slurp spew rmtree mkpath cpr work_area perl_run diff);
+
+# Allows executing programs under tain checking
+delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
+# Let's hope tar and gzip are in this path
+$ENV{PATH} = "/usr/local/bin:/usr/bin:/bin";
 
 $Bin =~ s{/\z}{};
 $Bin =~ tr{\\}{/} if $^O eq "MSWin32";
+$Bin =~ ($^O eq "MSWin32" ?
+         qr{^(((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*)/[a-zA-Z0-9_.-]+)/*\z} :
+         qr{^(((?:/[a-zA-Z0-9_:.-]+)*)/[a-zA-Z0-9_.-]+)/*\z}) ||
+    croak "Could not parse bin directory '$Bin'";
+# Use untainted version lib
+$Bin = $1;		## no critic (ProhibitUselessNoCritic ProhibitCaptureWithoutTest)
+our $base_dir = $2;	## no critic (ProhibitUselessNoCritic ProhibitCaptureWithoutTest)
+
 our $t_dir = $Bin;
 my $t_option_file = "$t_dir/options";
-our $base_dir = $t_dir;
-$base_dir =~ s{/t\z}{} ||
-    croak "test directory $t_dir does not seem to end on t";
 our $bin_dir = "$base_dir/bin";
 
 our $me;
 if ($^O eq "MSWin32") {
+    require File::Spec;
     require Win32;
     $me = Win32::LoginName();
 } else {
@@ -43,6 +55,12 @@ if ($^O eq "MSWin32") {
     $me ||= getpwuid $>;
 }
 die "Can't determine who I am" if !$me;
+# We can basically trust $me since it came from a real system request
+# Still, let's filter some weird characters
+die "Unacceptable userid '$me'" if $me eq "." || $me eq "..";
+$me =~ /^([0-9A-Za-z_.-]+)\z/ || die "Weird characters in userid '$me'";
+# Seems ok. Untaint
+$me = $1;	## no critic (ProhibitUselessNoCritic ProhibitCaptureWithoutTest)
 
 # State globals
 our ($cover, $tmp_dir, $tar, $zip, $compress);
@@ -290,7 +308,8 @@ sub work_area(%) {
 
     my $tmp;
     if ($keep) {
-        $keep = $Script;
+        $Script =~ /^([\w-]+\.t\z)/ || die "Weird script name '$Script'";
+        $keep = $1;
         # $leave = 1;
         $tmp = File::Spec->catfile(File::Spec->tmpdir(),
                                    $me, "PackageTools", $keep);
@@ -330,9 +349,23 @@ sub perl_run {
     open(my $old_err, ">&", "STDERR") || die "Can't dup STDERR: $!";
     open(STDERR, ">", "$tmp_dir/run/stderr") ||
         die "Could not open '$tmp_dir/run/stderr' for writing: $!";
-    my $ec = system($^X, $cover ? "-MDevel::Cover" : (),
-                    shift, "--blib", @_);
+    # Untaint $^X
+    $^X =~ ($^O eq "MSWin32" ?
+             qr{^((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*/[a-zA-Z0-9_.-]+)\z} :
+             qr{^((?:/[a-zA-Z0-9_:.-]+)*/[a-zA-Z0-9_.-]+)\z}) ||
+             croak "Could not parse bin directory '$Bin'";
+    my @run = ($1, $cover ? "-MDevel::Cover" : (), shift, "--blib", @_);
+    # Test::More::diag("run: @run");
+    my $ec = eval { system(@run) };
+    my $die = $@;	# Taint failure is the only way
     open(STDERR, ">&", $old_err) || die "Can't dup old STDERR: $!";
+    if ($die) {
+        use Scalar::Util qw(tainted);
+        for my $r (@run) {
+            Test::More::diag("tainted $r: " . (tainted($r) ? 1 : 0));
+        }
+        die $die;
+    }
     my $err = slurp("$tmp_dir/run/stderr");
     if ($ec) {
         $err =~ s/\s+\z//;

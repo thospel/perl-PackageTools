@@ -12,9 +12,13 @@ t/00_load.t
 t/01_syntax.t
 t/02_makeppd.t
 t/02_makeppd_ppm3.t
-t/02_makeppd_ppm4_3.t
 t/02_makeppd_ppm3_4.t
+t/02_makeppd_ppm4_3.t
 t/TestDrive.pm
+t/any_to_blib/01_basic.in
+t/any_to_blib/01_basic.out
+t/any_to_blib/02_filter.tmpl
+t/any_to_blib/02_filter.tmpl.out
 t/makeppd/LogParse/LogParse.ppd
 t/makeppd/LogParse/LogParse_ppm3.ppd
 t/makeppd/LogParse/blib/lib/LogParse.pm
