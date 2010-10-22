@@ -10,6 +10,7 @@ lib/PackageTools/Package.pm
 md5-versions
 t/00_load.t
 t/01_syntax.t
+t/02_any_to_blib.t
 t/02_makeppd.t
 t/02_makeppd_ppm3.t
 t/02_makeppd_ppm3_4.t

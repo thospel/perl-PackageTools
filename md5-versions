@@ -1,25 +1,26 @@
-# Generated on 2010-10-05 15:48:00 UT using /usr/local/bin/release_pm
+# Generated on 2010-10-21 13:07:20 UT using /home/tonh/perl-modules/PackageTools/bin/release_pm
 BEGIN
 SEMANTICS	1.010
 DIGITS		3
-RELEASE		1.007
-DATE		2010-10-05 15:48:00
-VERSION	85df43184afc72ad553b08442b69e3d8 1.007 Changes
-VERSION	98426fc7b6070e4c0f935249c0de1db9 1.003 MANIFEST
+RELEASE		1.008
+DATE		2010-10-21 13:07:20
+VERSION	d389478133989165c8b3e7a429fdba00 1.008 Changes
+VERSION	3cac43db008717067275fba7a143a67c 1.003 MANIFEST
 VERSION	7fc28799e003eef758e3ca50aec4cfe8 1.000 MANIFEST.SKIP
 VERSION	ea05545deb57acb07b061379d95d93f1 1.004 Makefile.PL
-VERSION	aa86230699d2e13f5b6b2ab73de9b4d4 1.007 README
+VERSION	79a3a885ee4bcc1a222ecc923d68d077 1.008 README
 VERSION	cf036937bd197166346ca852ecc201db 1.001 bin/any_to_blib
 VERSION	7f20aea9e68710f0bf7adf201ddf02dd 1.015 bin/makeppd.pl
 VERSION	93edb18836f734bbfc3a545f60f9834b 1.010 bin/release_pm
-VERSION	c92d7a4f7b07ad7df2da791e28356ef8 1.007 lib/PackageTools/Package.pm
+VERSION	8dd6a096d8f88b6e241919a3cd167aae 1.008 lib/PackageTools/Package.pm
 VERSION	89a0ea02e6558b988c4f38ba3530a2f1 1.000 t/00_load.t
 VERSION	d1f4bc414d3f4f1f77412356916d00f0 1.000 t/01_syntax.t
+VERSION	8c9e5f7ff256e1816a9cf105e0fee29d 1.000 t/02_any_to_blib.t
 VERSION	3b9f56637f0847c8e49454d7185d6385 1.002 t/02_makeppd.t
 VERSION	00b2a0258f5010ffba9a7517a6ef750e 1.002 t/02_makeppd_ppm3.t
 VERSION	a806a4eed94c29c1148c08a1f7e35fbe 1.000 t/02_makeppd_ppm3_4.t
 VERSION	1d0ff01aced18f062a37f041a0188231 1.000 t/02_makeppd_ppm4_3.t
-VERSION	7f1ad668e8d6a477840bd5972ec9a7b5 1.001 t/TestDrive.pm
+VERSION	ce53a950ee27042e1bfbb3176eae4fc1 1.001 t/TestDrive.pm
 VERSION	09d2169405e12412abea0be854589ce4 1.000 t/any_to_blib/01_basic.in
 VERSION	09d2169405e12412abea0be854589ce4 1.000 t/any_to_blib/01_basic.out
 VERSION	467b70af50bd1352451dfee3112faee5 1.000 t/any_to_blib/02_filter.tmpl
@@ -35,6 +36,7 @@ VERSION	527910531ab90c373da9ce7409345585 1.001 t/makeppd/LogParse/blib/lib/LogPa
 VERSION	c43b6d4af64b06d78bcf72b4b61b21b8 1.000 t/makeppd/LogParse/blib/lib/LogParse/State.pm
 VERSION	4b9fc984428cf95ed93014f62301fa93 1.001 t/makeppd/LogParse/blib/lib/LogParse/Transaction.pm
 VERSION	4dea568034288164b7d2d538148516f7 1.001 t/makeppd/LogParse/blib/lib/LogParse/Transaction/Record.pm
+RELEASED 1.008 1.008 Changes
 RELEASED 1.007 1.007 Changes
 RELEASED 1.006 1.006 Changes
 RELEASED 1.005 1.005 Changes
@@ -53,6 +55,7 @@ RELEASED 1.003 1.006 Makefile.PL
 RELEASED 1.002 1.005 Makefile.PL
 RELEASED 1.001 1.004 Makefile.PL
 RELEASED 1.000 1.001 Makefile.PL
+RELEASED 1.008 1.008 README
 RELEASED 1.007 1.007 README
 RELEASED 1.006 1.006 README
 RELEASED 1.005 1.005 README
@@ -77,6 +80,7 @@ RELEASED 1.005 1.003 bin/release_pm
 RELEASED 1.004 1.002 bin/release_pm
 RELEASED 1.003 1.001 bin/release_pm
 RELEASED 1.002 1.000 bin/release_pm
+RELEASED 1.008 1.008 lib/PackageTools/Package.pm
 RELEASED 1.007 1.007 lib/PackageTools/Package.pm
 RELEASED 1.006 1.006 lib/PackageTools/Package.pm
 RELEASED 1.005 1.005 lib/PackageTools/Package.pm
@@ -90,6 +94,7 @@ RELEASED 1.002 1.005 t/00_syntax.t
 RELEASED 1.001 1.004 t/00_syntax.t
 RELEASED 1.000 1.001 t/00_syntax.t
 RELEASED 1.000 1.007 t/01_syntax.t
+RELEASED 1.000 1.007 t/02_any_to_blib.t
 RELEASED 1.002 1.007 t/02_makeppd.t
 RELEASED 1.001 1.006 t/02_makeppd.t
 RELEASED 1.000 1.005 t/02_makeppd.t

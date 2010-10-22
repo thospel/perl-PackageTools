@@ -1,5 +1,5 @@
 package TestDrive;
-# $Id: TestDrive.pm 4228 2010-10-04 14:58:06Z hospelt $
+# $Id: TestDrive.pm 4253 2010-10-21 13:05:06Z hospelt $
 ## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
 use strict;
 use warnings;
@@ -28,7 +28,10 @@ delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
 $ENV{PATH} = "/usr/local/bin:/usr/bin:/bin";
 
 $Bin =~ s{/\z}{};
-$Bin =~ tr{\\}{/} if $^O eq "MSWin32";
+if ($^O eq "MSWin32") {
+    tr{\\}{/} for $Bin, $^X;
+}
+
 $Bin =~ ($^O eq "MSWin32" ?
          qr{^(((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*)/[a-zA-Z0-9_.-]+)/*\z} :
          qr{^(((?:/[a-zA-Z0-9_:.-]+)*)/[a-zA-Z0-9_.-]+)/*\z}) ||
@@ -354,7 +357,7 @@ sub perl_run {
     $^X =~ ($^O eq "MSWin32" ?
              qr{^((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*/[a-zA-Z0-9_.-]+)\z} :
              qr{^((?:/[a-zA-Z0-9_:.-]+)*/[a-zA-Z0-9_.-]+)\z}) ||
-             croak "Could not parse bin directory '$Bin'";
+             croak "Could not parse perl executable '$^X'";
     # No --blib since we always run the scripts from the blib directory already
     my @run = ($1, $cover ? "-MDevel::Cover" : (), $program, @_);
     # Test::More::diag("run: @run");

@@ -1,8 +1,8 @@
 #!/usr/bin/perl -wT
 # Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl -T 03_base.t'
+# `make test'. After `make install' it should work as `perl -T t/02_any_to_blib.t'
 #########################
-# $Id: 02_any_to_blib.t 4228 2010-10-04 14:58:06Z hospelt $
+# $Id: 02_any_to_blib.t 4253 2010-10-21 13:05:06Z hospelt $
 ## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
 use strict;
 use warnings;
@@ -18,7 +18,7 @@ BEGIN {
     lib->import($1);	## no critic (ProhibitCaptureWithoutTest)
 };
 
-use TestDrive qw(ENOENT ESTALE 
+use TestDrive qw(ENOENT ESTALE
                  $t_dir $tmp_dir $base_dir
                  work_area perl_run slurp diff);
 
@@ -55,5 +55,6 @@ eval {
         unlink("$tmp_dir/$_") || $! == ENOENT || $! == ESTALE || die "Could not unlink '$tmp_dir/$_': $!" for @out_files;
     }
 };
+my $err = $@;
 chdir($base_dir) || die "Could not change back to '$base_dir': $!";
-die $@ if $@;
+is($err, "", "No error at end");
