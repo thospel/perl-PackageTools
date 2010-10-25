@@ -8,7 +8,7 @@ use strict;
 use warnings;
 use vars qw($VERSION $release_time %history);
 $VERSION = "1.008";
-$release_time = 1287666440;	## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
+$release_time = 1288000078;	## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
 %history = (
   'Changes' => {
     '1.000' => '1.000',
@@ -68,7 +68,8 @@ $release_time = 1287666440;	## no critic (ProhibitUselessNoCritic ProhibitMagicN
     '1.007' => '1.005',
     '1.008' => '1.005',
     '1.009' => '1.006',
-    '1.010' => '1.007'
+    '1.010' => '1.007',
+    '1.011' => '1.008'
   },
   'lib/PackageTools/Package.pm' => {
     '1.000' => '1.000',

@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.008	2010-10-21 13:07:20 UT
+1.008	2010-10-25 09:47:58 UT
 	- Fix a very minor bug where a script name was not expanded in a comment
 	  in Makefile.PL
 
