@@ -8,7 +8,7 @@ use strict;
 use warnings;
 use vars qw($VERSION $release_time %history);
 $VERSION = "1.008";
-$release_time = 1288000078;	## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
+$release_time = 1288865639;	## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
 %history = (
   'Changes' => {
     '1.000' => '1.000',
@@ -50,7 +50,8 @@ $release_time = 1288000078;	## no critic (ProhibitUselessNoCritic ProhibitMagicN
   },
   'bin/any_to_blib' => {
     '1.000' => '1.005',
-    '1.001' => '1.007'
+    '1.001' => '1.007',
+    '1.002' => '1.008'
   },
   'bin/makeppd.pl' => {
     '1.011' => '1.000',

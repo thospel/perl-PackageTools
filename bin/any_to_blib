@@ -4,10 +4,10 @@
 use strict;
 use warnings;
 
-our $VERSION = "1.001";
+our $VERSION = "1.002";
 
 use FindBin qw($Script);
-our $Bin;
+our ($Bin, %defines);
 
 # If the program runs as /foobar/bin/program, find libraries in /foobar/lib
 BEGIN {
@@ -224,6 +224,7 @@ die "Could not parse your command line. Try $Script -h\n" unless
                "pairs!"		=> \my $pairs,
                "filter=s"	=> \my @filter,
                "do=s"		=> \my @do,
+               "define=s%"	=> \%defines,
                "force!"		=> \my $force,
                "P|proxy_file=s"	=> \my $proxy_file,
                "min_version=s"	=> \my $min_version,
@@ -623,8 +624,8 @@ any_to_blib - A variation on ExtUtils::Install::pm_to_blib
 
 =head1 SYNOPSIS
 
- any_to_blib [--proxy_file proxy_file] [--base_dir directory] [--blib blib_directory] {--filter condition} {--do do_file} {file}
- any_to_blib [--proxy_file proxy_file] [--base_dir directory] [--blib blib_directory] {--filter condition} {--do do_file} --pairs {from to}
+ any_to_blib [--proxy_file proxy_file] [--base_dir directory] [--blib blib_directory] {--filter condition} {--define foo=bar} {--do do_file} {file}
+ any_to_blib [--proxy_file proxy_file] [--base_dir directory] [--blib blib_directory] {--filter condition} {--define foo=bar} {--do do_file} --pairs {from to}
  any_to_blib [--version] [--unsafe] [-U] [-h] [--help]
 
 =head1 DESCRIPTION
@@ -745,11 +746,20 @@ will copy the file F<foo/bar> to F<blib/foo/bar> and file F<baz> to F<blib/baz>
 
 Will make the named condition true for L<macro filtering|"filter_macro">.
 
+=item X<option_define>--define foo=bar
+
+Each repetition of this option modifies the global hash C<%defines> by doing:
+
+  $defines{foo} = bar;
+
+This hash can then be used by L<--do|"option_do"> preprocessors.
+
 =item X<option_do>--do do_file
 
 Preprocess by doing a perl C<do> with F<do_file> as argument. The current
-content is available in C<$_> to the code in F<do_file>. The F<do_file> should
-return a true value
+content is available in C<$_> to the code in F<do_file>. It will also have
+access to any L<defines|"option_define"> that have been set. The F<do_file>
+should return a true value
 
 For example to change all C<foo> to C<bar> you could create a file F<change>
 containing:
