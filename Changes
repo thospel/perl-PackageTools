@@ -5,6 +5,7 @@ Revision history for Perl extension PackageTools.
 	  in Makefile.PL
 	- Add a "--define" option to any_to_blib allowing the caller to set
 	  name/value pairs
+	- New option for "release_pm": --vcs_check
 
 1.007	2010-10-21 13:03:02 UT
 	- Don't update Package.pm files inside a t directory

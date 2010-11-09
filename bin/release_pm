@@ -31,6 +31,7 @@ use IO::Handle;	# for (f)sync
 my $quot = qr/[\'\"]?/;
 my $sums = "md5-versions";
 my $quick = 1;
+my $vcs_check = 1;
 
 Getopt::Long::Configure ("bundling");
 my $start_digits  = 3;
@@ -41,6 +42,7 @@ die "Could not parse your command line. Try $Bin/$Script -h\n" unless
                "digits=i"		=> \$start_digits,
                "initial:s"		=> \my $start_release,
                "start_version=s",	=> \$start_version,
+               "vcs_check!"		=> \$vcs_check,
                "next!"			=> \my $next,
 	       "version!"		=> \my $print_version,
                "U|unsafe!"		=> \my $unsafe,
@@ -382,10 +384,13 @@ sub get_files {
             $release_props->next_release;
             warn "New $file\n";
         }
+        my $do_vcs_check;
         if ($file =~ m{\bPackage\.pm\z}) {
             ($file_props->{binary}, $file_props->{content}) = slurp($file, 1);
-            if (!defined $file_props->{content} ||
-                $file_props->{content} eq "") {
+            if (defined $file_props->{content} && 
+                $file_props->{content} ne "") {
+                $do_vcs_check = $vcs_check;
+            } else {
                 my $package_name = $file;
                 $package_name =~ s{^lib/}{} || die "No lib/ in '$package_name'";
                 $package_name =~ s{\.pm\z}{};
@@ -403,6 +408,13 @@ EOT
             }
         } else {
             ($file_props->{binary}, $file_props->{content}) = slurp($file);
+            $do_vcs_check = $vcs_check;
+        }
+        if ($do_vcs_check) {
+            while (my ($url) =
+                   $file_props->{content} =~ /\$HeadURL\s*:\s*(\S.*?)\s*\$/) {
+                print STDERR "File: $file Url: $url\n";
+            }
         }
         $file_props->{content_chksum} = $file_props->{disk_chksum} =
             chksum($file_props);
@@ -724,9 +736,9 @@ release_pm - Automatically update version information on files and packages
 
 =head1 SYNOPSIS
 
-  release_pm --initial [version] [--digits natural] [--import_version] [--import_revision] [--start_version version]
-  release_pm [--import_version] [--import_revision] [--start_version version]
-  release_pm --next
+  release_pm --initial [version] [--digits natural] [--import_version] [--import_revision] [--start_version version] [--vcs_check]
+  release_pm [--import_version] [--import_revision] [--start_version version] [--vcs_check]
+  release_pm [--vcs_check] --next
   release_pm [-U] [--unsafe] --help
   release_pm --version
 
@@ -846,6 +858,16 @@ work like this:
   # Due to the copy you are now back in the released package version
   # Switch back to the development package version and notice all changed files
   release_pm --next
+
+=item X<option_vcs_check>--vcs_check, --novcs_check
+
+If this option is true the program will looks for special version control system
+directives like C<$HeadURL> or C<$Id> in all files and checks that their values
+match with the filename. If not it prints a warning. The warning means that
+you probably forgot to activate the directives in your version control system
+(or never submitted the files yet).
+
+Defaults to true
 
 =item X<option_version>--version
 
