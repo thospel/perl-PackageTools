@@ -31,7 +31,6 @@ use IO::Handle;	# for (f)sync
 my $quot = qr/[\'\"]?/;
 my $sums = "md5-versions";
 my $quick = 1;
-my $vcs_check = 1;
 
 Getopt::Long::Configure ("bundling");
 my $start_digits  = 3;
@@ -42,7 +41,7 @@ die "Could not parse your command line. Try $Bin/$Script -h\n" unless
                "digits=i"		=> \$start_digits,
                "initial:s"		=> \my $start_release,
                "start_version=s",	=> \$start_version,
-               "vcs_check!"		=> \$vcs_check,
+               "vcs_check!"		=> \my $vcs_check,
                "next!"			=> \my $next,
 	       "version!"		=> \my $print_version,
                "U|unsafe!"		=> \my $unsafe,
@@ -229,7 +228,7 @@ sub spew($$;$) {
 
 sub get_versions_file {
     my ($class) = @_;
-    my (%file_props, %released, $release, $begun, $ended, $digits, $date);
+    my (%file_props, %released, $release, $begun, $ended, $digits, $date, $vcs);
     my @stat;
     # !$quick or @stat = stat($sums) or die "Could not stat '$sums': $!";
     my $content = slurp($sums, 1);
@@ -269,6 +268,9 @@ sub get_versions_file {
             } elsif ($line =~ /^DIGITS\s+([0-9]+)\z/) {
                 croak "Duplicate DIGITS\n" if defined $digits;
                 $digits = $1;
+            } elsif ($line =~ /^VCS_CHECK\s+([01])\z/) {
+                croak "Duplicate VCS_CHECK\n" if defined $vcs;
+                $vcs = $1;
             } elsif ($line =~ /^SEMANTICS\s+([0-9]+\.[0-9]+)\z/) {
                 no warnings 'once';
                 croak "File $sums needs at least $Script version $1, but this is version $VERSION" if $1 > $VERSION;
@@ -307,6 +309,10 @@ sub get_versions_file {
         old_file_props	=> \%file_props,
         released	=> \%released,
         time_stamp	=> $date,
+        vcs_check	=>
+            defined $vcs_check ? $vcs_check :
+            defined $vcs       ? $vcs       :
+            1,
     }, $class;
     $release_props->next_release if $next;
     return $release_props;
@@ -334,7 +340,7 @@ sub chksum {
     my ($file_props) = @_;
     # Get rid of typical CVS/Subversion junk
     my $content = $file_props->{content};
-    $content =~ s/\$(Revision|LastChangedRevision|Rev|Date|LastChangedDate|Author|LastChangedBy|Id|HeadURL|URL|Header|Name|Locker|Log|RCSfile|Source|State):[^\n\$]+?\$/\$$1: \$/g;
+    $content =~ s/\$(Revision|LastChangedRevision|Rev|Date|LastChangedDate|Author|LastChangedBy|Id|HeadURL|URL|Header|Name|Locker|Log|RCSfile|Source|State):[^\n\$]+?\s\$/\$$1: \$/g;
     return md5_hex($content);
 }
 
@@ -387,9 +393,9 @@ sub get_files {
         my $do_vcs_check;
         if ($file =~ m{\bPackage\.pm\z}) {
             ($file_props->{binary}, $file_props->{content}) = slurp($file, 1);
-            if (defined $file_props->{content} && 
+            if (defined $file_props->{content} &&
                 $file_props->{content} ne "") {
-                $do_vcs_check = $vcs_check;
+                $do_vcs_check = $release_props->{vcs_check};
             } else {
                 my $package_name = $file;
                 $package_name =~ s{^lib/}{} || die "No lib/ in '$package_name'";
@@ -408,18 +414,24 @@ EOT
             }
         } else {
             ($file_props->{binary}, $file_props->{content}) = slurp($file);
-            $do_vcs_check = $vcs_check;
+            $do_vcs_check = $release_props->{vcs_check};
         }
         if ($do_vcs_check) {
-            while (my ($url) =
-                   $file_props->{content} =~ /\$HeadURL\s*:\s*(\S.*?)\s*\$/) {
-                print STDERR "File: $file Url: $url\n";
+            for my $url ($file_props->{content} =~ /\$HeadURL\s*:\s*(\S.*?)\s+\$/g) {
+                next if $url =~ m{/\Q$file\E\z};
+                warn("Warning: $file has inconsistent \$HeadURL $url \$\n");
+                last;
+            }
+            for my $id ($file_props->{content} =~ /\$Id\s*:\s*(\S.*?)(?:,v)?\s.*?\s+\$/g) {
+                next if $file eq $id || $file =~ m{/\Q$id\E\z};
+                warn("Warning: $file has inconsistent \$Id $id\n");
+                last;
             }
         }
         $file_props->{content_chksum} = $file_props->{disk_chksum} =
             chksum($file_props);
         if ($import_revision &&
-            $file_props->{content} =~ /\$Revision\s*:\s*([0-9]+)\.([0-9]+)\S*\s*\$/) {
+            $file_props->{content} =~ /\$Revision\s*:\s*([0-9]+)\.([0-9]+)\S*\s+\$/) {
             $file_props->{version} = $release_props->next_version($1, $2);
             $file_props->{version_changed} = 1;
             $release_props->next_release;
@@ -667,6 +679,8 @@ sub set_version_file {
     $content .= "DIGITS\t\t$release_props->{digits}\n";
     $content .= "RELEASE\t\t$release_props->{release}\n";
     $content .= "DATE\t\t$iso_time\n";
+    $content .= sprintf("VCS_CHECK\t%d\n",
+                        $release_props->{vcs_check} ? 1 : 0);
 
     my $file_props = $release_props->{file_props};
     # Same order as files in MANIFEST
@@ -867,7 +881,11 @@ match with the filename. If not it prints a warning. The warning means that
 you probably forgot to activate the directives in your version control system
 (or never submitted the files yet).
 
-Defaults to true
+The given setting is written to the F<md5-versions> file and becomes the default
+for further calls.
+
+Initial Default is true, from then on the default comes from the md5-versions
+file.
 
 =item X<option_version>--version
 
