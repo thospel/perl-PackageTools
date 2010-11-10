@@ -695,12 +695,12 @@ For example:
 
 will become:
 
-  foo<!>bar
+  foobar
 
 This allows you to spread things over multiple lines for clarity without
 introducing spurious spaces. It is also useful to use at the end of a file
 that will get included with <!-- TMPL_INCLUDE --> since this will remove the
-extra most editors will put there.
+extra newline most editors will put there.
 
 =item X<filter_single_empty_coments>Remove single empty comments without their whitespace
 
@@ -730,6 +730,12 @@ Find the target files relative to base_dir (defaults to C<.>).
 
 The target directory for the copies. Defaults to F<blib>.
 
+For example:
+
+  any_to_blib --blib foo/bar baz
+
+will copy the file F<baz> to F<foo/bar/baz>
+
 =item X<option_pairs>--pairs
 
 By default the arguments are files to be copied. If this option is given the
@@ -738,9 +744,9 @@ The L<blib directory|"option_blib"> is still prepended to the F<to> name.
 
 For example:
 
-  any_to_blib --blib foo/bar baz
+  any_to_blib --pairs foo/bar baz
 
-will copy the file F<foo/bar> to F<blib/foo/bar> and file F<baz> to F<blib/baz>
+will copy the file F<foo/bar> to F<blib/baz>
 
 =item X<option_filter>--filter condition
 
@@ -782,8 +788,7 @@ short-circuited and the copy is always done
 If the any_to_blib script is more recently modified than the given file the
 L<force flag|"option_force"> is automatically turned on. When using any_to_blib
 in Makefiles the rule target is usually a file that gets touched when the copy
-to blib is finished. This file is the natural target for this option. This is a
-developer option.
+to blib is finished. This file is the natural target for this option.
 
 Typical use in a Makefile:
 
@@ -816,33 +821,24 @@ Print version info.
 
 =back
 
-=head1 EXAMPLE
-
-A typical use would be:
-
-  find -name "*.mp3" -print0 | random -0 | xargs -0 amp
-
-to play all mp3 files in a directory tree in a random order
-
 =head1 BUGS
 
 None known
 
 =head1 SEE ALSO
 
-L<find|find(1)>,
-L<xargs|xargs(1)>
+L<release_pm|release_pm(1)>
 
 =head1 AUTHOR
 
-Ton Hospel, E<lt>random@ton.iguana.beE<gt>
+Ton Hospel, E<lt>PackageTools@ton.iguana.beE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2002 by Ton Hospel
+Copyright (C) 2010 by Ton Hospel
 
 This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.8.2 or,
+it under the same terms as Perl itself, either Perl version 5.8.1 or,
 at your option, any later version of Perl 5 you may have available.
 
 =cut
