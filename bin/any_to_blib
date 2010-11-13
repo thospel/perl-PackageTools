@@ -762,10 +762,31 @@ This hash can then be used by L<--do|"option_do"> preprocessors.
 
 =item X<option_do>--do do_file
 
-Preprocess by doing a perl C<do> with F<do_file> as argument. The current
-content is available in C<$_> to the code in F<do_file>. It will also have
-access to any L<defines|"option_define"> that have been set. The F<do_file>
-should return a true value
+Preprocess by doing a perl C<do> with F<do_file> as argument. The F<do_file>
+should return a true value. The following special global variables are available
+for use:
+
+=over
+
+=item X<option_do__>V<$_>
+
+The current content. Making changes to this variable is normally the whole point
+
+=item X<option_do_defines>C<%defines>
+
+The tag/value pairs set using the L<defines option|"option_define">
+
+=item X<option_do_from>C<$from>
+
+The original file name (relative to the L<base directory|"option_base_dir">) of
+the content being transformed
+
+=item X<option_do_to>C<$to>
+
+The target file name (relative to the L<blib directory|"option_blib"> of the
+content being transformed
+
+=back
 
 For example to change all C<foo> to C<bar> you could create a file F<change>
 containing:

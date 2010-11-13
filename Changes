@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.008	2010-11-10 12:02:49 UT
+1.008	2010-11-13 22:58:08 UT
 	- release_pm: Fix a very minor bug where a script name was not expanded
 	  in a comment in Makefile.PL
 	- any_to_blib: Add a "--define" option allowing the caller to set
