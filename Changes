@@ -1,6 +1,6 @@
 Revision history for Perl extension PackageTools.
 
-1.008	2010-11-13 22:58:08 UT
+1.008	2010-11-15 11:26:00 UT
 	- release_pm: Fix a very minor bug where a script name was not expanded
 	  in a comment in Makefile.PL
 	- any_to_blib: Add a "--define" option allowing the caller to set
@@ -8,6 +8,9 @@ Revision history for Perl extension PackageTools.
 	- release_pm: Bugfix: vcs directives must end on "whitspace $" instead
 	  of just "$" to be recognized
 	- any_to_blib: Fix some total nonsense in the documentation
+	- any_to_blib: Start by writing the processing that will be done
+	  so that if it fails we know on what file it failed
+	- any_to_blib: Support multiple proxy files
 	- release_pm: New option "--vcs_check"
 
 1.007	2010-10-21 13:03:02 UT
