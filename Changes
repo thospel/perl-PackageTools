@@ -1,6 +1,8 @@
 Revision history for Perl extension PackageTools.
 
-1.009	2010-12-13 12:54:15 UT
+1.009	2011-01-14 12:58:35 UT
+	- makeppd.pl: find bsdtar and zip through the PATH. Internally extend
+	  the PATH with "C:/Program Files/GnuWin32/bin"
 
 1.008	2010-12-13 12:50:46 UT
 	- release_pm: Fix a very minor bug where a script name was not expanded

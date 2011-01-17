@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: Makefile.PL 4213 2010-09-27 00:52:37Z hospelt $
+# $Id: Makefile.PL 4480 2011-01-14 12:49:09Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
@@ -7,7 +7,7 @@ use ExtUtils::MakeMaker;
 use FindBin;
 use Config qw(%Config);
 
-our $VERSION = '1.004';
+our $VERSION = '1.005';
 
 # Allows to suppress all program installation with -n (library only)
 use Getopt::Std;
@@ -81,17 +81,17 @@ BEGIN {
 
     $postamble{ppm} = <<'EOT';
 ppm: $(DISTNAME).ppd
-	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.015 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
+	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.016 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
 EOT
 
     $postamble{ppm3} = <<'EOT';
 ppm3: $(DISTNAME).ppd
-	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.015 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --ppm_version=3 --leave=ppm3 "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
+	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.016 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --ppm_version=3 --leave=ppm3 "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
 EOT
 
     $postamble{ppm4} = <<'EOT';
 ppm4: $(DISTNAME).ppd
-	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.015 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --ppm_version=4 --leave=ppm4 "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
+	makeppd.pl "--perl=$(PERLRUN)" --min_version=1.016 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --ppm_version=4 --leave=ppm4 "--objects=$(OBJECT)" $(DISTNAME).ppd $(VERSION)
 EOT
 
     $postamble{ppd} = <<'EOT';
@@ -134,8 +134,18 @@ undef &postamble;	## no critic (ProhibitUselessNoCritic ProhibitAmpersandSigils)
 BEGIN {
 package MY;
 our %postamble;
-$postamble{ppd} = <<'EOF';
-$(DISTNAME).ppd: all ppd
-	$(PERL) bin/makeppd.pl "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm $(DISTNAME).ppd $(VERSION)
-EOF
+    $postamble{ppm} = <<'EOT';
+ppm: $(DISTNAME).ppd
+	$(PERL) bin/makeppd.pl --min_version=1.016 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm $(DISTNAME).ppd $(VERSION)
+EOT
+
+    $postamble{ppm3} = <<'EOT';
+ppm3: $(DISTNAME).ppd
+	$(PERL) bin/makeppd.pl --min_version=1.016 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --ppm_version=3 --leave=ppm3 $(DISTNAME).ppd $(VERSION)
+EOT
+
+    $postamble{ppm4} = <<'EOT';
+ppm4: $(DISTNAME).ppd
+	$(PERL) bin/makeppd.pl --min_version=1.016 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --ppm_version=4 --leave=ppm4 $(DISTNAME).ppd $(VERSION)
+EOT
 }

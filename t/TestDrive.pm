@@ -1,10 +1,10 @@
 package TestDrive;
-# $Id: TestDrive.pm 4253 2010-10-21 13:05:06Z hospelt $
+# $Id: TestDrive.pm 4481 2011-01-14 12:59:16Z hospelt $
 ## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
 use strict;
 use warnings;
 
-our $VERSION = "1.001";
+our $VERSION = "1.002";
 
 use Carp;
 use FindBin qw($Bin $Script);
@@ -67,8 +67,8 @@ $me = $1;	## no critic (ProhibitUselessNoCritic ProhibitCaptureWithoutTest)
 
 # State globals
 our ($cover, $tmp_dir, $tar, $zip, $compress);
-our $bsd_tar	= 'C:/Program Files/GnuWin32/bin/bsdtar';
-our $gnuwin_zip	= 'C:/Program Files/GnuWin32/bin/zip';
+our $bsd_tar	= 'bsdtar';
+our $gnuwin_zip	= 'zip';
 
 my ($keep, $leave, $strace, $real_base);
 

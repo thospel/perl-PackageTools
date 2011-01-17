@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 4211 2010-09-24 23:00:32Z hospelt $
+# $Id: makeppd.pl 4480 2011-01-14 12:49:09Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-our $VERSION = "1.015";
+our $VERSION = "1.016";
 
 use FindBin qw($Bin $Script);
 # If the program runs as /foobar/bin/program, find libraries in /foobar/lib
@@ -43,9 +43,9 @@ my $tar = "tar";
 my $compress = "gzip --best";
 
 # http://gnuwin32.sourceforge.net/packages/bsdtar.htm
-my $bsd_tar	= 'C:/Program Files/GnuWin32/bin/bsdtar';
+my $bsd_tar	= 'bsdtar';
 # http://gnuwin32.sourceforge.net/packages/zip.htm
-my $gnuwin_zip	= 'C:/Program Files/GnuWin32/bin/zip';
+my $gnuwin_zip	= 'zip';
 
 Getopt::Long::config("bundling", "require_order");
 my @OLD_ARGV = @ARGV;
@@ -91,6 +91,7 @@ makeppd.pl $VERSION (PackageTools $PackageTools::Package::VERSION)
 EOF
     exit 0;
 }
+$ENV{PATH} = "" if !defined $ENV{PATH};
 if ($help) {
     $ENV{PATH} .= ":" unless $ENV{PATH} eq "";
     $ENV{PATH} = "$ENV{PATH}$Config{installscript}";
@@ -392,6 +393,8 @@ close($npfh)	|| die "Error closing '$new_ppd': $!";
 # and they will cause an error on ppm install
 # We are currently assuming gnu tar here
 # (maybe at some point generate a filelist myself and do the compress later)
+
+$ENV{PATH} = $ENV{PATH} eq "" ? "C:/Program Files/GnuWin32/bin" : "$ENV{PATH};C:/Program Files/GnuWin32/bin" if $^O eq "MSWin32";
 
 warn "\t$tar ", "-czf $tmp_dir/$arch/$dist --exclude \"blib/man*\"", $pp_dir eq "" ? "" : " -C $pp_dir", " blib\n";
 system($tar,

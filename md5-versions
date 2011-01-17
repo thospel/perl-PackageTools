@@ -1,19 +1,19 @@
-# Generated on 2010-12-13 12:54:15 UT using /usr/local/bin/release_pm
+# Generated on 2011-01-14 12:58:35 UT using /home/ton/perl-modules/PackageTools/bin/release_pm
 BEGIN
-SEMANTICS	1.011
+SEMANTICS	1.012
 DIGITS		3
 RELEASE		1.009
-DATE		2010-12-13 12:54:15
+DATE		2011-01-14 12:58:35
 VCS_CHECK	1
-VERSION	a5b7b6ea21bb2f30497767ab16d91a73 1.009 Changes
+VERSION	6f9d298e2735a92129bfa50836541a64 1.009 Changes
 VERSION	3cac43db008717067275fba7a143a67c 1.003 MANIFEST
 VERSION	7fc28799e003eef758e3ca50aec4cfe8 1.000 MANIFEST.SKIP
-VERSION	ea05545deb57acb07b061379d95d93f1 1.004 Makefile.PL
+VERSION	40d2eb479b347d899a0e91cfd86aea33 1.005 Makefile.PL
 VERSION	f1e7dd1b379df791ef3bcaaa5f240bfb 1.009 README
 VERSION	254729ed7f038b8974df5c884e1567cb 1.002 bin/any_to_blib
-VERSION	7f20aea9e68710f0bf7adf201ddf02dd 1.015 bin/makeppd.pl
-VERSION	9bf279fc89471dcaedbcc13a3ed2c3e7 1.011 bin/release_pm
-VERSION	1b840cbce9f183c211b72b2876733d83 1.009 lib/PackageTools/Package.pm
+VERSION	c5d7059320d95e800f31e7ee8afc07d5 1.016 bin/makeppd.pl
+VERSION	17c85b04cc69a6d58244b937297a6982 1.012 bin/release_pm
+VERSION	d7051e7dba6cc52f418e6c2d923429d6 1.009 lib/PackageTools/Package.pm
 VERSION	89a0ea02e6558b988c4f38ba3530a2f1 1.000 t/00_load.t
 VERSION	d1f4bc414d3f4f1f77412356916d00f0 1.000 t/01_syntax.t
 VERSION	8c9e5f7ff256e1816a9cf105e0fee29d 1.000 t/02_any_to_blib.t
@@ -21,7 +21,7 @@ VERSION	3b9f56637f0847c8e49454d7185d6385 1.002 t/02_makeppd.t
 VERSION	00b2a0258f5010ffba9a7517a6ef750e 1.002 t/02_makeppd_ppm3.t
 VERSION	a806a4eed94c29c1148c08a1f7e35fbe 1.000 t/02_makeppd_ppm3_4.t
 VERSION	1d0ff01aced18f062a37f041a0188231 1.000 t/02_makeppd_ppm4_3.t
-VERSION	ce53a950ee27042e1bfbb3176eae4fc1 1.001 t/TestDrive.pm
+VERSION	0aef4b8b4dc996e62c75141d7673df4e 1.002 t/TestDrive.pm
 VERSION	09d2169405e12412abea0be854589ce4 1.000 t/any_to_blib/01_basic.in
 VERSION	09d2169405e12412abea0be854589ce4 1.000 t/any_to_blib/01_basic.out
 VERSION	467b70af50bd1352451dfee3112faee5 1.000 t/any_to_blib/02_filter.tmpl
@@ -52,6 +52,7 @@ RELEASED 1.002 1.005 MANIFEST
 RELEASED 1.001 1.004 MANIFEST
 RELEASED 1.000 1.000 MANIFEST
 RELEASED 1.000 1.004 MANIFEST.SKIP
+RELEASED 1.005 1.009 Makefile.PL
 RELEASED 1.004 1.007 Makefile.PL
 RELEASED 1.003 1.006 Makefile.PL
 RELEASED 1.002 1.005 Makefile.PL
@@ -70,11 +71,13 @@ RELEASED 1.000 1.000 README
 RELEASED 1.002 1.008 bin/any_to_blib
 RELEASED 1.001 1.007 bin/any_to_blib
 RELEASED 1.000 1.005 bin/any_to_blib
+RELEASED 1.016 1.009 bin/makeppd.pl
 RELEASED 1.015 1.007 bin/makeppd.pl
 RELEASED 1.014 1.005 bin/makeppd.pl
 RELEASED 1.013 1.004 bin/makeppd.pl
 RELEASED 1.012 1.002 bin/makeppd.pl
 RELEASED 1.011 1.000 bin/makeppd.pl
+RELEASED 1.012 1.009 bin/release_pm
 RELEASED 1.011 1.008 bin/release_pm
 RELEASED 1.010 1.007 bin/release_pm
 RELEASED 1.009 1.006 bin/release_pm
@@ -109,6 +112,7 @@ RELEASED 1.001 1.006 t/02_makeppd_ppm3.t
 RELEASED 1.000 1.005 t/02_makeppd_ppm3.t
 RELEASED 1.000 1.007 t/02_makeppd_ppm3_4.t
 RELEASED 1.000 1.007 t/02_makeppd_ppm4_3.t
+RELEASED 1.002 1.009 t/TestDrive.pm
 RELEASED 1.001 1.007 t/TestDrive.pm
 RELEASED 1.000 1.005 t/TestDrive.pm
 RELEASED 1.000 1.007 t/any_to_blib/01_basic.in
