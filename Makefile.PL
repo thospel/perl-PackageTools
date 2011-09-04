@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: Makefile.PL 4480 2011-01-14 12:49:09Z hospelt $
+# $Id: Makefile.PL 4698 2011-09-01 13:16:02Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
@@ -57,8 +57,11 @@ if ($@) {
 WriteMakefile
     (NAME		=> 'PackageTools',
      VERSION_FROM	=> 'lib/PackageTools/Package.pm', # finds $VERSION
+     BUILD_REQUIRES	=> {
+         # Only for the tests
+         "Test::More"	=> "0.01",
+     },
      PREREQ_PM		=> {
-	 "Test::More"		=> "0.01",	# Only for the tests
      },
      ABSTRACT		=> 'Package management tools',
      AUTHOR		=> 'Ton Hospel <PackageTools@ton.iguana.be>',

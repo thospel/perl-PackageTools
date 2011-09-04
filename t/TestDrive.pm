@@ -1,5 +1,5 @@
 package TestDrive;
-# $Id: TestDrive.pm 4481 2011-01-14 12:59:16Z hospelt $
+# $Id: TestDrive.pm 4642 2011-06-09 11:07:51Z hospelt $
 ## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
 use strict;
 use warnings;
@@ -22,7 +22,7 @@ our @EXPORT_OK =
        $tmp_dir $t_dir $base_dir $bin_dir $me $cover $tar $zip $compress
        slurp spew rmtree mkpath cpr work_area perl_run diff);
 
-# Allows executing programs under tain checking
+# Allows executing programs under taint checking
 delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
 # Let's hope tar and gzip are in this path
 $ENV{PATH} = "/usr/local/bin:/usr/bin:/bin";
