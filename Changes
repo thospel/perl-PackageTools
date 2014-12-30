@@ -1,9 +1,19 @@
 Revision history for Perl extension PackageTools.
 
-1.009	2011-09-01 13:13:28 UT
+1.010	2014-05-15 13:21:11 UT
+	- Added downgrade version check
+	- release_pm: Added a sub_release
+	- Force pdf to be "binary". They often are plain text at the start so
+	  perl -B thinks they are completely plain text
+	- Make -h work on windows
+
+1.009	2012-05-03 10:32:19 UT
 	- makeppd.pl: find bsdtar and zip through the PATH. Internally extend
 	  the PATH with "C:/Program Files/GnuWin32/bin"
-	- release_pm: Put the packagine name in the intial Package.pm HeadURL
+	- release_pm: Put the package name in the intial Package.pm HeadURL
+	- release_pm: If we don't find any_to_blib in the path just leave the
+	  string as is. If you need any_to_blib, add PackageTools to the
+	  BUILD_REQUIRES in Makefile.PL
 
 1.008	2010-12-13 12:50:46 UT
 	- release_pm: Fix a very minor bug where a script name was not expanded

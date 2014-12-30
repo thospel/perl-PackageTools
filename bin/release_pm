@@ -1,10 +1,10 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/release_pm $
-# $Id: release_pm 4697 2011-08-30 11:34:50Z hospelt $
+# $Id: release_pm 5507 2013-05-24 10:50:41Z hospelt $
 use strict;
 use warnings;
 
-our $VERSION = "1.012";
+our $VERSION = "1.013";
 
 use FindBin qw($Script);
 our $Bin;
@@ -49,17 +49,16 @@ die "Could not parse your command line. Try $Bin/$Script -h\n" unless
 
 if ($print_version) {
     require PackageTools::Package;
-    ## no critic (ProhibitUselessNoCritic RequireCheckedSyscalls)
-    print <<"EOT";
-release_pm $VERSION (PackageTools $PackageTools::Package::VERSION)
-EOT
+    ## no critic (UselessNoCritic RequireCheckedSyscalls)
+    print
+        "release_pm $VERSION (PackageTools $PackageTools::Package::VERSION)\n";
     exit 0;
 }
 if ($help) {
     require Config;
     $ENV{PATH} .= ":" unless $ENV{PATH} eq "";
     $ENV{PATH} = "$ENV{PATH}$Config::Config{'installscript'}";
-    exec("perldoc", "-F", $unsafe ? "-U" : (), "$Bin/$Script") || exit 1;
+    exit system("perldoc", "-F", $unsafe ? "-U" : (), "$Bin/$Script") ? 1 : 0;
     # make parser happy
     %Config::Config = ();
 }
@@ -76,7 +75,7 @@ use FindBin qw($Script);
 
 use constant MTIME	=> 9;	# where to find mtime in stat
 
-my $epoch_base = timegm(0,0,0,1,0,70);	## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
+my $epoch_base = timegm(0,0,0,1,0,70);	## no critic (UselessNoCritic MagicNumbers)
 
 # Todo: For the next incompatible change, replace $package by $module
 # Maybe also add support for for looking up files --Ton
@@ -87,10 +86,18 @@ use Carp;
 
 my $epoch_base;
 
+sub SUB_VERSION {
+    return $SUB_VERSION;
+}
+
+sub FULL_VERSION {
+    return "$VERSION.$SUB_VERSION";
+}
+
 sub release_time {
     if (!defined $epoch_base) {
         require Time::Local;
-        $epoch_base = Time::Local::timegm(0,0,0,1,0,70);	## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
+        $epoch_base = Time::Local::timegm(0,0,0,1,0,70);	## no critic (UselessNoCritic MagicNumbers)
     }
     return $release_time + $epoch_base;
 }
@@ -197,7 +204,7 @@ sub slurp {
     open(my $fh, "<", $file) or
         $may_not_exist && ($! == ENOENT || $! == ESTALE) ?
 	return undef : croak "Could not open '$file': $!";
-    my $binary = -B $file;
+    my $binary = $file =~ /\.(?:pdf)\z/i || -B $file;
     binmode $fh if $binary;
     my $rc = read($fh, my $slurp, 1024 + -s $fh);
     croak "File '$file' is still growing" if
@@ -229,7 +236,7 @@ sub spew($$;$) {
 sub get_versions_file {
     my ($class) = @_;
     my (%file_props, %released, $release, $begun, $ended, $digits, $date, $vcs);
-    my @stat;
+    my ($sub_release, @stat);
     # !$quick or @stat = stat($sums) or die "Could not stat '$sums': $!";
     my $content = slurp($sums, 1);
     if (defined $content) {
@@ -265,6 +272,9 @@ sub get_versions_file {
             } elsif ($line =~ /^RELEASE\s+([0-9]+(?:\.[0-9]+)?)\z/) {
                 croak "Duplicate RELEASE\n" if defined $release;
                 $release = $1;
+            } elsif ($line =~ /^SUB_RELEASE\s+([0-9]+)\z/) {
+                croak "Duplicate SUB_RELEASE\n" if defined $sub_release;
+                $sub_release = $1;
             } elsif ($line =~ /^DIGITS\s+([0-9]+)\z/) {
                 croak "Duplicate DIGITS\n" if defined $digits;
                 $digits = $1;
@@ -303,6 +313,7 @@ sub get_versions_file {
         start_version	=> sprintf($format, $start_version),
         digits		=> $digits,
         release		=> $release,
+        sub_release	=> $sub_release || 0,
         release_changed	=> !$next,
         any_changes	=> 0,
         old_content	=> $content,
@@ -314,6 +325,8 @@ sub get_versions_file {
             defined $vcs       ? $vcs       :
             1,
     }, $class;
+    $release_props->{next_sub_release} = sprintf(
+        "%.*d", $release_props->{digits}, $release_props->{sub_release} + 1);
     $release_props->next_release if $next;
     return $release_props;
 }
@@ -330,6 +343,8 @@ sub next_release {
     my ($release_props) = @_;
     if (!$release_props->{release_changed}) {
         $release_props->{release} = $release_props->next_version($release_props->{release});
+        $release_props->{next_sub_release} = sprintf(
+            "%.*d", $release_props->{digits}, 0);
         $release_props->{release_changed} = 1;
         warn "Release $release_props->{release}\n";
     }
@@ -465,8 +480,11 @@ sub release {
     my $changes;
     do {
         $changes = 0;
-        $release_props->{time_stamp} = $release_props->{now} if
-            $release_props->{any_changes};
+        if ($release_props->{any_changes}) {
+            # Avoid repeated changes, they get updated to themselves
+            $release_props->{time_stamp} = $release_props->{now};
+            $release_props->{sub_release} = $release_props->{next_sub_release};
+        }
         for my $file (@{$release_props->{files}}) {
             my $file_props = $file_props->{$file} ||
                 die "Assertion: Unknown file $file";
@@ -502,7 +520,9 @@ sub release {
                 $his =~ s/PACKAGE/$package_name/g;
                 my $released_string =
                     Data::Dumper::Dumper($release_props->{released});
-                $released_string =~ s/^\s*\$VAR1\s*=\s*{(.*)}\s*;\s*\z/use strict;\nuse warnings;\nuse vars qw(\$VERSION \$release_time %history);\n\$VERSION = "$release_props->{release}";\n\$release_time = $time_stamp;\t## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)\n%history = ($1);\n\n$his/s || die "Assertion: Unexpected Dumper output";
+                $released_string =~
+                    s{^\s*\$VAR1\s*=\s*{(.*)}\s*;\s*\z}
+                     {use strict;\nuse warnings;\nuse vars qw(\$VERSION \$SUB_VERSION \$release_time %history);\n\$VERSION = "$release_props->{release}";\n\$SUB_VERSION = "$release_props->{sub_release}";\n\$release_time = $time_stamp;\t## no critic (UselessNoCritic MagicNumbers)\n%history = ($1);\n\n$his}s || die "Assertion: Unexpected Dumper output";
                 $file_props->{content} =~ s/^[^\S\n]*\#\s*START\s+HISTORY\s*\n(.*?)^\s*\#\s*END\s+HISTORY[^\S\n]*\n/\# START HISTORY\n# autogenerated by $Script\n$released_string\# END HISTORY\n/sm;
                 $file_props->{version_changed} = 1;
                 $file_props->{version} = $release_props->{release};
@@ -570,30 +590,35 @@ POSTAMBLES
 BEGIN {
     package MY;
     my $min_any_to_blib_version = "1.000";
-    my ($any_to_blib, $error);
+    my $any_to_blib = "any_to_blib";
+    my $error;
 
     for my $path (split $^O eq "MSWin32" ? qr{;} : qr{:}, $ENV{PATH}) {
-        if ($^O eq "MSWin32" ? -f "$path/any_to_blib" : -x "$path/any_to_blib") {
+        if ($^O eq "MSWin32" ? -f "$path/$any_to_blib" : -x "$path/$any_to_blib") {
             defined(my $pid =
                     open(my $fh, "-|",
-                         $^O eq "MSWin32" ? qq("$^X" "$path/any_to_blib" --version):
-                         ($^X, "$path/any_to_blib", "--version"))) ||
+                         $^O eq "MSWin32" ? qq("$^X" "$path/$any_to_blib" --version):
+                         ($^X, "$path/$any_to_blib", "--version"))) ||
                          die "Could not fork: $!";
             my $version_string = do { local $/; <$fh> };
-            close($fh);	## no critic (ProhibitUselessNoCritic RequireCheckedClose)
-            die "Unexpected exit code $? while closing '$^X $path/any_to_blib --version'" if $?;
-            my ($version) = $version_string =~ /^any_to_blib\s+(\d+\.\d+)\s/m or
-                die "$path/any_to_blib --version: Could not parse version_string\n$version_string";
+            close($fh);	## no critic (UselessNoCritic RequireCheckedClose)
+            die "Unexpected exit code $? while closing '$^X $path/$any_to_blib --version'" if $?;
+            my ($version) = $version_string =~ /^\Q$any_to_blib\E\s+(\d+\.\d+)\s/m or
+                die "$path/$any_to_blib --version: Could not parse version_string\n$version_string";
             if ($version < $min_any_to_blib_version) {
-                $error .= "$path/any_to_blib is version '$version' but I need at least version '$min_any_to_blib_version'\n";
+                $error .= "$path/$any_to_blib is version '$version' but I need at least version '$min_any_to_blib_version'\n";
                 next;
             }
-            $any_to_blib = "$path/any_to_blib";
+            $any_to_blib = "$path/$any_to_blib";
             last;
         }
     }
     die $error if $error;
-    die "Could not find exectable 'any_to_blib' in PATH" if !$any_to_blib;
+    $any_to_blib =~ m{/} || eval {
+         ## no critic (UselessNoCritic MagicNumbers)
+         ExtUtils::MakeMaker->VERSION(6.55_01);
+         1;
+    } || die "Could not find executable '$any_to_blib' in PATH. Please install package PackageTools\n";
 
     our %postamble;
     $postamble{any_to_blib} = <<"EOT";
@@ -606,7 +631,7 @@ MY_ANY_TO_BLIB
                 }
                 $my_section .= << 'EOT'
 
-undef &postamble;	## no critic (ProhibitUselessNoCritic ProhibitAmpersandSigils)
+undef &postamble;	## no critic (UselessNoCritic AmpersandSigils)
 EOT
     ;
 		my $post_section = << 'EOT'
@@ -678,6 +703,7 @@ sub set_version_file {
     $content .= "SEMANTICS\t$VERSION\n";
     $content .= "DIGITS\t\t$release_props->{digits}\n";
     $content .= "RELEASE\t\t$release_props->{release}\n";
+    $content .= "SUB_RELEASE\t$release_props->{sub_release}\n";
     $content .= "DATE\t\t$iso_time\n";
     $content .= sprintf("VCS_CHECK\t%d\n",
                         $release_props->{vcs_check} ? 1 : 0);
@@ -744,7 +770,7 @@ die "Aborted: $@" if $@;
 
 __END__
 
-=for stopwords cvs makeppd.pl
+=for stopwords cvs makeppd.pl md5-versions
 
 =head1 NAME
 

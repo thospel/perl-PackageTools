@@ -2,12 +2,12 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl 01_syntax.t'
 #########################
-# $Id: 01_syntax.t 4213 2010-09-27 00:52:37Z hospelt $
-## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
+# $Id: 01_syntax.t 5026 2012-02-02 22:33:26Z hospelt $
+## no critic (UselessNoCritic MagicNumbers)
 use strict;
 use warnings;
 
-our $VERSION = "1.000";
+our $VERSION = "1.001";
 
 use FindBin;
 
@@ -17,19 +17,17 @@ BEGIN {
     "lib"->import($FindBin::Bin);
 };
 
-use TestDrive qw($tmp_dir $bin_dir slurp work_area);
+use TestDrive qw($tmp_dir $bin_dir $base_dir slurp work_area);
 
 use Test::More tests => 3;
 
 sub check {
-    # Normally I would put the local inside the open, but this also counts as
-    # the second use to avoid a warning
-    local *OLDERR;
-    open(*OLDERR, ">&", "STDERR") || die "Can't dup STDERR: $!";
+    open(my $olderr, ">&", "STDERR") || die "Can't dup STDERR: $!";
     open(STDERR, ">", "$tmp_dir/stderr") ||
         die "Can't open $tmp_dir/stderr: $!";
+    # diag("$^X -c @_");
     my $rc = system($^X, "-c", @_);
-    open(STDERR, ">&", "OLDERR")        || die "Can't dup OLDERR: $!";
+    open(STDERR, ">&", $olderr)        || die "Can't dup old STDERR: $!";
     my $errors = slurp("$tmp_dir/stderr");
     $errors =~ s/.* syntax OK\n//;
     if ($errors ne "") {
@@ -40,6 +38,8 @@ sub check {
 }
 
 work_area();
-for my $file qw(release_pm makeppd.pl any_to_blib) {
-    ok(!check("$bin_dir/$file"), "Can compile $file");
+for my $script (qw(release_pm makeppd.pl any_to_blib)) {
+    ok(!check("-I", "$base_dir/blib/lib", "-I", "$base_dir/blib/arch",
+              "$bin_dir/$script"),
+       "Can compile $bin_dir/$script");
 }

@@ -2,12 +2,12 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl -T t/02_any_to_blib.t'
 #########################
-# $Id: 02_any_to_blib.t 4253 2010-10-21 13:05:06Z hospelt $
-## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
+# $Id: 02_any_to_blib.t 4842 2011-11-28 17:31:33Z hospelt $
+## no critic (UselessNoCritic MagicNumbers)
 use strict;
 use warnings;
 
-our $VERSION = "1.000";
+our $VERSION = "1.001";
 
 BEGIN {
     $^W = 1;
@@ -15,7 +15,7 @@ BEGIN {
     use lib;
     # Untaint (otherwise some versions of Carp::croak will fail)
     $FindBin::Bin =~ m{^(.*?)/*\z}s;
-    lib->import($1);	## no critic (ProhibitCaptureWithoutTest)
+    lib->import($1);	## no critic (CaptureWithoutTest)
 };
 
 use TestDrive qw(ENOENT ESTALE

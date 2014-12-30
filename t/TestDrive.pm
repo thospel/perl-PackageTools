@@ -1,10 +1,10 @@
 package TestDrive;
-# $Id: TestDrive.pm 4642 2011-06-09 11:07:51Z hospelt $
-## no critic (ProhibitUselessNoCritic ProhibitMagicNumbers)
+# $Id: TestDrive.pm 5091 2012-05-15 15:09:26Z hospelt $
+## no critic (UselessNoCritic MagicNumbers)
 use strict;
 use warnings;
 
-our $VERSION = "1.002";
+our $VERSION = "1.003";
 
 use Carp;
 use FindBin qw($Bin $Script);
@@ -37,11 +37,11 @@ $Bin =~ ($^O eq "MSWin32" ?
          qr{^(((?:/[a-zA-Z0-9_:.-]+)*)/[a-zA-Z0-9_.-]+)/*\z}) ||
     croak "Could not parse bin directory '$Bin'";
 # Use untainted version lib
-$Bin = $1;		## no critic (ProhibitUselessNoCritic ProhibitCaptureWithoutTest)
-our $base_dir = $2;	## no critic (ProhibitUselessNoCritic ProhibitCaptureWithoutTest)
+$Bin = $1;		## no critic (UselessNoCritic CaptureWithoutTest)
+our $base_dir = $2;	## no critic (UselessNoCritic CaptureWithoutTest)
 
 our $t_dir = $Bin;
-my $t_option_file = "$t_dir/options";
+my $t_option_file = "$t_dir/options.$^O";
 our $bin_dir = "$base_dir/bin";
 
 our $me;
@@ -63,14 +63,14 @@ die "Can't determine who I am" if !$me;
 die "Unacceptable userid '$me'" if $me eq "." || $me eq "..";
 $me =~ /^([0-9A-Za-z_.-]+)\z/ || die "Weird characters in userid '$me'";
 # Seems ok. Untaint
-$me = $1;	## no critic (ProhibitUselessNoCritic ProhibitCaptureWithoutTest)
+$me = $1;	## no critic (UselessNoCritic CaptureWithoutTest)
 
 # State globals
 our ($cover, $tmp_dir, $tar, $zip, $compress);
 our $bsd_tar	= 'bsdtar';
 our $gnuwin_zip	= 'zip';
 
-my ($keep, $leave, $strace, $real_base);
+my ($keep, $leave, $strace);
 
 sub executable {
     my ($name) = @_;
@@ -365,9 +365,10 @@ sub perl_run {
     my $die = $@;	# Taint failure is the only way
     open(STDERR, ">&", $old_err) || die "Can't dup old STDERR: $!";
     if ($die) {
-        use Scalar::Util qw(tainted);
+        require Scalar::Util;
         for my $r (@run) {
-            Test::More::diag("tainted $r: " . (tainted($r) ? 1 : 0));
+            Test::More::diag("tainted $r: " .
+                             (Scalar::Util::tainted($r) ? 1 : 0));
         }
         die $die;
     }

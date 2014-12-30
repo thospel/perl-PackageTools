@@ -31,3 +31,4 @@ t/makeppd/LogParse/blib/lib/LogParse/Record.pm
 t/makeppd/LogParse/blib/lib/LogParse/State.pm
 t/makeppd/LogParse/blib/lib/LogParse/Transaction.pm
 t/makeppd/LogParse/blib/lib/LogParse/Transaction/Record.pm
+version_check

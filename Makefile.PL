@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: Makefile.PL 4698 2011-09-01 13:16:02Z hospelt $
+# $Id: Makefile.PL 5091 2012-05-15 15:09:26Z hospelt $
 use 5.008000;
 use strict;
 use warnings;
@@ -7,7 +7,7 @@ use ExtUtils::MakeMaker;
 use FindBin;
 use Config qw(%Config);
 
-our $VERSION = '1.005';
+our $VERSION = '1.006';
 
 # Allows to suppress all program installation with -n (library only)
 use Getopt::Std;
@@ -17,7 +17,7 @@ getopts("ny") || die "Usage: $0 [-n] [-y]\n";
 my @programs_to_install;
 
 if (!$opt_n || $opt_y) {
-    print <<EOT	## no critic (ProhibitUselessNoCritic InputOutput::RequireCheckedSyscalls)
+    print <<EOT	## no critic (UselessNoCritic InputOutput::RequireCheckedSyscalls)
 
 This package comes with a programs that I can try
 to install in $Config{installscript}.
@@ -38,7 +38,7 @@ if !$opt_y;
         prompt("Install any_to_blib, a pm_to_blib replacement ?", "y") =~ /^y/i;
 }
 
-my $option_file = "$FindBin::Bin/t/options";
+my $option_file = "$FindBin::Bin/t/options.$^O";
 my $new = "$option_file.new.$$";
 open(my $fh, ">", $new) || die "Could not open '$new': $!";
 printf($fh "KEEP=0\nSTRACE=0\n") ||
@@ -54,13 +54,19 @@ if ($@) {
     die $@;
 }
 
+settings();
+
 WriteMakefile
     (NAME		=> 'PackageTools',
      VERSION_FROM	=> 'lib/PackageTools/Package.pm', # finds $VERSION
-     BUILD_REQUIRES	=> {
+     eval {
+         ## no critic (UselessNoCritic MagicNumbers)
+         ExtUtils::MakeMaker->VERSION(6.55_01);
+         1;
+     } ? (BUILD_REQUIRES	=> {
          # Only for the tests
          "Test::More"	=> "0.01",
-     },
+     }) : (),
      PREREQ_PM		=> {
      },
      ABSTRACT		=> 'Package management tools',
@@ -71,7 +77,7 @@ WriteMakefile
          PM_FILTER	=> '$(PERL) -p -e1',
      ) : (),
      clean		=> {
-         FILES => '$(DISTNAME).ppd ppm cover_db t/options',
+         FILES => '$(DISTNAME).ppd ppm cover_db nytprof nytprof.out* t/options t/options.* md5-versions.old',
      },
      );
 
@@ -124,7 +130,7 @@ ppm_uninstall:
 	ppm uninstall $(DISTNAME)
 EOT
 
-undef &postamble;	## no critic (ProhibitUselessNoCritic ProhibitAmpersandSigils)
+undef &postamble;	## no critic (UselessNoCritic AmpersandSigils)
 }
 {
     package MY;
@@ -134,9 +140,15 @@ undef &postamble;	## no critic (ProhibitUselessNoCritic ProhibitAmpersandSigils)
 }
 # END MY
 
-BEGIN {
-package MY;
-our %postamble;
+sub settings {
+    package MY;
+    our %postamble;
+
+    $postamble{version_check} = <<'EOF';
+all ::
+	$(NOECHO) $(FULLPERL) version_check "$(NAME)" "$(DESTINSTALLSITELIB)" "$(VERSION)" "$(VERSION_FROM)"
+EOF
+
     $postamble{ppm} = <<'EOT';
 ppm: $(DISTNAME).ppd
 	$(PERL) bin/makeppd.pl --min_version=1.016 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm $(DISTNAME).ppd $(VERSION)

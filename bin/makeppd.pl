@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # $HeadURL: http://subversion.bmsg.nl/repos/kpn/trunk/src/perl-modules/PackageTools/bin/makeppd.pl $
-# $Id: makeppd.pl 4480 2011-01-14 12:49:09Z hospelt $
+# $Id: makeppd.pl 5507 2013-05-24 10:50:41Z hospelt $
 
 # Author: Ton Hospel
 # Create a ppm
@@ -8,7 +8,7 @@
 use strict;
 use warnings;
 
-our $VERSION = "1.016";
+our $VERSION = "1.017";
 
 use FindBin qw($Bin $Script);
 # If the program runs as /foobar/bin/program, find libraries in /foobar/lib
@@ -95,7 +95,7 @@ $ENV{PATH} = "" if !defined $ENV{PATH};
 if ($help) {
     $ENV{PATH} .= ":" unless $ENV{PATH} eq "";
     $ENV{PATH} = "$ENV{PATH}$Config{installscript}";
-    exec("perldoc", "-F", $unsafe ? "-U" : (), "$Bin/$Script") || exit 1;
+    exit system("perldoc", "-F", $unsafe ? "-U" : (), "$Bin/$Script") ? 1 : 0;
 }
 
 sub executable {
