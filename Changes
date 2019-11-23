@@ -1,6 +1,9 @@
 Revision history for Perl extension PackageTools.
 
 1.010	2014-05-15 13:21:11 UT
+        - release_pm: First write new diles to a temporary before updating.
+	  Untested on windows
+	  (will probably fail on windows due to the typical filesystem races)
 	- Added downgrade version check
 	- release_pm: Added a sub_release
 	- Force pdf to be "binary". They often are plain text at the start so

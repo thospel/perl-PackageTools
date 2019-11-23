@@ -19,7 +19,7 @@ my @programs_to_install;
 if (!$opt_n || $opt_y) {
     print <<EOT	## no critic (UselessNoCritic InputOutput::RequireCheckedSyscalls)
 
-This package comes with a programs that I can try
+This package comes with programs that I can try
 to install in $Config{installscript}.
 
    Note that you can avoid this question by passing

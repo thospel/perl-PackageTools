@@ -218,17 +218,19 @@ sub spew($$;$) {
     my $file = $_[0];
     croak "filename is undefined" if !defined $file;
     croak "We shouldn't be trying to update binary file '$file'" if -s $file && -B _;
-    open(my $fh, ">", $file) || croak "Could not create '$file': $!";
+    my $tmp_file = "$file.tmp.$$";
+    open(my $fh, ">", $tmp_file) || croak "Could not create '$tmp_file': $!";
     binmode $fh if $_[2];
     eval {
-        print($fh $_[1]) || croak "Error writing to '$file': $!";
-        $fh->flush	|| croak "Error flushing '$file': $!";
-        $^O eq "MSWin32" || $fh->sync || croak "Error syncing '$file': $!";
-        close($fh)	|| croak "Error closing '$file': $!";
+        print($fh $_[1]) || croak "Error writing to '$tmp_file': $!";
+        $fh->flush	|| croak "Error flushing '$tmp_file': $!";
+        $^O eq "MSWin32" || $fh->sync || croak "Error syncing '$tmp_file': $!";
+        close($fh)	|| croak "Error closing '$tmp_file': $!";
+        rename($tmp_file, $file) || croak "Could not rename '$tmp_file' to '$file': $!";
     };
     if ($@) {
         undef $fh;
-        unlink($file) || die "Could not unlink '$file' after $@";
+        unlink($tmp_file) || die "Could not unlink '$tmp_file' after $@";
         die $@;
     }
 }
