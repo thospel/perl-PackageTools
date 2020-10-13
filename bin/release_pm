@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 
-our $VERSION = "1.013";
+our $VERSION = "1.014";
 
 use FindBin qw($Script);
 our $Bin;
@@ -75,7 +75,7 @@ use FindBin qw($Script);
 
 use constant MTIME	=> 9;	# where to find mtime in stat
 
-my $epoch_base = timegm(0,0,0,1,0,70);	## no critic (UselessNoCritic MagicNumbers)
+my $epoch_base = timegm(0,0,0,1,0,1970);	## no critic (UselessNoCritic MagicNumbers)
 
 # Todo: For the next incompatible change, replace $package by $module
 # Maybe also add support for for looking up files --Ton
@@ -97,7 +97,7 @@ sub FULL_VERSION {
 sub release_time {
     if (!defined $epoch_base) {
         require Time::Local;
-        $epoch_base = Time::Local::timegm(0,0,0,1,0,70);	## no critic (UselessNoCritic MagicNumbers)
+        $epoch_base = Time::Local::timegm(0,0,0,1,0,1970);	## no critic (UselessNoCritic MagicNumbers)
     }
     return $release_time + $epoch_base;
 }
@@ -290,7 +290,7 @@ sub get_versions_file {
                 croak "Duplicate DATE\n" if defined $date;
                 croak "Your name isn't Lovelace" if $1 < 1900;
                 croak "Newyear in december" if $2 < 1;
-                $date = timegm($6, $5, $4, $3, $2-1, $1-1900);
+                $date = timegm($6, $5, $4, $3, $2-1, $1);
             } elsif ($line eq "END") {
                 $ended = 1;
             } else {

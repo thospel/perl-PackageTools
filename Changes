@@ -1,7 +1,10 @@
 Revision history for Perl extension PackageTools.
 
-1.010	2014-05-15 13:21:11 UT
-        - release_pm: First write new diles to a temporary before updating.
+1.011	2020-11-05 21:10:35 UT
+	- release_pm: Use timegm with years without subtracting 1900
+
+1.010	2020-10-13 15:40:57 UT
+        - release_pm: First write new files to a temporary before updating.
 	  Untested on windows
 	  (will probably fail on windows due to the typical filesystem races)
 	- Added downgrade version check

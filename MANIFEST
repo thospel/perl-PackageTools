@@ -6,6 +6,7 @@ README
 bin/any_to_blib
 bin/makeppd.pl
 bin/release_pm
+bin/symbol_scanner
 lib/PackageTools/Package.pm
 md5-versions
 t/00_load.t

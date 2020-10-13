@@ -8,6 +8,8 @@
 ^_MTN$
 ^_MTN/
 ^\.mtn-ignore$
+^\.git/
+^\.gitignore$
 
 # Avoid Makemaker generated and utility files.
 \bMANIFEST\.bak
@@ -45,3 +47,6 @@
 ^MYMETA\.json$
 /\.access\^$
 ^\.access\^$
+
+
+^bl.b$
