@@ -72,8 +72,12 @@ use Digest::MD5 qw(md5_hex);
 use Errno qw(ENOENT ESTALE);
 use Time::Local qw(timegm);
 use FindBin qw($Script);
+use Fcntl qw(S_IMODE);
 
-use constant MTIME	=> 9;	# where to find mtime in stat
+use constant {
+    MTIME	=> 9,	# where to find mtime in stat
+    MODE	=> 2,	# where to find mode in stat
+};
 
 my $epoch_base = timegm(0,0,0,1,0,1970);	## no critic (UselessNoCritic MagicNumbers)
 
@@ -718,6 +722,17 @@ sub set_version_file {
         if ($file_props->{content_chksum} ne $file_props->{disk_chksum}) {
             spew($file, $file_props->{content}, $file_props->{binary});
             warn "Restored $file\n" if $file_props->{old_chksum} && $file_props->{old_chksum} eq $file_props->{content_chksum};
+        }
+        if ($file =~ m{(?:^|/)(?:t/[^/]+\.t|bin/[^/]+)\z}) {
+            # Change t/*.t and bin/* to executable
+            if (my @stat = lstat($file) and -f _) {
+                my $mode = S_IMODE($stat[MODE]) & 0777;
+                if (!($mode & 0111) && ($mode & 0444)) {
+                    warn "Make $file executable\n";
+                    $mode |= ($mode & 0444) >> 2;
+                    chmod($mode, $file) || die "Could not chmod $file: $^E";
+                }
+            }
         }
         $content .=
             sprintf("VERSION\t%s %s %s\n", @$file_props{qw(content_chksum version file)});
