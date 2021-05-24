@@ -1,8 +1,15 @@
 Revision history for Perl extension PackageTools.
 
-1.011	2020-11-10 20:47:56 UT
+1.012	2021-06-04 21:46:18 UT
+	- Placeholder
+
+1.011	2021-05-24 13:42:52 UT
 	- release_pm: Use timegm with years without subtracting 1900
 	- release_pm: Make bin/* and t/*.t files executable
+	- release_pm: Update MANIFEST.SKIP
+	- release_pm: Support README.md in Makefile.PL
+	- release_pm: Add more postamble sections in Makefile.PL,
+                      Remove duplicate postamble sections
 
 1.010	2020-10-13 15:40:57 UT
         - release_pm: First write new files to a temporary before updating.

@@ -18,7 +18,7 @@
 \bMakeMaker-\d
 \bpm_to_blib\.ts$
 \bpm_to_blib$
-\bblibdirs\.ts$         # 6.18 through 6.25 generated this
+\bblibdirs\.ts$		# 6.18 through 6.25 generated this
 ^[\w-]+-\d+\.\d+\.tar\.gz$
 ^[\w-]+-\d+\.\d+\.ppm$
 ^[\w-]+\.ppd$
@@ -33,7 +33,6 @@
 ~$
 \.old$
 \#$
-\b\.#
 /\.#
 ^\.#
 \.bak$
@@ -48,5 +47,10 @@
 /\.access\^$
 ^\.access\^$
 
-
+# Ignore more stuff
 ^bl.b$
+^test_
+^test\.pl$
+^core$
+^core\.
+^debian/

@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 
-our $VERSION = "1.014";
+our $VERSION = "1.015";
 
 use FindBin qw($Script);
 our $Bin;
@@ -15,10 +15,10 @@ BEGIN {
     $Bin = $FindBin::Bin;
     $Bin =~ s{/+\z}{};
     $Bin =~
-        ($^O eq "MSWin32" ?
-         qr{^((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*)/[a-zA-Z0-9_.-]+/*\z} :
-         qr{^((?:/[a-zA-Z0-9_:.-]+)*)/[a-zA-Z0-9_.-]+/*\z}) ||
-         die "Could not parse bin directory '$Bin'";
+	($^O eq "MSWin32" ?
+	 qr{^((?:[A-Z]:)?(?:/[a-zA-Z0-9_:.~ -]+)*)/[a-zA-Z0-9_.-]+/*\z} :
+	 qr{^((?:/[a-zA-Z0-9_:.-]+)*)/[a-zA-Z0-9_.-]+/*\z}) ||
+	 die "Could not parse bin directory '$Bin'";
     # Use untainted version of lib
     require lib;
     # Support a simple --blib option for pre-install testing
@@ -26,7 +26,7 @@ BEGIN {
 }
 
 use Getopt::Long;
-use IO::Handle;	# for (f)sync
+use IO::Handle; # for (f)sync
 
 my $quot = qr/[\'\"]?/;
 my $sums = "md5-versions";
@@ -37,21 +37,21 @@ my $start_digits  = 3;
 my $start_version = 1;
 die "Could not parse your command line. Try $Bin/$Script -h\n" unless
     GetOptions("import_revision!"	=> \my $import_revision,
-               "import_version!"	=> \my $import_version,
-               "digits=i"		=> \$start_digits,
-               "initial:s"		=> \my $start_release,
-               "start_version=s",	=> \$start_version,
-               "vcs_check!"		=> \my $vcs_check,
-               "next!"			=> \my $next,
+	       "import_version!"	=> \my $import_version,
+	       "digits=i"		=> \$start_digits,
+	       "initial:s"		=> \my $start_release,
+	       "start_version=s",	=> \$start_version,
+	       "vcs_check!"		=> \my $vcs_check,
+	       "next!"			=> \my $next,
 	       "version!"		=> \my $print_version,
-               "U|unsafe!"		=> \my $unsafe,
-               "h|help!"		=> \my $help);
+	       "U|unsafe!"		=> \my $unsafe,
+	       "h|help!"		=> \my $help);
 
 if ($print_version) {
     require PackageTools::Package;
     ## no critic (UselessNoCritic RequireCheckedSyscalls)
     print
-        "release_pm $VERSION (PackageTools $PackageTools::Package::VERSION)\n";
+	"release_pm $VERSION (PackageTools $PackageTools::Package::VERSION)\n";
     exit 0;
 }
 if ($help) {
@@ -83,6 +83,7 @@ my $epoch_base = timegm(0,0,0,1,0,1970);	## no critic (UselessNoCritic MagicNumb
 
 # Todo: For the next incompatible change, replace $package by $module
 # Maybe also add support for for looking up files --Ton
+
 # Use |= instead of = for the POD keywords so that selfdocumentation of
 # release_pm doesn't improperly pick up the Package POD
 our $history = <<'EOT'
@@ -100,8 +101,8 @@ sub FULL_VERSION {
 
 sub release_time {
     if (!defined $epoch_base) {
-        require Time::Local;
-        $epoch_base = Time::Local::timegm(0,0,0,1,0,1970);	## no critic (UselessNoCritic MagicNumbers)
+	require Time::Local;
+	$epoch_base = Time::Local::timegm(0,0,0,1,0,1970);	## no critic (UselessNoCritic MagicNumbers)
     }
     return $release_time + $epoch_base;
 }
@@ -111,13 +112,13 @@ sub released {
     my $p = $package;
     $p =~ s{::}{/}g;
     my $history = $history{"lib/$p.pm"} ||
-        croak "Could not find a history for package '$package'";
+	croak "Could not find a history for package '$package'";
     my $lowest = 9**9**9;
     for my $v (keys %$history) {
-        $lowest = $v if $v >= $version && $v < $lowest;
+	$lowest = $v if $v >= $version && $v < $lowest;
     }
     croak "No known version '$version' of package '$package'" if
-        $lowest == 9**9**9;
+	$lowest == 9**9**9;
     return $history->{$lowest};
 }
 1;
@@ -201,18 +202,78 @@ EOT
     ;
 $history =~ s/^\|=/=/mg;
 
+our $manifest_skip = <<'EOT'
+# Avoid version control files.
+\bRCS\b
+\bCVS\b
+\bSCCS\b
+,v$
+\B\.svn\b
+\b_darcs\b
+^_MTN$
+^_MTN/
+^\.mtn-ignore$
+^\.git/
+^\.gitignore$
+
+# Avoid Makemaker generated and utility files.
+\bMANIFEST\.bak
+\bMakefile$
+\bblib/
+\bMakeMaker-\d
+\bpm_to_blib\.ts$
+\bpm_to_blib$
+\bblibdirs\.ts$		# 6.18 through 6.25 generated this
+^[\w-]+-\d+\.\d+\.tar\.gz$
+^[\w-]+-\d+\.\d+\.ppm$
+^[\w-]+\.ppd$
+^ppm/[\w-]+\.ppd$
+^ppm/[\w.-]+/[\w-]+-\d+\.\d+\.tar\.gz$
+
+# Avoid Module::Build generated and utility files.
+\bBuild$
+\b_build/
+
+# Avoid temp and backup files.
+~$
+\.old$
+\#$
+/\.#
+^\.#
+\.bak$
+
+# Ignore Devel::Cover and Devel::NYTProf files.
+^cover_db/
+^nytprof/
+^nytprof\.out$
+^nytprof\.out\.\d+$
+^MYMETA\.yml$
+^MYMETA\.json$
+/\.access\^$
+^\.access\^$
+
+# Ignore more stuff
+^bl.b$
+^test_
+^test\.pl$
+^core$
+^core\.
+^debian/
+EOT
+;
+
 # Import a complete file and return the contents as a single string
 sub slurp {
     my ($file, $may_not_exist) = @_;
     croak "filename is undefined" if !defined $file;
     open(my $fh, "<", $file) or
-        $may_not_exist && ($! == ENOENT || $! == ESTALE) ?
+	$may_not_exist && ($! == ENOENT || $! == ESTALE) ?
 	return undef : croak "Could not open '$file': $!";
     my $binary = $file =~ /\.(?:pdf)\z/i || -B $file;
     binmode $fh if $binary;
     my $rc = read($fh, my $slurp, 1024 + -s $fh);
     croak "File '$file' is still growing" if
-        $rc &&= read($fh, $slurp, 1024, length $slurp);
+	$rc &&= read($fh, $slurp, 1024, length $slurp);
     croak "Error reading from '$file': $!" if !defined $rc;
     close($fh) || croak "Error while closing '$file': $!";
     return $binary, $slurp;
@@ -226,16 +287,16 @@ sub spew($$;$) {
     open(my $fh, ">", $tmp_file) || croak "Could not create '$tmp_file': $!";
     binmode $fh if $_[2];
     eval {
-        print($fh $_[1]) || croak "Error writing to '$tmp_file': $!";
-        $fh->flush	|| croak "Error flushing '$tmp_file': $!";
-        $^O eq "MSWin32" || $fh->sync || croak "Error syncing '$tmp_file': $!";
-        close($fh)	|| croak "Error closing '$tmp_file': $!";
-        rename($tmp_file, $file) || croak "Could not rename '$tmp_file' to '$file': $!";
+	print($fh $_[1]) || croak "Error writing to '$tmp_file': $!";
+	$fh->flush	|| croak "Error flushing '$tmp_file': $!";
+	$^O eq "MSWin32" || $fh->sync || croak "Error syncing '$tmp_file': $!";
+	close($fh)	|| croak "Error closing '$tmp_file': $!";
+	rename($tmp_file, $file) || croak "Could not rename '$tmp_file' to '$file': $!";
     };
     if ($@) {
-        undef $fh;
-        unlink($tmp_file) || die "Could not unlink '$tmp_file' after $@";
-        die $@;
+	undef $fh;
+	unlink($tmp_file) || die "Could not unlink '$tmp_file' after $@";
+	die $@;
     }
 }
 
@@ -246,93 +307,93 @@ sub get_versions_file {
     # !$quick or @stat = stat($sums) or die "Could not stat '$sums': $!";
     my $content = slurp($sums, 1);
     if (defined $content) {
-        my $md5_versions_content = $content;
-        my $line_nr;
-        while ($md5_versions_content =~ s/^([^\n]*.)//s) {
-            $line_nr++;
-            my $line = $+;
-            $line =~ s/\s+\z//;
-            $line =~ s/^\s+//;
-            next if $line eq "" || $line =~ /^\#/;
-            if (!$begun) {
-                if ($line eq "BEGIN") {
-                    $begun = 1;
-                    next;
-                }
-                croak "Unexpected data before BEGIN at line $line_nr in file $sums";
-            }
-            croak "Unexpected data after END at line $line_nr in file $sums" if
-                $ended;
-            if ($line =~ /^VERSION\s+([a-fA-F0-9]{32})\s+([0-9]+(?:\.[0-9]+)?)\s+(\S+)\z/) {
-                croak "Duplicate VERSION entry for file $3\n" if
-                    exists $file_props{$3};
-                $file_props{$3} = {
-                    old_chksum	=> $1,
-                    version	=> $2,
-                    file	=> $3,
-                };
-            } elsif ($line =~ /^RELEASED\s+([0-9]+(?:\.[0-9]+)?)\s+([0-9]+(?:\.[0-9]+)?)\s+(\S+)\z/) {
-                croak "Duplicate RELEASED entry for file $3 version $1\n" if
-                    exists $released{$3}{$1};
-                $released{$3}{$1} = $2;
-            } elsif ($line =~ /^RELEASE\s+([0-9]+(?:\.[0-9]+)?)\z/) {
-                croak "Duplicate RELEASE\n" if defined $release;
-                $release = $1;
-            } elsif ($line =~ /^SUB_RELEASE\s+([0-9]+)\z/) {
-                croak "Duplicate SUB_RELEASE\n" if defined $sub_release;
-                $sub_release = $1;
-            } elsif ($line =~ /^DIGITS\s+([0-9]+)\z/) {
-                croak "Duplicate DIGITS\n" if defined $digits;
-                $digits = $1;
-            } elsif ($line =~ /^VCS_CHECK\s+([01])\z/) {
-                croak "Duplicate VCS_CHECK\n" if defined $vcs;
-                $vcs = $1;
-            } elsif ($line =~ /^SEMANTICS\s+([0-9]+\.[0-9]+)\z/) {
-                no warnings 'once';
-                croak "File $sums needs at least $Script version $1, but this is version $VERSION" if $1 > $VERSION;
-            } elsif ($line =~ /^DATE\s+([0-9]{4})-([0-9]{2})-([0-9]{2})\s+([0-9]{2}):([0-9]{2}):([0-9]{2})\z/) {
-                croak "Duplicate DATE\n" if defined $date;
-                croak "Your name isn't Lovelace" if $1 < 1900;
-                croak "Newyear in december" if $2 < 1;
-                $date = timegm($6, $5, $4, $3, $2-1, $1);
-            } elsif ($line eq "END") {
-                $ended = 1;
-            } else {
-                croak "Could not parse line $line_nr in file $sums: '$line'";
-            }
-        }
+	my $md5_versions_content = $content;
+	my $line_nr;
+	while ($md5_versions_content =~ s/^([^\n]*.)//s) {
+	    $line_nr++;
+	    my $line = $+;
+	    $line =~ s/\s+\z//;
+	    $line =~ s/^\s+//;
+	    next if $line eq "" || $line =~ /^\#/;
+	    if (!$begun) {
+		if ($line eq "BEGIN") {
+		    $begun = 1;
+		    next;
+		}
+		croak "Unexpected data before BEGIN at line $line_nr in file $sums";
+	    }
+	    croak "Unexpected data after END at line $line_nr in file $sums" if
+		$ended;
+	    if ($line =~ /^VERSION\s+([a-fA-F0-9]{32})\s+([0-9]+(?:\.[0-9]+)?)\s+(\S+)\z/) {
+		croak "Duplicate VERSION entry for file $3\n" if
+		    exists $file_props{$3};
+		$file_props{$3} = {
+		    old_chksum	=> $1,
+		    version	=> $2,
+		    file	=> $3,
+		};
+	    } elsif ($line =~ /^RELEASED\s+([0-9]+(?:\.[0-9]+)?)\s+([0-9]+(?:\.[0-9]+)?)\s+(\S+)\z/) {
+		croak "Duplicate RELEASED entry for file $3 version $1\n" if
+		    exists $released{$3}{$1};
+		$released{$3}{$1} = $2;
+	    } elsif ($line =~ /^RELEASE\s+([0-9]+(?:\.[0-9]+)?)\z/) {
+		croak "Duplicate RELEASE\n" if defined $release;
+		$release = $1;
+	    } elsif ($line =~ /^SUB_RELEASE\s+([0-9]+)\z/) {
+		croak "Duplicate SUB_RELEASE\n" if defined $sub_release;
+		$sub_release = $1;
+	    } elsif ($line =~ /^DIGITS\s+([0-9]+)\z/) {
+		croak "Duplicate DIGITS\n" if defined $digits;
+		$digits = $1;
+	    } elsif ($line =~ /^VCS_CHECK\s+([01])\z/) {
+		croak "Duplicate VCS_CHECK\n" if defined $vcs;
+		$vcs = $1;
+	    } elsif ($line =~ /^SEMANTICS\s+([0-9]+\.[0-9]+)\z/) {
+		no warnings 'once';
+		croak "File $sums needs at least $Script version $1, but this is version $VERSION" if $1 > $VERSION;
+	    } elsif ($line =~ /^DATE\s+([0-9]{4})-([0-9]{2})-([0-9]{2})\s+([0-9]{2}):([0-9]{2}):([0-9]{2})\z/) {
+		croak "Duplicate DATE\n" if defined $date;
+		croak "Your name isn't Lovelace" if $1 < 1900;
+		croak "Newyear in december" if $2 < 1;
+		$date = timegm($6, $5, $4, $3, $2-1, $1);
+	    } elsif ($line eq "END") {
+		$ended = 1;
+	    } else {
+		croak "Could not parse line $line_nr in file $sums: '$line'";
+	    }
+	}
     } else {
-        $content = "";
+	$content = "";
     }
 
     $digits = $start_digits if !defined $digits;
     my $format = sprintf("%%.%df", $digits);
     if (!defined $release) {
-        # croak "No RELEASE\n" if $content ne "";
-        $start_release ||= 1;
-        $release = sprintf($format, $start_release);
+	# croak "No RELEASE\n" if $content ne "";
+	$start_release ||= 1;
+	$release = sprintf($format, $start_release);
     }
     my $release_props = bless {
-        modified	=> $stat[MTIME],
-        step		=> 1/10**$digits,
-        "format"	=> $format,
-        start_version	=> sprintf($format, $start_version),
-        digits		=> $digits,
-        release		=> $release,
-        sub_release	=> $sub_release || 0,
-        release_changed	=> !$next,
-        any_changes	=> 0,
-        old_content	=> $content,
-        old_file_props	=> \%file_props,
-        released	=> \%released,
-        time_stamp	=> $date,
-        vcs_check	=>
-            defined $vcs_check ? $vcs_check :
-            defined $vcs       ? $vcs       :
-            1,
+	modified	=> $stat[MTIME],
+	step		=> 1/10**$digits,
+	"format"	=> $format,
+	start_version	=> sprintf($format, $start_version),
+	digits		=> $digits,
+	release		=> $release,
+	sub_release	=> $sub_release || 0,
+	release_changed => !$next,
+	any_changes	=> 0,
+	old_content	=> $content,
+	old_file_props	=> \%file_props,
+	released	=> \%released,
+	time_stamp	=> $date,
+	vcs_check	=>
+	    defined $vcs_check ? $vcs_check :
+	    defined $vcs       ? $vcs	    :
+	    1,
     }, $class;
     $release_props->{next_sub_release} = sprintf(
-        "%.*d", $release_props->{digits}, $release_props->{sub_release} + 1);
+	"%.*d", $release_props->{digits}, $release_props->{sub_release} + 1);
     $release_props->next_release if $next;
     return $release_props;
 }
@@ -342,17 +403,17 @@ sub next_version {
     Carp::confess "Assertion: No version" if !defined $version;
     $steps = 1 if !defined $steps;
     return sprintf($release_props->{format},
-                   $version + $steps * $release_props->{step});
+		   $version + $steps * $release_props->{step});
 }
 
 sub next_release {
     my ($release_props) = @_;
     if (!$release_props->{release_changed}) {
-        $release_props->{release} = $release_props->next_version($release_props->{release});
-        $release_props->{next_sub_release} = sprintf(
-            "%.*d", $release_props->{digits}, 0);
-        $release_props->{release_changed} = 1;
-        warn "Release $release_props->{release}\n";
+	$release_props->{release} = $release_props->next_version($release_props->{release});
+	$release_props->{next_sub_release} = sprintf(
+	    "%.*d", $release_props->{digits}, 0);
+	$release_props->{release_changed} = 1;
+	warn "Release $release_props->{release}\n";
     }
     $release_props->{any_changes} ||= 1;
 }
@@ -368,11 +429,11 @@ sub chksum {
 sub get_MANIFEST {
     my $manifest = slurp("MANIFEST");
     if ($manifest !~ s/^\s*\Q$sums\E\s*\n//m) {
-        croak "$sums is not in MANIFEST\n" if !defined $start_release;
-        warn "Creating empty $sums\n";
-        spew($sums, "");
-        warn "Adding $sums to MANIFEST\n";
-        spew("MANIFEST", "$manifest$sums\n");
+	croak "$sums is not in MANIFEST\n" if !defined $start_release;
+	warn "Creating empty $sums\n";
+	spew($sums, "");
+	warn "Adding $sums to MANIFEST\n";
+	spew("MANIFEST", "$manifest$sums\n");
     }
     # META.yml is often generated during the make dist so it's often absent
     # and even if it isn't versioning typically happens too late
@@ -381,10 +442,39 @@ sub get_MANIFEST {
     my %seen;
     my $error;
     for my $file (@files) {
-        $error .= "Duplicate in MANIFEST: $file\n" if $seen{lc $file}++;
+	$error .= "Duplicate in MANIFEST: $file\n" if $seen{lc $file}++;
     }
     die $error if $error;
     return @files;
+}
+
+sub missing_manifest_skip {
+    my ($file_props) = @_;
+
+    # We depend on content already having been stripped
+    my $header_match = qr{[^\S\n]*#[^\S\n]*(.*)\n}o;
+
+    # Squeeze empty lines
+    $file_props->{content} =~ s{^\s+}{};
+    $file_props->{content} =~ tr/\n//s;
+    # Normalize headers
+    $file_props->{content} =~ s/^$header_match/# $1\n/mg;
+
+    while ($manifest_skip =~ /\G$header_match((?:.*\n)*?)(?=\z|#)/gm) {
+	my $header = $1;
+	my $skips  = $2;
+	my $add = "";
+	while ($skips =~ /^((\S+).*\n)/mg) {
+	    $add .= $1;
+	    $file_props->{content} =~ s/^\Q$2\E(?:[^\S\n].*)?\n//gm;
+	}
+	$file_props->{content} .= "# $header\n" if $file_props->{content} !~ /^# \Q$header\E\n/m;
+	$file_props->{content} =~ s{^(# \Q$header\E\n)}{$1$add\n}sm ||
+	    die "Assertion: Could not update skip file";
+    }
+    # Restore empty lines before comment
+    $file_props->{content} =~ s{\n+#}{\n\n#}g;
+    $file_props->{content} =~ s{\n+\z}{\n}g;
 }
 
 sub get_files {
@@ -395,35 +485,35 @@ sub get_files {
     my @files = get_MANIFEST();
     $release_props->{files} = \@files;
     for my $file (@files) {
-        my $file_props = delete $release_props->{old_file_props}{$file};
-        if ($file_props) {
-            $released->{$file}{$file_props->{version}} ||= do {
-                warn "Fixup missing RELEASED for $file\n";
-                $release_props->{release};
-            };
-            $file_props->{version_changed} = !$next && $released->{$file}{$file_props->{version}} eq $release_props->{release};
-        } else {
-            $file_props = {
-                version	=> $release_props->{start_version},
-                version_changed => 1,
-                file	=> $file,
-            };
-            $release_props->next_release;
-            warn "New $file\n";
-        }
-        my $do_vcs_check;
-        if ($file =~ m{\bPackage\.pm\z}) {
-            ($file_props->{binary}, $file_props->{content}) = slurp($file, 1);
-            if (defined $file_props->{content} &&
-                $file_props->{content} ne "") {
-                $do_vcs_check = $release_props->{vcs_check};
-            } else {
-                my $package_name = $file;
-                $package_name =~ s{^lib/}{} || die "No lib/ in '$package_name'";
-                $package_name =~ s{\.pm\z}{};
-                $package_name =~ s{/}{::}g;
-                warn "Generating initial content for $file\n";
-                $file_props->{content} = <<"EOT";
+	my $file_props = delete $release_props->{old_file_props}{$file};
+	if ($file_props) {
+	    $released->{$file}{$file_props->{version}} ||= do {
+		warn "Fixup missing RELEASED for $file\n";
+		$release_props->{release};
+	    };
+	    $file_props->{version_changed} = !$next && $released->{$file}{$file_props->{version}} eq $release_props->{release};
+	} else {
+	    $file_props = {
+		version => $release_props->{start_version},
+		version_changed => 1,
+		file	=> $file,
+	    };
+	    $release_props->next_release;
+	    warn "New $file\n";
+	}
+	my $do_vcs_check;
+	if ($file =~ m{\bPackage\.pm\z}) {
+	    ($file_props->{binary}, $file_props->{content}) = slurp($file, 1);
+	    if (defined $file_props->{content} &&
+		$file_props->{content} ne "") {
+		$do_vcs_check = $release_props->{vcs_check};
+	    } else {
+		my $package_name = $file;
+		$package_name =~ s{^lib/}{} || die "No lib/ in '$package_name'";
+		$package_name =~ s{\.pm\z}{};
+		$package_name =~ s{/}{::}g;
+		warn "Generating initial content for $file\n";
+		$file_props->{content} = <<"EOT";
 package $package_name;
 # \$HeadURL: xxx/$file \$
 # \$Id: xxx \$
@@ -432,49 +522,49 @@ package $package_name;
 # END HISTORY
 EOT
     ;
-            }
-        } else {
-            ($file_props->{binary}, $file_props->{content}) = slurp($file);
-            $do_vcs_check = $release_props->{vcs_check};
-        }
-        if ($do_vcs_check) {
-            for my $url ($file_props->{content} =~ /\$HeadURL[^\S\n]*:[^\S\n]*(\S.*?)[^\S\n]+\$/g) {
-                next if $url =~ m{/\Q$file\E\z};
-                warn("Warning: $file has inconsistent \$HeadURL $url \$\n");
-                last;
-            }
-            for my $id ($file_props->{content} =~ /\$Id[^\S\n]*:[^\S\n]*(\S.*?)(?:,v)?[^\S\n].*?[^\S\n]+\$/g) {
-                next if $file eq $id || $file =~ m{/\Q$id\E\z};
-                warn("Warning: $file has inconsistent \$Id $id\n");
-                last;
-            }
-        }
-        $file_props->{content_chksum} = $file_props->{disk_chksum} =
-            chksum($file_props);
-        if ($import_revision &&
-            $file_props->{content} =~ /\$Revision\s*:[^\S\n]*([0-9]+)\.([0-9]+)\S*[^\S\n]+\$/) {
-            $file_props->{version} = $release_props->next_version($1, $2);
-            $file_props->{version_changed} = 1;
-            $release_props->next_release;
-        }
-        if ($import_version &&
-            $file_props->{content} =~
-            /^\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=
-                       \s*(?:($quot)([0-9._]+)\1	|
-                             qq?\{([0-9._]+)\})\s*[;\}]	|
-                    \$Version:\s*([0-9.]+)\s*\$/mx) {
-            $file_props->{version} = $release_props->next_version($+, 0);
-            $file_props->{version_changed} = 1;
-            $release_props->next_release;
-        }
-        $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release} if $file_props->{version_changed} && $file ne $sums;
-        $file_props{$file} = $file_props;
+	    }
+	} else {
+	    ($file_props->{binary}, $file_props->{content}) = slurp($file);
+	    $do_vcs_check = $release_props->{vcs_check};
+	}
+	if ($do_vcs_check) {
+	    for my $url ($file_props->{content} =~ /\$HeadURL[^\S\n]*:[^\S\n]*(\S.*?)[^\S\n]+\$/g) {
+		next if $url =~ m{/\Q$file\E\z};
+		warn("Warning: $file has inconsistent \$HeadURL $url \$\n");
+		last;
+	    }
+	    for my $id ($file_props->{content} =~ /\$Id[^\S\n]*:[^\S\n]*(\S.*?)(?:,v)?[^\S\n].*?[^\S\n]+\$/g) {
+		next if $file eq $id || $file =~ m{/\Q$id\E\z};
+		warn("Warning: $file has inconsistent \$Id $id\n");
+		last;
+	    }
+	}
+	$file_props->{content_chksum} = $file_props->{disk_chksum} =
+	    chksum($file_props);
+	if ($import_revision &&
+	    $file_props->{content} =~ /\$Revision\s*:[^\S\n]*([0-9]+)\.([0-9]+)\S*[^\S\n]+\$/) {
+	    $file_props->{version} = $release_props->next_version($1, $2);
+	    $file_props->{version_changed} = 1;
+	    $release_props->next_release;
+	}
+	if ($import_version &&
+	    $file_props->{content} =~
+	    /^\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=
+		       \s*(?:($quot)([0-9._]+)\1	|
+			     qq?\{([0-9._]+)\})\s*[;\}] |
+		    \$Version:\s*([0-9.]+)\s*\$/mx) {
+	    $file_props->{version} = $release_props->next_version($+, 0);
+	    $file_props->{version_changed} = 1;
+	    $release_props->next_release;
+	}
+	$release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release} if $file_props->{version_changed} && $file ne $sums;
+	$file_props{$file} = $file_props;
     }
     if (%{$release_props->{old_file_props}}) {
-        $release_props->next_release;
-        for my $file (keys %{$release_props->{old_file_props}}) {
-            warn "Forgetting $file\n";
-        }
+	$release_props->next_release;
+	for my $file (keys %{$release_props->{old_file_props}}) {
+	    warn "Forgetting $file\n";
+	}
     }
     $release_props->{now} = time;
     $release_props->{time_stamp} ||= $release_props->{now};
@@ -482,72 +572,75 @@ EOT
 
 sub release {
     my ($release_props) = @_;
+
     my $file_props = $release_props->{file_props};
     my $changes;
     do {
-        $changes = 0;
-        if ($release_props->{any_changes}) {
-            # Avoid repeated changes, they get updated to themselves
-            $release_props->{time_stamp} = $release_props->{now};
-            $release_props->{sub_release} = $release_props->{next_sub_release};
-        }
-        for my $file (@{$release_props->{files}}) {
-            my $file_props = $file_props->{$file} ||
-                die "Assertion: Unknown file $file";
-            if (!$file_props->{binary} && $file !~ /\.(?:diff|patch)\z/i) {
-                $file_props->{content} =~ s{[^\S\n]+\n}{\n}g;
-                $file_props->{content} =~ s{(?:^\n)+\z}{}m;
-            }
-            if ($file eq "README") {
-                $file_props->{content} =~ s/^(.* version )(.*)\n/$1$release_props->{release}\n/i;
-                $file_props->{content} =~ s/^(.*)\n=+\n/"$1\n" . "=" x length($1) . "\n"/ie;
-            } elsif ($file eq "Changes") {
-                if ($release_props->{any_changes}) {
-                    my ($sec, $min, $hour, $mday, $mon, $year) =
-                        gmtime($release_props->{time_stamp});
-                    my $now = sprintf("%04d-%02d-%02d %02d:%02d:%02d UT",
-                                      $year+1900, $mon+1, $mday,
-                                      $hour, $min, $sec);
-                    $file_props->{content} =~ s/^(Revision history for .*\s*\n|)([0-9.]+)([^\S\n]*.*)/$1 . ($2 eq $release_props->{release} ? "$2\t$now" : "$release_props->{release}\t$now\n\n$2$3")/ie;
-                }
-            } elsif ($file eq "Package.pm" ||
-                     $file =~ m{/Package\.pm\z} &&
-                     $file !~ m{^t/} && $file !~ m{/t/}) {
-                no warnings "once";
-                require Data::Dumper;
-                local $Data::Dumper::Indent = 1;
-                local $Data::Dumper::Sortkeys = 1;
-                my $time_stamp = $release_props->{time_stamp} - $epoch_base;
-                my $package_name = $file;
-                $package_name =~ s{^lib/}{} || die "No lib/ in '$package_name'";
-                $package_name =~ s{/*Package\.pm\z}{};
-                $package_name =~ s{/}{::}g;
-                my $his = $history;
-                $his =~ s/PACKAGE/$package_name/g;
-                my $released_string =
-                    Data::Dumper::Dumper($release_props->{released});
-                $released_string =~
-                    s{^\s*\$VAR1\s*=\s*{(.*)}\s*;\s*\z}
-                     {use strict;\nuse warnings;\nuse vars qw(\$VERSION \$SUB_VERSION \$release_time %history);\n\$VERSION = "$release_props->{release}";\n\$SUB_VERSION = "$release_props->{sub_release}";\n\$release_time = $time_stamp;\t## no critic (UselessNoCritic MagicNumbers)\n%history = ($1);\n\n$his}s || die "Assertion: Unexpected Dumper output";
-                $file_props->{content} =~ s/^[^\S\n]*\#\s*START\s+HISTORY\s*\n(.*?)^\s*\#\s*END\s+HISTORY[^\S\n]*\n/\# START HISTORY\n# autogenerated by $Script\n$released_string\# END HISTORY\n/sm;
-                $file_props->{version_changed} = 1;
-                $file_props->{version} = $release_props->{release};
-            } elsif ($file =~ m{(?:^|/)t/(.*\.t)\z}) {
-                my $name = $1;
-                $file_props->{content} =~ s{^((?:\#.*\n)*\#.*it should work as )[`']perl\s+((?:-T\s+|)(?:t/|)).*[`']\s*\n}{$1`perl $2$name'\n};
-            } elsif ($file =~ m{(.*/)MANIFEST\z}s) {
-                my $sub_match = qr{^\Q$1\E(.*)}s;
-                $file_props->{content} = "";
-                for my $file (@{$release_props->{files}}) {
-                    $file_props->{content} .= "$1\n" if $file =~ $sub_match;
-                }
-            } elsif ($file eq "Makefile.PL" || $file =~ m{/Makefile\.PL\z}) {
-                my $my_section = "";
-                my $my_any_to_blib = "";
-                if ($file eq "Makefile.PL") {
-                    # We should check the dependencies and then set the makeppd
-                    # min_version based on that
-                    $my_section .= << 'POSTAMBLES';
+	$changes = 0;
+	if ($release_props->{any_changes}) {
+	    # Avoid repeated changes, they get updated to themselves
+	    $release_props->{time_stamp} = $release_props->{now};
+	    $release_props->{sub_release} = $release_props->{next_sub_release};
+	}
+	for my $file (@{$release_props->{files}}) {
+	    my $file_props = $file_props->{$file} ||
+		die "Assertion: Unknown file $file";
+	    if (!$file_props->{binary} && $file !~ /\.(?:diff|patch)\z/i) {
+		$file_props->{content} =~ s{[^\S\n]+\n}{\n}g;
+		$file_props->{content} =~ s{(?:^\n)+\z}{}m;
+	    }
+	    if ($file eq "README") {
+		$file_props->{content} =~ s/^(.* version )(.*)\n/$1$release_props->{release}\n/i;
+		$file_props->{content} =~ s/^(.*)\n=+\n/"$1\n" . "=" x length($1) . "\n"/ie;
+	    } elsif ($file eq "Changes") {
+		if ($release_props->{any_changes}) {
+		    my ($sec, $min, $hour, $mday, $mon, $year) =
+			gmtime($release_props->{time_stamp});
+		    my $now = sprintf("%04d-%02d-%02d %02d:%02d:%02d UT",
+				      $year+1900, $mon+1, $mday,
+				      $hour, $min, $sec);
+		    $file_props->{content} =~ s/^(Revision history for .*\s*\n|)([0-9.]+)([^\S\n]*.*)/$1 . ($2 eq $release_props->{release} ? "$2\t$now" : "$release_props->{release}\t$now\n\n$2$3")/ie;
+		}
+	    } elsif ($file eq "Package.pm" ||
+		     $file =~ m{/Package\.pm\z} &&
+		     $file !~ m{^t/} && $file !~ m{/t/}) {
+		no warnings "once";
+		require Data::Dumper;
+		local $Data::Dumper::Indent = 1;
+		local $Data::Dumper::Sortkeys = 1;
+		my $time_stamp = $release_props->{time_stamp} - $epoch_base;
+		my $package_name = $file;
+		$package_name =~ s{^lib/}{} || die "No lib/ in '$package_name'";
+		$package_name =~ s{/*Package\.pm\z}{};
+		$package_name =~ s{/}{::}g;
+		my $his = $history;
+		$his =~ s/PACKAGE/$package_name/g;
+		my $released_string =
+		    Data::Dumper::Dumper($release_props->{released});
+		$released_string =~
+		    s{^\s*\$VAR1\s*=\s*{(.*)}\s*;\s*\z}
+		     {use strict;\nuse warnings;\nuse vars qw(\$VERSION \$SUB_VERSION \$release_time %history);\n\$VERSION = "$release_props->{release}";\n\$SUB_VERSION = "$release_props->{sub_release}";\n\$release_time = $time_stamp;\t## no critic (UselessNoCritic MagicNumbers)\n%history = ($1);\n\n$his}s || die "Assertion: Unexpected Dumper output";
+		$file_props->{content} =~ s/^[^\S\n]*\#\s*START\s+HISTORY\s*\n(.*?)^\s*\#\s*END\s+HISTORY[^\S\n]*\n/\# START HISTORY\n# autogenerated by $Script\n$released_string\# END HISTORY\n/sm;
+		$file_props->{version_changed} = 1;
+		$file_props->{version} = $release_props->{release};
+	    } elsif ($file =~ m{(?:^|/)t/(.*\.t)\z}) {
+		my $name = $1;
+		$file_props->{content} =~ s{^((?:\#.*\n)*\#.*it should work as )[`']perl\s+((?:-T\s+|)(?:t/|)).*[`']\s*\n}{$1`perl $2$name'\n};
+	    } elsif ($file =~ m{(.*/)MANIFEST\z}s) {
+		my $sub_match = qr{^\Q$1\E(.*)}s;
+		$file_props->{content} = "";
+		for my $file (@{$release_props->{files}}) {
+		    $file_props->{content} .= "$1\n" if $file =~ $sub_match;
+		}
+	    } elsif ($file =~ m{^(?:.*/|)MANIFEST\.SKIP\z}s) {
+		missing_manifest_skip($file_props);
+	    } elsif ($file =~ m{^(.*/|)Makefile\.PL\z}) {
+		my $my_section = "";
+		my $my_any_to_blib = "";
+		if ($file eq "Makefile.PL") {
+		    # We should check the dependencies and then set the makeppd
+		    # min_version based on that
+		    $my_section .= << 'POSTAMBLES';
 
     $postamble{ppm} = <<'EOT';
 ppm: $(DISTNAME).ppd
@@ -590,9 +683,16 @@ EOT
 ppm_uninstall:
 	ppm uninstall $(DISTNAME)
 EOT
+
+    # You will need to add your own entry for README.md
+    $postamble{commit} = <<'EOT';
+commit: all README.md
+	release_pm
+	git commit -av
+EOT
 POSTAMBLES
-    ;
-                    $my_any_to_blib .= <<'MY_ANY_TO_BLIB';
+		    ;
+		    $my_any_to_blib .= <<'MY_ANY_TO_BLIB'
 BEGIN {
     package MY;
     my $min_any_to_blib_version = "1.000";
@@ -600,30 +700,30 @@ BEGIN {
     my $error;
 
     for my $path (split $^O eq "MSWin32" ? qr{;} : qr{:}, $ENV{PATH}) {
-        if ($^O eq "MSWin32" ? -f "$path/$any_to_blib" : -x "$path/$any_to_blib") {
-            defined(my $pid =
-                    open(my $fh, "-|",
-                         $^O eq "MSWin32" ? qq("$^X" "$path/$any_to_blib" --version):
-                         ($^X, "$path/$any_to_blib", "--version"))) ||
-                         die "Could not fork: $!";
-            my $version_string = do { local $/; <$fh> };
-            close($fh);	## no critic (UselessNoCritic RequireCheckedClose)
-            die "Unexpected exit code $? while closing '$^X $path/$any_to_blib --version'" if $?;
-            my ($version) = $version_string =~ /^\Q$any_to_blib\E\s+(\d+\.\d+)\s/m or
-                die "$path/$any_to_blib --version: Could not parse version_string\n$version_string";
-            if ($version < $min_any_to_blib_version) {
-                $error .= "$path/$any_to_blib is version '$version' but I need at least version '$min_any_to_blib_version'\n";
-                next;
-            }
-            $any_to_blib = "$path/$any_to_blib";
-            last;
-        }
+	if ($^O eq "MSWin32" ? -f "$path/$any_to_blib" : -x "$path/$any_to_blib") {
+	    defined(my $pid =
+		    open(my $fh, "-|",
+			 $^O eq "MSWin32" ? qq("$^X" "$path/$any_to_blib" --version):
+			 ($^X, "$path/$any_to_blib", "--version"))) ||
+			 die "Could not fork: $!";
+	    my $version_string = do { local $/; <$fh> };
+	    close($fh); ## no critic (UselessNoCritic RequireCheckedClose)
+	    die "Unexpected exit code $? while closing '$^X $path/$any_to_blib --version'" if $?;
+	    my ($version) = $version_string =~ /^\Q$any_to_blib\E\s+(\d+\.\d+)\s/m or
+		die "$path/$any_to_blib --version: Could not parse version_string\n$version_string";
+	    if ($version < $min_any_to_blib_version) {
+		$error .= "$path/$any_to_blib is version '$version' but I need at least version '$min_any_to_blib_version'\n";
+		next;
+	    }
+	    $any_to_blib = "$path/$any_to_blib";
+	    last;
+	}
     }
     die $error if $error;
     $any_to_blib =~ m{/} || eval {
-         ## no critic (UselessNoCritic MagicNumbers)
-         ExtUtils::MakeMaker->VERSION(6.55_01);
-         1;
+	 ## no critic (UselessNoCritic MagicNumbers)
+	 ExtUtils::MakeMaker->VERSION(6.55_01);
+	 1;
     } || die "Could not find executable '$any_to_blib' in PATH. Please install package PackageTools\n";
 
     our %postamble;
@@ -633,9 +733,18 @@ ANY_TO_BLIB = $any_to_blib --min_version $min_any_to_blib_version
 EOT
 }
 MY_ANY_TO_BLIB
-    ;
-                }
-                $my_section .= << 'EOT'
+   ;
+		    if ($release_props->{file_props}{version_check}) {
+			$my_section .= << 'POSTAMBLES'
+
+    $postamble{version_check} = <<'EOT';
+all ::
+	$(NOECHO) $(FULLPERL) version_check "$(NAME)" "$(DESTINSTALLSITELIB)" "$(VERSION)" "$(VERSION_FROM)"
+EOT
+POSTAMBLES
+		    }
+		}
+		$my_section .= << 'EOT'
 
 undef &postamble;	## no critic (UselessNoCritic AmpersandSigils)
 EOT
@@ -645,8 +754,17 @@ EOT
 	return shift->SUPER::postamble() . join("\n", @postamble{sort {uc $a cmp uc $b || $a cmp $b } keys %postamble});
     }
 EOT
-    ;
-                $file_props->{content} =~ s{^[^\S\n]*\#\s*START\s+MY\s*\n(.*?)^\s*\#\s*END\s+MY[^\S\n]*\n}{# START MY
+	;
+		$file_props->{content} =~ s{^[^\S\n]*\#\s*START\s+MY\s*\n(.*?)^\s*\#\s*END\s+MY[^\S\n]*\n}{# START MY\n# END MY\n}sm;
+
+		# Remove duplicate postamble section outside of START/END
+		# (In case it got subsumed into release_pm)
+		while ($my_section =~ m{^[^\S\n]*\$postamble\{(\w+)\}\s*=\s*<<\s*'([^']+)';?[^\S\n]*\n.*?^\2\n(?:\s*;[^\S\n]*\n)?}gsm) {
+		    my $name = $1;
+		    $file_props->{content} =~ s{^\s*^[^\S\n]*\$postamble\{\Q$name\E\}\s*=\s*<<\s*'([^']+)';?[^\S\n]*\n.*?^\1\n(?:\s*;[^\S\n]*\n)?}{}gsm;
+		}
+
+		$file_props->{content} =~ s{^# START MY\n# END MY\n}{# START MY
 # autogenerated by $Script
 BEGIN {
     package MY;
@@ -656,43 +774,43 @@ $my_section}
 {
     package MY;
 $post_section}
-# END MY\n}sm;
-                $file_props->{content} =~ s{^[^\S\n]*\#\s*START\s+ANY_TO_BLIB\s*\n(.*?)^\s*\#\s*END\s+ANY_TO_BLIB[^\S\n]*\n}{# START ANY_TO_BLIB
+# END MY\n}m;
+		$file_props->{content} =~ s{^[^\S\n]*\#\s*START\s+ANY_TO_BLIB\s*\n(.*?)^\s*\#\s*END\s+ANY_TO_BLIB[^\S\n]*\n}{# START ANY_TO_BLIB
 # autogenerated by $Script
 $my_any_to_blib# END ANY_TO_BLIB\n}sm;
-            }
-
-            if (!$file_props->{binary}) {
-                $file_props->{content} =~ s/^(\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*)($quot)[0-9._]+\2(\s*[;\}])/$1$2$file_props->{version}$2$3/mg;
-                $file_props->{content} =~ s/\$Version:\s*[0-9.]+\s*\$/\$Version: $file_props->{version} \$/g;
 	    }
 
-            # Did we change ?
-            my $content_chksum = chksum($file_props);
-            if ($file_props->{content_chksum} ne $content_chksum) {
-                $file_props->{content_chksum} = $content_chksum;
-                warn "Updated $file\n";
-            }
-            my $force_package_version =
-                $file =~ /\.pm\z/ &&
-                $file_props->{content} =~ /\bXSLoader\b|\bDynaLoader\b/ &&
-                $file_props->{version} ne $release_props->{release};
-            if (!$file_props->{old_chksum} ||
-                $file_props->{old_chksum} ne $file_props->{content_chksum} ||
-                $force_package_version) {
-                $release_props->{any_changes} = $changes = 1 if
-                    !$release_props->{any_changes};
-                if (!$file_props->{version_changed} || $force_package_version) {
-                    $release_props->next_release;
-                    $file_props->{version} = $force_package_version ?
-                        $release_props->{release} :
-                        $release_props->next_version($file_props->{version});
-                    $file_props->{version_changed} = 1;
-                    $changes++;
-                }
-            }
-            $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release} if $release_props->{release_changed};
-        }
+	    if (!$file_props->{binary}) {
+		$file_props->{content} =~ s/^(\s*(?:(?:my|our|BEGIN\s*\{)\s*)?\$VERSION\s*=\s*)($quot)[0-9._]+\2(\s*[;\}])/$1$2$file_props->{version}$2$3/mg;
+		$file_props->{content} =~ s/\$Version:\s*[0-9.]+\s*\$/\$Version: $file_props->{version} \$/g;
+	    }
+
+	    # Did we change ?
+	    my $content_chksum = chksum($file_props);
+	   if ($file_props->{content_chksum} ne $content_chksum) {
+		$file_props->{content_chksum} = $content_chksum;
+		warn "Updated $file\n";
+	    }
+	    my $force_package_version =
+		$file =~ /\.pm\z/ &&
+		$file_props->{content} =~ /\bXSLoader\b|\bDynaLoader\b/ &&
+		$file_props->{version} ne $release_props->{release};
+	    if (!$file_props->{old_chksum} ||
+		$file_props->{old_chksum} ne $file_props->{content_chksum} ||
+		$force_package_version) {
+		$release_props->{any_changes} = $changes = 1 if
+		    !$release_props->{any_changes};
+		if (!$file_props->{version_changed} || $force_package_version) {
+		    $release_props->next_release;
+		    $file_props->{version} = $force_package_version ?
+			$release_props->{release} :
+			$release_props->next_version($file_props->{version});
+		    $file_props->{version_changed} = 1;
+		    $changes++;
+		}
+	    }
+	    $release_props->{released}{$file}{$file_props->{version}} ||= $release_props->{release} if $release_props->{release_changed};
+	}
     } while $changes;
 }
 
@@ -701,9 +819,9 @@ sub set_version_file {
     die "Assertion: No RELEASE\n" if !defined $release_props->{release};
 
     my ($sec, $min, $hour, $mday, $mon, $year) =
-        gmtime($release_props->{time_stamp});
+	gmtime($release_props->{time_stamp});
     my $iso_time = sprintf("%4d-%02d-%02d %02d:%02d:%02d",
-                           $year+1900, $mon+1, $mday, $hour, $min, $sec);
+			   $year+1900, $mon+1, $mday, $hour, $min, $sec);
     my $content = "# Generated on $iso_time UT using $Bin/$Script\n";
     $content .= "BEGIN\n";
     $content .= "SEMANTICS\t$VERSION\n";
@@ -712,39 +830,39 @@ sub set_version_file {
     $content .= "SUB_RELEASE\t$release_props->{sub_release}\n";
     $content .= "DATE\t\t$iso_time\n";
     $content .= sprintf("VCS_CHECK\t%d\n",
-                        $release_props->{vcs_check} ? 1 : 0);
+			$release_props->{vcs_check} ? 1 : 0);
 
     my $file_props = $release_props->{file_props};
     # Same order as files in MANIFEST
     for my $file (@{$release_props->{files}}) {
-        my $file_props = $file_props->{$file} ||
-            die "Assertion: No data for $file";
-        if ($file_props->{content_chksum} ne $file_props->{disk_chksum}) {
-            spew($file, $file_props->{content}, $file_props->{binary});
-            warn "Restored $file\n" if $file_props->{old_chksum} && $file_props->{old_chksum} eq $file_props->{content_chksum};
-        }
-        if ($file =~ m{(?:^|/)(?:t/[^/]+\.t|bin/[^/]+)\z}) {
-            # Change t/*.t and bin/* to executable
-            if (my @stat = lstat($file) and -f _) {
-                my $mode = S_IMODE($stat[MODE]) & 0777;
-                if (!($mode & 0111) && ($mode & 0444)) {
-                    warn "Make $file executable\n";
-                    $mode |= ($mode & 0444) >> 2;
-                    chmod($mode, $file) || die "Could not chmod $file: $^E";
-                }
-            }
-        }
-        $content .=
-            sprintf("VERSION\t%s %s %s\n", @$file_props{qw(content_chksum version file)});
+	my $file_props = $file_props->{$file} ||
+	    die "Assertion: No data for $file";
+	if ($file_props->{content_chksum} ne $file_props->{disk_chksum}) {
+	    spew($file, $file_props->{content}, $file_props->{binary});
+	    warn "Restored $file\n" if $file_props->{old_chksum} && $file_props->{old_chksum} eq $file_props->{content_chksum};
+	}
+	if ($file =~ m{(?:^|/)(?:t/[^/]+\.t|bin/[^/]+)\z}) {
+	    # Change t/*.t and bin/* to executable
+	    if (my @stat = lstat($file) and -f _) {
+		my $mode = S_IMODE($stat[MODE]) & 0777;
+		if (!($mode & 0111) && ($mode & 0444)) {
+		    warn "Make $file executable\n";
+		    $mode |= ($mode & 0444) >> 2;
+		    chmod($mode, $file) || die "Could not chmod $file: $^E";
+		}
+	    }
+	}
+	$content .=
+	    sprintf("VERSION\t%s %s %s\n", @$file_props{qw(content_chksum version file)});
     }
     my $released = $release_props->{released};
     for my $file (sort keys %$released) {
-        my $versions = $released->{$file};
-        for my $version (sort { $b <=> $a } keys %$versions) {
-            # $content .= sprintf("RELEASED $release_props->{format} $release_props->{format} %s\n", $version, $versions->{$version}, $file);
-            $content .= sprintf("RELEASED %s %s %s\n",
-                                $version, $versions->{$version}, $file);
-        }
+	my $versions = $released->{$file};
+	for my $version (sort { $b <=> $a } keys %$versions) {
+	    # $content .= sprintf("RELEASED $release_props->{format} $release_props->{format} %s\n", $version, $versions->{$version}, $file);
+	    $content .= sprintf("RELEASED %s %s %s\n",
+				$version, $versions->{$version}, $file);
+	}
     }
     $content .= "END\n";
     my $c1 = $content;
@@ -753,14 +871,14 @@ sub set_version_file {
     $c2 =~ s/^[^\n\S]*\#.*\n//mg;
     my $updates = 0;
     if ($c1 ne $c2) {
-        if ($release_props->{old_content} eq "") {
-            warn "New $sums\n";
-        } else {
-            warn "Updated $sums\n";
-            spew("$sums.old", $release_props->{old_content})
-        }
-        spew($sums, $content);
-        $updates++;
+	if ($release_props->{old_content} eq "") {
+	    warn "New $sums\n";
+	} else {
+	    warn "Updated $sums\n";
+	    spew("$sums.old", $release_props->{old_content})
+	}
+	spew($sums, $content);
+	$updates++;
     }
     return $updates;
 }
@@ -770,12 +888,12 @@ use constant MAX_DEPTH => 50;
 
 eval {
     if (!defined $start_release) {
-        # Walk up until we find a md5-versions file
-        for (1..MAX_DEPTH) {
-            goto FOUND if -e $sums;
-            chdir("..") || die "Could not chdir to ..: $!";
-        }
-        die "Could not find '$sums' in . or in any higher directory\n";
+	# Walk up until we find a md5-versions file
+	for (1..MAX_DEPTH) {
+	    goto FOUND if -e $sums;
+	    chdir("..") || die "Could not chdir to ..: $!";
+	}
+	die "Could not find '$sums' in . or in any higher directory\n";
       FOUND:
     }
     my $release_props = PackageTools::Release->get_versions_file;
@@ -826,6 +944,10 @@ then after running release_pm the file F<bar/MANIFEST> will contain
 
   baz
   MANIFEST
+
+=item MANIFEST.SKIP
+
+Add several default entries so you don't accidentially forget them
 
 =item deep Makefile.PLs
 

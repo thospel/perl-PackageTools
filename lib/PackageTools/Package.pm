@@ -7,9 +7,9 @@ package PackageTools::Package;
 use strict;
 use warnings;
 use vars qw($VERSION $SUB_VERSION $release_time %history);
-$VERSION = "1.011";
-$SUB_VERSION = "002";
-$release_time = 1605041276;	## no critic (UselessNoCritic MagicNumbers)
+$VERSION = "1.012";
+$SUB_VERSION = "008";
+$release_time = 1622843178;	## no critic (UselessNoCritic MagicNumbers)
 %history = (
   'Changes' => {
     '1.000' => '1.000',
@@ -23,7 +23,8 @@ $release_time = 1605041276;	## no critic (UselessNoCritic MagicNumbers)
     '1.008' => '1.008',
     '1.009' => '1.009',
     '1.010' => '1.010',
-    '1.011' => '1.011'
+    '1.011' => '1.011',
+    '1.012' => '1.012'
   },
   'MANIFEST' => {
     '1.000' => '1.000',
@@ -35,7 +36,8 @@ $release_time = 1605041276;	## no critic (UselessNoCritic MagicNumbers)
   'MANIFEST.SKIP' => {
     '1.000' => '1.004',
     '1.001' => '1.009',
-    '1.002' => '1.010'
+    '1.002' => '1.010',
+    '1.003' => '1.012'
   },
   'Makefile.PL' => {
     '1.000' => '1.001',
@@ -44,7 +46,8 @@ $release_time = 1605041276;	## no critic (UselessNoCritic MagicNumbers)
     '1.003' => '1.006',
     '1.004' => '1.007',
     '1.005' => '1.009',
-    '1.006' => '1.010'
+    '1.006' => '1.010',
+    '1.007' => '1.012'
   },
   'README' => {
     '1.000' => '1.000',
@@ -58,7 +61,8 @@ $release_time = 1605041276;	## no critic (UselessNoCritic MagicNumbers)
     '1.008' => '1.008',
     '1.009' => '1.009',
     '1.010' => '1.010',
-    '1.011' => '1.011'
+    '1.011' => '1.011',
+    '1.012' => '1.012'
   },
   'bin/any_to_blib' => {
     '1.000' => '1.005',
@@ -89,7 +93,8 @@ $release_time = 1605041276;	## no critic (UselessNoCritic MagicNumbers)
     '1.011' => '1.008',
     '1.012' => '1.009',
     '1.013' => '1.010',
-    '1.014' => '1.011'
+    '1.014' => '1.011',
+    '1.015' => '1.012'
   },
   'bin/symbol_scanner' => {
     '1.000' => '1.010'
@@ -106,7 +111,8 @@ $release_time = 1605041276;	## no critic (UselessNoCritic MagicNumbers)
     '1.008' => '1.008',
     '1.009' => '1.009',
     '1.010' => '1.010',
-    '1.011' => '1.011'
+    '1.011' => '1.011',
+    '1.012' => '1.012'
   },
   't/00_load.t' => {
     '1.000' => '1.007',
@@ -222,8 +228,8 @@ sub FULL_VERSION {
 
 sub release_time {
     if (!defined $epoch_base) {
-        require Time::Local;
-        $epoch_base = Time::Local::timegm(0,0,0,1,0,1970);	## no critic (UselessNoCritic MagicNumbers)
+	require Time::Local;
+	$epoch_base = Time::Local::timegm(0,0,0,1,0,1970);	## no critic (UselessNoCritic MagicNumbers)
     }
     return $release_time + $epoch_base;
 }
@@ -233,13 +239,13 @@ sub released {
     my $p = $package;
     $p =~ s{::}{/}g;
     my $history = $history{"lib/$p.pm"} ||
-        croak "Could not find a history for package '$package'";
+	croak "Could not find a history for package '$package'";
     my $lowest = 9**9**9;
     for my $v (keys %$history) {
-        $lowest = $v if $v >= $version && $v < $lowest;
+	$lowest = $v if $v >= $version && $v < $lowest;
     }
     croak "No known version '$version' of package '$package'" if
-        $lowest == 9**9**9;
+	$lowest == 9**9**9;
     return $history->{$lowest};
 }
 1;

@@ -11,6 +11,7 @@ ppm
 cover_db
 .#*
 *.~*~
+*.bak
 .access^
 MYMETA.yml
 MYMETA.json

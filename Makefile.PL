@@ -7,7 +7,7 @@ use ExtUtils::MakeMaker;
 use FindBin;
 use Config qw(%Config);
 
-our $VERSION = '1.006';
+our $VERSION = '1.007';
 
 # Allows to suppress all program installation with -n (library only)
 use Getopt::Std;
@@ -130,6 +130,18 @@ ppm_uninstall:
 	ppm uninstall $(DISTNAME)
 EOT
 
+    # You will need to add your own entry for README.md
+    $postamble{commit} = <<'EOT';
+commit: all README.md
+	release_pm
+	git commit -av
+EOT
+
+    $postamble{version_check} = <<'EOT';
+all ::
+	$(NOECHO) $(FULLPERL) version_check "$(NAME)" "$(DESTINSTALLSITELIB)" "$(VERSION)" "$(VERSION_FROM)"
+EOT
+
 undef &postamble;	## no critic (UselessNoCritic AmpersandSigils)
 }
 {
@@ -144,23 +156,10 @@ sub settings {
     package MY;
     our %postamble;
 
-    $postamble{version_check} = <<'EOF';
-all ::
-	$(NOECHO) $(FULLPERL) version_check "$(NAME)" "$(DESTINSTALLSITELIB)" "$(VERSION)" "$(VERSION_FROM)"
-EOF
+    $postamble{README} = <<'EOT';
+README.md: bin/release_pm
+	pod2readme -f github $< $@
 
-    $postamble{ppm} = <<'EOT';
-ppm: $(DISTNAME).ppd
-	$(PERL) bin/makeppd.pl --min_version=1.016 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --leave=ppm $(DISTNAME).ppd $(VERSION)
-EOT
-
-    $postamble{ppm3} = <<'EOT';
-ppm3: $(DISTNAME).ppd
-	$(PERL) bin/makeppd.pl --min_version=1.016 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --ppm_version=3 --leave=ppm3 $(DISTNAME).ppd $(VERSION)
-EOT
-
-    $postamble{ppm4} = <<'EOT';
-ppm4: $(DISTNAME).ppd
-	$(PERL) bin/makeppd.pl --min_version=1.016 "--zip=$(ZIP)" "--tar=$(TAR)" "--compress=$(COMPRESS)" --ppm_version=4 --leave=ppm4 $(DISTNAME).ppd $(VERSION)
+dist: README.md
 EOT
 }
