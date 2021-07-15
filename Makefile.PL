@@ -26,16 +26,42 @@ to install in $Config{installscript}.
    the '-n' or '-y' option to 'Makefile.PL'.
 
 EOT
-if !$opt_y;
-    push @programs_to_install, "bin/release_pm" if
-        $opt_y ||
-        prompt("Install release_pm, a simple version manager ?", "y") =~ /^y/i;
-    push @programs_to_install, "bin/makeppd.pl" if
-        $opt_y ||
-        prompt("Install makeppd.pl, a simple ppd generator ?", "y") =~ /^y/i;
-    push @programs_to_install, "bin/any_to_blib" if
-        $opt_y ||
-        prompt("Install any_to_blib, a pm_to_blib replacement ?", "y") =~ /^y/i;
+        if !$opt_y;
+
+    # Only do this site_perl substitution for non binary extensions!
+    my $site_lib = "$ExtUtils::MakeMaker::Config{siteprefix}/lib/site_perl";
+    if ($ExtUtils::MakeMaker::Config{installsitelib} ne $site_lib &&
+        grep $_ eq $site_lib, @INC) {
+        print <<EOT	## no critic (UselessNoCritic InputOutput::RequireCheckedSyscalls)
+Your default perl library install directory is $ExtUtils::MakeMaker::Config{installsitelib}.
+This works fine but has the drawback that the library files will not be found
+anymore if the perl version gets upgraded. Since $site_lib is in
+your default library search path I can use that instead
+
+EOT
+            if !$opt_y;
+        # arch directories needed to get packlist into /usr/local/lib/site_perl
+        map $ExtUtils::MakeMaker::Config{$_} = $site_lib, qw(installsitelib sitelibexp sitearchexp installsitearch) if
+            $opt_y ||
+            prompt("Use $site_lib as default library install directory ?", "y") =~ /^y/i;
+    }
+
+    print <<EOT	## no critic (UselessNoCritic InputOutput::RequireCheckedSyscalls)
+This package comes with programs that I can try
+to install in $ExtUtils::MakeMaker::Config{installsitebin}.
+
+EOT
+        if !$opt_y;
+    my %programs = (
+        "bin/release_pm"	=> "a simple version manager",
+        "bin/makeppd.pl"	=> "a simple ppd generator",
+        "bin/any_to_blib"	=> "a pm_to_blib replacement",
+    );
+    for my $program (sort keys %programs) {
+        push @programs_to_install, $program if
+            $opt_y ||
+            prompt("Install $program, $programs{$program} ?", "y") =~ /^y/i;
+    }
 }
 
 my $option_file = "$FindBin::Bin/t/options.$^O";
